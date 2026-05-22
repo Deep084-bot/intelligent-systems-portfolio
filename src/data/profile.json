@@ -1,0 +1,137 @@
+{
+  "name": "Deep Mehta",
+  "title": "Systems, Backend & AI Engineering Student",
+  "shortHeadline": "Building intelligent backend systems, scalable applications, and engineering-focused software.",
+  "location": "Gujarat, India",
+  "bio": "Computer Science student focused on backend engineering, AI systems, distributed systems fundamentals, and problem solving. Passionate about understanding how scalable software systems work internally and applying engineering thinking to real-world applications. Strong interest in AI engineering, backend architecture, APIs, databases, and system-level concepts, with a growing focus on building intelligent and production-oriented software systems.",
+  "identity": {
+    "primaryRoles": [
+      "Backend Engineering Student",
+      "AI Engineering Learner",
+      "Systems-Focused Developer",
+      "Problem Solver"
+    ],
+    "corePositioning": "Engineering-focused student exploring backend systems, AI applications, scalable architectures, and intelligent software development.",
+    "portfolioMessage": "A student engineer focused on understanding systems deeply, building practical software seriously, and continuously improving through problem solving and hands-on engineering."
+  },
+  "technicalInterests": [
+    "Backend Systems",
+    "AI Engineering",
+    "Distributed Systems",
+    "Cybersecurity",
+    "Problem Solving",
+    "System Design",
+    "APIs",
+    "Databases",
+    "DevOps",
+    "Cloud Computing"
+  ],
+  "currentFocus": {
+    "academics": [
+      "Computer Networks",
+      "Operating Systems",
+      "Machine Learning"
+    ],
+    "engineering": [
+      "Backend Development",
+      "AI Engineering Fundamentals",
+      "System Design Fundamentals",
+      "Scalable Backend Thinking"
+    ],
+    "projectFocus": [
+      "Building practical engineering projects",
+      "Improving architecture thinking",
+      "Creating AI-integrated applications"
+    ]
+  },
+  "strengths": [
+    "Problem Solving",
+    "Backend Logic Development",
+    "Algorithmic Thinking",
+    "Learning System Internals",
+    "Engineering Curiosity",
+    "Technical Consistency"
+  ],
+  "thingsEnjoyedMost": [
+    "Solving algorithmic and logical problems",
+    "Building backend APIs and application logic",
+    "Understanding scalable systems and architectures",
+    "Experimenting with AI technologies and engineering workflows"
+  ],
+  "comfortableTechnologies": {
+    "languages": [
+      "Java",
+      "JavaScript",
+      "Python",
+      "SQL"
+    ],
+    "backend": [
+      "Node.js",
+      "Express.js",
+      "PostgreSQL"
+    ],
+    "frontend": [
+      "React",
+      "Tailwind CSS"
+    ],
+    "databases": [
+      "PostgreSQL",
+      "MongoDB"
+    ],
+    "ai_ml": [
+      "Python",
+      "Pandas"
+    ],
+    "operatingSystems": [
+      "Windows",
+      "macOS",
+      "Linux"
+    ]
+  },
+  "currentlyLearning": [
+    "AI Engineering Fundamentals",
+    "Machine Learning",
+    "Computer Networks",
+    "Operating Systems",
+    "DevOps Fundamentals",
+    "Distributed Systems Concepts",
+    "System Design Fundamentals"
+  ],
+  "careerDirection": [
+    "AI Engineer",
+    "Backend Engineer",
+    "Systems Engineer"
+  ],
+  "strongestProjects": [
+    {
+      "name": "Portfolio Website",
+      "reason": "Represents engineering identity, AI integration, backend-focused thinking, and product-level architecture."
+    },
+    {
+      "name": "SUMS - Smart University Management System",
+      "reason": "Demonstrates backend engineering, system-level thinking, and practical application development."
+    }
+  ],
+  "engineeringMindset": {
+    "approach": "Focused on building practical systems while continuously improving engineering depth and technical understanding.",
+    "learningStyle": "Learns through projects, implementation, experimentation, and deep exploration of system behavior.",
+    "philosophy": "Strong engineering comes from understanding systems deeply, solving problems consistently, and building real applications thoughtfully."
+  },
+  "personalitySignals": [
+    "Curious builder",
+    "Engineering-focused learner",
+    "Analytical thinker",
+    "System-oriented developer",
+    "Growth-driven technologist"
+  ],
+  "aiAssistantTone": {
+    "style": "Technical, thoughtful, concise, and engineering-focused.",
+    "avoid": [
+      "Corporate buzzwords",
+      "Fake senior-level claims",
+      "Overconfident language",
+      "Generic motivational phrasing"
+    ],
+    "desiredImpression": "A technically serious student engineer with strong problem-solving foundations and growing backend/AI engineering depth."
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "commands": [
+    {
+      "name": "whoami",
+      "description": "Who am I?",
+      "category": "profile",
+      "hidden": false
+    },
+    {
+      "name": "skills",
+      "description": "View my technical skills",
+      "category": "tech",
+      "hidden": false
+    },
+    {
+      "name": "projects",
+      "description": "Show featured projects",
+      "category": "work",
+      "hidden": false
+    },
+    {
+      "name": "achievements",
+      "description": "View achievements & badges",
+      "category": "achievements",
+      "hidden": false
+    },
+    {
+      "name": "dsa",
+      "description": "Data Structures & Algorithms stats",
+      "category": "tech",
+      "hidden": false
+    },
+    {
+      "name": "currently-learning",
+      "description": "What I'm learning right now",
+      "category": "learning",
+      "hidden": false
+    },
+    {
+      "name": "blog",
+      "description": "Recent engineering blogs",
+      "category": "content",
+      "hidden": false
+    },
+    {
+      "name": "contact",
+      "description": "How to reach me",
+      "category": "contact",
+      "hidden": false
+    },
+    {
+      "name": "help",
+      "description": "Show available commands",
+      "category": "system",
+      "hidden": false
+    },
+    {
+      "name": "clear",
+      "description": "Clear terminal screen",
+      "category": "system",
+      "hidden": false
+    }
+  ]
+}

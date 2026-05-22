@@ -1,0 +1,147 @@
+{
+  "projects": [
+    {
+      "id": "portfolio-website",
+      "slug": "portfolio-website",
+      "title": "Portfolio Website",
+      "shortDescription": "An engineering-focused portfolio showcasing projects, engineering notes, and an AI assistant using React, Vite, and an Express backend.",
+      "image": "/images/projects/portfolio-website.jpg",
+      "tags": ["Frontend", "Backend", "AI"],
+      "status": "Complete",
+      "featured": true,
+      "priority": 1,
+      "startDate": "2026-01-01",
+      "endDate": "2026-05-01",
+      "links": {
+        "github": "https://github.com/deepmehta/portfolio-website",
+        "demo": null,
+        "blog": "/blog/building-ai-portfolio"
+      },
+      "overview": {
+        "problem": "Traditional portfolios are static and don't reflect engineering depth or system thinking.",
+        "solution": "Built a dynamic, JSON/Markdown-driven portfolio with a terminal-inspired UI and an AI assistant that understands project and note context."
+      },
+      "details": {
+        "architecture": "React + Vite frontend, Express backend providing AI and content APIs. Content is driven by JSON and Markdown files for easy updates.",
+        "technicalChallenges": [
+          "Designing a reusable content pipeline for JSON and Markdown",
+          "Rendering engineering notes safely with syntax highlighting",
+          "Integrating a lightweight AI assistant without overengineering"
+        ],
+        "learnings": "Improved content architecture, markdown rendering, and clean backend integration for AI-assisted interactions."
+      },
+      "tech": ["React", "Vite", "Tailwind CSS", "Node.js", "Express", "Gemini API"],
+      "futureImprovements": [
+        "Polish AI assistant prompts and context builder",
+        "Add more engineering notes and code examples",
+        "Improve accessibility and testing"
+      ]
+    },
+    {
+      "id": "sums",
+      "slug": "sums-smart-university",
+      "title": "SUMS - Smart University Management System",
+      "shortDescription": "Role-based university management system focusing on academic workflows and placement processes.",
+      "image": "/images/projects/sums.jpg",
+      "tags": ["Backend", "PostgreSQL", "Node.js"],
+      "status": "Complete",
+      "featured": true,
+      "priority": 2,
+      "startDate": "2025-06-01",
+      "endDate": "2025-10-01",
+      "links": {
+        "github": "https://github.com/deepmehta/sums",
+        "demo": null,
+        "blog": "/blog/sums-design-notes"
+      },
+      "overview": {
+        "problem": "University administrative workflows were fragmented and required role-based access control and transactional integrity.",
+        "solution": "Designed normalized PostgreSQL schemas and role-based APIs to support Students, Faculty, and Admin workflows reliably."
+      },
+      "details": {
+        "architecture": "Express.js backend, PostgreSQL with normalized schemas, clear role-based routing and validation middleware.",
+        "technicalChallenges": [
+          "Designing a BCNF-like normalized schema that supports role-based workflows",
+          "Implementing transactional operations and validation across modules"
+        ],
+        "learnings": "Database normalization practices, API design for role-based systems, and validation pipelines."
+      },
+      "tech": ["Node.js", "Express.js", "PostgreSQL", "SQL"],
+      "futureImprovements": [
+        "Add automated test coverage for core workflows",
+        "Introduce CI for schema migrations",
+        "Document APIs thoroughly"
+      ]
+    },
+    {
+      "id": "github-analyzer",
+      "slug": "github-project-analyzer",
+      "title": "GitHub Project Analyzer",
+      "shortDescription": "A small analytics dashboard that surfaces repository metrics and language distributions using GitHub APIs.",
+      "image": "/images/projects/github-analyzer.jpg",
+      "tags": ["Backend", "APIs", "Visualization"],
+      "status": "Complete",
+      "featured": false,
+      "priority": 3,
+      "startDate": "2025-03-01",
+      "endDate": "2025-04-15",
+      "links": {
+        "github": "https://github.com/deepmehta/github-analyzer",
+        "demo": null,
+        "blog": "/blog/github-analyzer"
+      },
+      "overview": {
+        "problem": "Developers and small teams need quick insights into repository metrics.",
+        "solution": "Built a simple API-backed dashboard that aggregates GitHub repo stats and visualizes language usage and stars/forks trends."
+      },
+      "details": {
+        "architecture": "Express backend calling GitHub REST APIs, frontend visualizations with Chart.js/EJS for rapid prototyping.",
+        "technicalChallenges": [
+          "Handling API rate limits",
+          "Designing clean visualizations for small datasets"
+        ],
+        "learnings": "API integration patterns, rate limit handling strategies, and data visualization basics."
+      },
+      "tech": ["Node.js", "Express.js", "Axios", "Chart.js"],
+      "futureImprovements": [
+        "Add caching for API results",
+        "Support OAuth for user-specific analytics"
+      ]
+    },
+    {
+      "id": "school-api",
+      "slug": "school-management-api",
+      "title": "School Management API",
+      "shortDescription": "REST APIs for managing school data with geolocation-based sorting and basic reporting.",
+      "image": "/images/projects/school-api.jpg",
+      "tags": ["Backend", "MySQL", "APIs"],
+      "status": "Complete",
+      "featured": false,
+      "priority": 4,
+      "startDate": "2024-09-01",
+      "endDate": "2024-11-01",
+      "links": {
+        "github": "https://github.com/deepmehta/school-api",
+        "demo": null,
+        "blog": "/blog/school-api"
+      },
+      "overview": {
+        "problem": "Schools require structured APIs for student, staff, and location-based queries.",
+        "solution": "Implemented CRUD APIs with geolocation features and documented endpoints for maintainable backend workflows."
+      },
+      "details": {
+        "architecture": "Express.js backend with MySQL, simple reporting endpoints and Postman-documented APIs.",
+        "technicalChallenges": [
+          "Designing flexible query endpoints",
+          "Documenting APIs for maintainability"
+        ],
+        "learnings": "Practical API design, geolocation querying, and deployment basics."
+      },
+      "tech": ["Node.js", "Express.js", "MySQL", "Postman"],
+      "futureImprovements": [
+        "Add authentication and authorization",
+        "Introduce pagination and caching for large queries"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "dsa": {
+    "totalSolved": 741,
+    "byDifficulty": {
+      "easy": 200,
+      "medium": 430,
+      "hard": 111
+    },
+    "byCategory": [
+      { "name": "Arrays & Strings", "count": 140 },
+      { "name": "Trees & Graphs", "count": 160 },
+      { "name": "Dynamic Programming", "count": 120 },
+      { "name": "Hash Tables & Sets", "count": 80 },
+      { "name": "Linked Lists", "count": 50 },
+      { "name": "Stacks & Queues", "count": 70 },
+      { "name": "Heaps & Sorting", "count": 60 },
+      { "name": "Binary Search", "count": 51 }
+    ],
+    "platforms": [
+      {
+        "name": "LeetCode",
+        "solved": 741,
+        "rating": 1679,
+        "url": "https://leetcode.com/deepmehta"
+      },
+      {
+        "name": "CodeChef",
+        "rating": 1600,
+        "url": "https://www.codechef.com/users/deepmehta"
+      }
+    ],
+    "stats": {
+      "currentStreak": 45,
+      "bestStreak": 120,
+      "averageAccuracy": "92%",
+      "totalTime": "850 hours",
+      "lastUpdated": "2026-05-22"
+    }
+  }
+}

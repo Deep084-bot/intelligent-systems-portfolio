@@ -1,0 +1,58 @@
+{
+  "achievements": [
+    {
+      "id": "sums-project",
+      "category": "Project",
+      "title": "SUMS - Smart University Management System (2026)",
+      "description": "Designed and implemented a backend-focused university management system (role-based APIs, PostgreSQL schemas, transactional workflows).",
+      "date": "2026-01-01",
+      "icon": "server",
+      "proof": "https://github.com/deepmehta/sums"
+    },
+    {
+      "id": "portfolio-website",
+      "category": "Project",
+      "title": "AI-Integrated Engineering Portfolio (2026)",
+      "description": "Built a dynamic portfolio with Markdown-driven engineering notes and a Gemini-powered assistant for contextual interactions.",
+      "date": "2026-05-01",
+      "icon": "browser",
+      "proof": "https://github.com/deepmehta/portfolio-website"
+    },
+    {
+      "id": "github-analyzer",
+      "category": "Project",
+      "title": "GitHub Project Analyzer (2026)",
+      "description": "Developed a repository analytics dashboard using GitHub APIs and Chart.js.",
+      "date": "2026-04-01",
+      "icon": "chart",
+      "proof": "https://github.com/deepmehta/github-analyzer"
+    },
+    {
+      "id": "school-api",
+      "category": "Project",
+      "title": "School Management API (2026)",
+      "description": "Implemented REST APIs for managing school data with geolocation-based sorting and reporting.",
+      "date": "2026-02-01",
+      "icon": "database",
+      "proof": "https://github.com/deepmehta/school-api"
+    },
+    {
+      "id": "dsa-practice",
+      "category": "Problem-Solving",
+      "title": "700+ DSA Problems Solved",
+      "description": "Consistent practice across LeetCode, CodeChef, and GeeksforGeeks focused on medium and selected hard problems.",
+      "date": "2026-05-01",
+      "icon": "puzzle",
+      "proof": "https://leetcode.com/deepmehta"
+    },
+    {
+      "id": "hackout-finalist",
+      "category": "Hackathon",
+      "title": "DAIICT HackOut Finalist (2025)",
+      "description": "Finalist at a university hackathon; contributed backend integration and rapid prototyping.",
+      "date": "2025-11-01",
+      "icon": "flag",
+      "proof": null
+    }
+  ]
+}
