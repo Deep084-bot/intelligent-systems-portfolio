@@ -77,7 +77,7 @@ export const DSADashboardSection = () => {
   );
 };
 
-import AIConsole from '../components/ai/AIConsole';
+import ChatAssistant from '../components/ai/ChatAssistant';
 
 export const AIAssistantSection = () => {
   return (
@@ -92,7 +92,7 @@ export const AIAssistantSection = () => {
           </FadeIn>
 
           <FadeIn>
-            <AIConsole />
+            <ChatAssistant />
           </FadeIn>
 
         </Stack>
