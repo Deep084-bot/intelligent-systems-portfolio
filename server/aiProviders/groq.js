@@ -196,7 +196,8 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
           body: JSON.stringify(payload),
           signal: controller.signal,
         });
-        console.log(JSON.stringify({ event: 'provider_fetch_end', provider: 'groq', requestId, attempt, status: res.status }));
+        const groqRequestId = res.headers.get('x-request-id') || res.headers.get('request-id') || null;
+        console.log(JSON.stringify({ event: 'provider_fetch_end', provider: 'groq', requestId, attempt, status: res.status, groq_request_id: groqRequestId }));
         const providerCallMs = Date.now() - reqStart;
         clearTimeout(timeoutId);
 
@@ -229,10 +230,17 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
           throw err;
         }
 
+        // Log full response details for debugging (non-sensitive parts)
+        const respPreview = (() => {
+          try {
+            return j.choices?.[0]?.message?.content?.slice(0, 120) || JSON.stringify(j).slice(0, 120);
+          } catch (e) { return null; }
+        })();
+
         circuitBreaker.recordSuccess();
         const latencyMs = Date.now() - start;
         const normalized = normalizeResp(j);
-        console.log(JSON.stringify({ event: 'provider_success', provider: 'groq', latencyMs, attempt, requestId, provider_latency_ms: latencyMs, provider_call_ms: providerCallMs }));
+        console.log(JSON.stringify({ event: 'provider_success', provider: 'groq', latencyMs, attempt, requestId, provider_latency_ms: latencyMs, provider_call_ms: providerCallMs, groq_request_id: groqRequestId, response_preview: respPreview }));
 
         return {
           text: normalized.text,

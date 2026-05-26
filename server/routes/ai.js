@@ -5,7 +5,7 @@ import { buildPrompt } from '../prompt/builder.js';
 import { getProvider } from '../aiProviders/index.js';
 
 const router = express.Router();
-const REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_TIMEOUT_MS = 60_000; // temporarily extended for connectivity debugging
 
 function safeJson(res, status, data) {
   if (res.headersSent) return;
@@ -45,11 +45,11 @@ router.post('/chat', async (req, res) => {
     try { controller.abort(); } catch {}
   }, REQUEST_TIMEOUT_MS);
 
-  // if client disconnects, abort provider work
-  req.on('close', () => {
-    console.log(JSON.stringify({ event: 'client_disconnected', id: logMeta.id, requestId: reqId }));
-    try { controller.abort(); } catch {}
-  });
+  // NOTE: temporarily DISABLED client disconnect abort propagation to debug local connectivity issues
+  // req.on('close', () => {
+  //   console.log(JSON.stringify({ event: 'client_disconnected', id: logMeta.id, requestId: reqId }));
+  //   try { controller.abort(); } catch {}
+  // });
 
   try {
     const { question, history } = req.body || {};
@@ -100,13 +100,14 @@ router.post('/chat', async (req, res) => {
     }));
 
     try {
+      // NOTE: do NOT pass request lifecycle signal during connectivity debugging
       const result = await provider.sendPrompt({
         systemPrompt,
         history: normalizedHistory,
         question,
         temperature: 0.05,
         maxTokens: 512,
-        signal: controller.signal,
+        // signal: controller.signal, // disabled for debugging
         requestId: reqId,
       });
 
