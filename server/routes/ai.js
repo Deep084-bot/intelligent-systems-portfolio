@@ -164,4 +164,158 @@ router.get('/status', (req, res) => {
   });
 });
 
+// Connectivity test endpoint (raw provider connectivity debugging)
+router.get('/test', async (req, res) => {
+  const start = Date.now();
+  const requestId = Math.random().toString(36).slice(2, 10);
+  console.log(JSON.stringify({ event: 'provider_connectivity_test_start', requestId }));
+
+  const apiHost = 'api.groq.com';
+  const apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+  const key = process.env.GROQ_API_KEY || null;
+
+  // helper to respond in a single place
+  function respond(status, body) {
+    if (res.headersSent) return;
+    res.status(status).json(body);
+  }
+
+  // DNS lookup
+  try {
+    const dns = await import('dns');
+    const { promises: dnsPromises } = dns;
+    const lookupStart = Date.now();
+    let addr = null;
+    try {
+      const r = await dnsPromises.lookup(apiHost);
+      addr = r.address;
+      console.log(JSON.stringify({ event: 'dns_lookup', requestId, host: apiHost, address: addr, durationMs: Date.now() - lookupStart }));
+    } catch (e) {
+      console.error(JSON.stringify({ event: 'dns_error', requestId, host: apiHost, msg: e.message }));
+      // continue to allow fetch to reveal error too
+    }
+  } catch (e) {
+    console.error(JSON.stringify({ event: 'dns_module_unavailable', msg: e.message }));
+  }
+
+  // TCP connect test
+  try {
+    const net = await import('net');
+    const socket = new net.Socket();
+    const connectStart = Date.now();
+    const connTimeout = 5000;
+    let connected = false;
+    await new Promise((resolve) => {
+      socket.setTimeout(connTimeout);
+      socket.once('error', (err) => {
+        console.error(JSON.stringify({ event: 'tcp_connect_error', requestId, msg: err.message }));
+        socket.destroy();
+        resolve();
+      });
+      socket.once('timeout', () => {
+        console.error(JSON.stringify({ event: 'tcp_connect_timeout', requestId, host: apiHost }));
+        socket.destroy();
+        resolve();
+      });
+      socket.connect(443, apiHost, () => {
+        connected = true;
+        const ms = Date.now() - connectStart;
+        console.log(JSON.stringify({ event: 'tcp_connect', requestId, host: apiHost, durationMs: ms }));
+        socket.end();
+        resolve();
+      });
+    });
+  } catch (e) {
+    console.error(JSON.stringify({ event: 'tcp_test_failure', requestId, msg: e.message }));
+  }
+
+  // If no API key, return early
+  if (!key) {
+    console.error(JSON.stringify({ event: 'provider_connectivity_test_no_key', requestId }));
+    return respond(400, { ok: false, error: 'GROQ_API_KEY not configured', requestId });
+  }
+
+  // Increase timeout for connectivity test
+  const controller = new AbortController();
+  const timeoutMs = 60_000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  // Try groq-sdk first if available
+  try {
+    let Groq = null;
+    try {
+      const mod = await import('groq-sdk');
+      Groq = mod.default || mod.Groq || mod;
+    } catch (e) {
+      console.log(JSON.stringify({ event: 'groq_sdk_missing', requestId, msg: e.message }));
+    }
+
+    if (Groq) {
+      try {
+        console.log(JSON.stringify({ event: 'groq_sdk_init', requestId }));
+        const sdk = new Groq({ apiKey: key });
+        console.log(JSON.stringify({ event: 'groq_sdk_ready', requestId }));
+        // send minimal request
+        console.log(JSON.stringify({ event: 'groq_sdk_request_start', requestId }));
+        const reqStart = Date.now();
+        // Attempt to call compatible API — many SDKs map to openai-like methods; try common patterns
+        let sdkResp = null;
+        if (typeof sdk.chat === 'object' && typeof sdk.chat.completions?.create === 'function') {
+          sdkResp = await sdk.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] });
+        } else if (typeof sdk.chatCompletion === 'function') {
+          sdkResp = await sdk.chatCompletion({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] });
+        } else if (typeof sdk.createCompletion === 'function') {
+          // fallback
+          sdkResp = await sdk.createCompletion({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] });
+        } else if (typeof sdk.request === 'function') {
+          sdkResp = await sdk.request({ method: 'POST', path: '/openai/v1/chat/completions', body: { model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] } });
+        } else {
+          console.log(JSON.stringify({ event: 'groq_sdk_unknown_api', requestId }));
+        }
+        const sdkMs = Date.now() - reqStart;
+        clearTimeout(timeoutId);
+        console.log(JSON.stringify({ event: 'groq_sdk_response', requestId, durationMs: sdkMs }));
+        // attempt to extract text
+        let respText = '';
+        try { respText = (sdkResp?.choices?.[0]?.message?.content) || JSON.stringify(sdkResp).slice(0, 200); } catch (e) { respText = String(sdkResp).slice(0, 200); }
+        return respond(200, { ok: true, via: 'sdk', durationMs: sdkMs, preview: String(respText).slice(0, 100), requestId, raw: typeof sdkResp === 'object' ? Object.keys(sdkResp).slice(0,5) : null });
+      } catch (sdkErr) {
+        console.error(JSON.stringify({ event: 'groq_sdk_error', requestId, msg: sdkErr.message?.slice(0,300) }));
+        // fallthrough to raw fetch test
+      }
+    }
+  } catch (e) {
+    console.error(JSON.stringify({ event: 'groq_sdk_import_failed', requestId, msg: e.message }));
+  }
+
+  // Raw fetch fallback
+  try {
+    console.log(JSON.stringify({ event: 'groq_raw_fetch_start', requestId }));
+    const fetchStart = Date.now();
+    const resp = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] }),
+      signal: controller.signal,
+    });
+    const fetchMs = Date.now() - fetchStart;
+    let j = null;
+    try { j = await resp.json(); } catch (e) { j = null; }
+    clearTimeout(timeoutId);
+
+    const groqRequestId = resp.headers.get('x-request-id') || resp.headers.get('request-id') || null;
+    console.log(JSON.stringify({ event: 'groq_raw_fetch_end', requestId, status: resp.status, groq_request_id: groqRequestId, fetchMs }));
+
+    const preview = j ? (j.choices?.[0]?.message?.content || JSON.stringify(j).slice(0,100)) : null;
+    return respond(resp.ok ? 200 : 502, { ok: resp.ok, status: resp.status, groqRequestId, durationMs: fetchMs, preview: preview ? String(preview).slice(0,100) : null, body: j });
+  } catch (e) {
+    clearTimeout(timeoutId);
+    // Determine error type
+    const errMsg = e?.message || String(e);
+    const errType = (e && e.code) ? e.code : (/(timeout|aborted|abort)/i.test(errMsg) ? 'AbortError/Timeout' : 'network');
+    console.error(JSON.stringify({ event: 'groq_raw_fetch_error', requestId, errType, msg: errMsg }));
+    return respond(502, { ok: false, error: errMsg, errType, requestId });
+  }
+});
+
 export default router;

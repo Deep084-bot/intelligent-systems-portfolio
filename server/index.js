@@ -1,19 +1,50 @@
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+import { config } from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const envResult = config({ path: resolve(__dirname, '.env') });
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import aiRouter from './routes/ai.js';
+import contactRouter from './routes/contact.js';
 import rateLimitMiddleware from './middleware/rateLimit.js';
 
-dotenv.config();
-
 const app = express();
-app.use(cors());
-app.use(express.json({ limit: '128kb' }));
 
-// Basic in-memory rate limiting middleware
+// Startup: log GROQ API key presence safely
+try {
+  const groqKey = process.env.GROQ_API_KEY || null;
+  const present = !!groqKey;
+  const prefix = groqKey ? groqKey.slice(0, 4) : null;
+  const len = groqKey ? groqKey.length : 0;
+  console.log(JSON.stringify({ event: 'startup_groq_key', loaded: present, key_prefix: prefix, key_length: len }));
+} catch (e) {
+  console.log(JSON.stringify({ event: 'startup_groq_key', loaded: false }));
+}
+
+app.set('trust proxy', 1);
+app.use(cors());
+app.use(express.json({ limit: '64kb' }));
+
 app.use(rateLimitMiddleware);
 
 app.use('/api/ai', aiRouter);
+app.use('/api/contact', contactRouter);
+
+// Global error handler — catches JSON parse failures and uncaught errors
+app.use((err, _req, res, _next) => {
+  const isJsonParse = err.type === 'entity.parse.failed' || err instanceof SyntaxError;
+  res.status(isJsonParse ? 400 : 500).json({
+    error: isJsonParse ? 'Invalid request body.' : 'Internal server error.',
+  });
+  console.error(JSON.stringify({
+    event: 'express_error', type: isJsonParse ? 'bad_json' : 'uncaught',
+    msg: err.message?.slice(0, 200),
+  }));
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
