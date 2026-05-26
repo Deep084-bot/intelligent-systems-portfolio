@@ -20,6 +20,8 @@ const DSA = dsaStatsData.dsa || {};
 const ACHIEVEMENTS = achievementsData.achievements || [];
 
 const BOOT_LINES = [
+  { text: `Last login: ${new Date().toLocaleString()} on ttys000`, delay: 160 },
+  { text: 'Welcome back, Deep.', delay: 140 },
   { text: 'Loading portfolio kernel...', delay: 200 },
   { text: 'Initializing module system...', delay: 180 },
   { text: 'Mounting project filesystems...', delay: 250 },
@@ -58,12 +60,98 @@ const FILESYSTEM = {
     children: {
       'about.txt': { type: 'file', content: () => `${PROFILE.name}\n${PROFILE.title}\n${PROFILE.bio}` },
       'skills.txt': { type: 'file', content: () => SKILLS.map(s => `${s.category}: ${s.skills.map(x => x.name || x).join(', ')}`).join('\n') },
-      'projects': { type: 'dir', children: {} },
-      'notes': { type: 'dir', children: {} },
+      'projects': {
+        type: 'dir',
+        children: {
+          'portfolio-ai.md': { type: 'file', content: () => `# Portfolio AI\n\nA project combining retrieval, structured prompts and LLMs to power portfolio-aware assistant.\n\nTech: Node, React, Groq API, Vite, Express` },
+          'github-analyzer.md': { type: 'file', content: () => `# GitHub Analyzer\n\nTooling to analyze repositories for insights, contribution patterns, and hot spots.` },
+          'sums.md': { type: 'file', content: () => `# Sums Project\n\nUtility microservice for quick-sum analytics and batch processing.` },
+          'academic-system.md': { type: 'file', content: () => `# Academic System\n\nCourse management prototype with role-based access and grading pipelines.` },
+        }
+      },
+      'notes': {
+        type: 'dir',
+        children: {
+          'retrieval-pipeline.md': { type: 'file', content: () => `# Retrieval Pipeline\n\nNotes: context assembly, chunking strategy, relevance scoring, fallback heuristics.` },
+          'groq-debugging.md': { type: 'file', content: () => `# Groq Debugging\n\nDebug steps used: direct fetch, SDK test, DNS/TCP checks, requestId tracing, abort wiring.` },
+          'backend-learning.md': { type: 'file', content: () => `# Backend Learning\n\nTopics: request lifecycle, AbortController, error normalization, circuit breakers, retry/backoff.` },
+          'scaling-notes.md': { type: 'file', content: () => `# Scaling Notes\n\nObservations: serialized queues, provider rate limits, caching strategies, horizontal scaling tradeoffs.` },
+        }
+      },
       'README.md': { type: 'file', content: () => '# Deep Mehta - Portfolio\n\nBackend engineer & AI engineering learner.\nType `help` for available commands.' },
     },
   },
 };
+
+// --- Virtual filesystem utilities ---
+// Resolve a path (relative or absolute) against the current working directory.
+function resolvePath(cwd, target) {
+  if (!target) return cwd;
+  // normalize slashes
+  const parts = (target.startsWith('/') ? target : `${cwd === '/' ? '' : cwd}${cwd === '/' ? '' : '/'}${target}`)
+    .split('/')
+    .filter(Boolean);
+  const stack = [];
+  for (const p of parts) {
+    if (p === '.') continue;
+    if (p === '..') {
+      if (stack.length) stack.pop();
+      continue;
+    }
+    stack.push(p);
+  }
+  return '/' + stack.join('/');
+}
+
+// Get node at absolute path. Returns { node, name }
+function getNodeAtPath(path) {
+  const clean = path === '/' ? '/' : path.replace(/\/+$/,'');
+  if (clean === '/') return { node: FILESYSTEM['/'], name: '/' };
+  const parts = clean.split('/').filter(Boolean);
+  let node = FILESYSTEM['/'];
+  let name = '/';
+  for (const p of parts) {
+    if (!node || node.type !== 'dir' || !node.children) return { node: null, name: p };
+    if (!Object.prototype.hasOwnProperty.call(node.children, p)) return { node: null, name: p };
+    node = node.children[p];
+    name = p;
+  }
+  return { node, name };
+}
+
+function listDirectory(path) {
+  const { node } = getNodeAtPath(path);
+  if (!node) return { error: `ls: cannot access '${path}': No such file or directory` };
+  if (node.type !== 'dir') return { error: `ls: cannot access '${path}': Not a directory` };
+  const entries = Object.entries(node.children || {}).map(([name, entry]) => entry.type === 'dir' ? `${name}/` : name);
+  return { entries };
+}
+
+function readFile(path) {
+  const { node } = getNodeAtPath(path);
+  if (!node) return { error: `cat: ${path}: No such file or directory` };
+  if (node.type === 'dir') return { error: `cat: ${path}: Is a directory` };
+  const content = typeof node.content === 'function' ? node.content() : (node.content || '');
+  return { content };
+}
+
+function renderTree(path, prefix = '') {
+  const { node } = getNodeAtPath(path);
+  if (!node) return `tree: ${path}: No such directory`;
+  if (node.type !== 'dir') return `tree: ${path}: Not a directory`;
+  const lines = [];
+  const children = Object.entries(node.children || {});
+  children.forEach(([name, child], idx) => {
+    const isLast = idx === children.length - 1;
+    const pointer = isLast ? '└── ' : '├── ';
+    lines.push(`${prefix}${pointer}${name}${child.type === 'dir' ? '/' : ''}`);
+    if (child.type === 'dir') {
+      const nextPrefix = prefix + (isLast ? '    ' : '│   ');
+      lines.push(renderTree(`${path === '/' ? '' : path}/${name}`, nextPrefix));
+    }
+  });
+  return lines.join('\n');
+}
 
 const MOCK_CONTAINERS = [
   { id: 'fc9d7b1f2e3a', image: 'node:18-alpine', command: 'node server/index.js', created: '2h', status: 'Up 2h', ports: '4000/tcp' },
@@ -151,7 +239,7 @@ export const TerminalSection = () => {
   ], []);
 
   const commandAliases = useMemo(() => ({
-    cls: 'clear', gh: 'github', lc: 'leetcode', ll: 'ls',
+    cls: 'clear', gh: 'github', lc: 'leetcode', ll: 'ls', la: 'ls', '..': '..', '...': '...', home: 'home',
   }), []);
 
   useEffect(() => {
@@ -420,11 +508,38 @@ ${getRandomElement(vibes)}
       ██            ██      Shell:    /bin/portfolio
         ████████████        DE:       Tailwind UI
                             Terminal: Interactive Mode
-
+ 
   Projects: ${PROJECTS.length} featured
   DSA:      ${DSA.totalSolved || 'N/A'} problems solved
   Location: ${PROFILE.location}
   Interests: ${PROFILE.technicalInterests?.slice(0, 3).join(', ')}`;
+      }
+
+      // Lightweight UNIX-like helpers
+      case 'date': {
+        return new Date().toString();
+      }
+
+      case 'who': {
+        return `${PROFILE.name}  ${PROFILE.title}`;
+      }
+
+      case 'uptime': {
+        const days = Math.floor(Math.random() * 5) + 1;
+        const hours = Math.floor(Math.random() * 23);
+        return `up ${days} days, ${hours} hours`;
+      }
+
+      case 'uname': {
+        return 'PortfolioOS Linux 6.1.0-react';
+      }
+
+      case 'env': {
+        return `NODE_ENV=${process.env.NODE_ENV || 'development'}\nPORT=5173\nAPI_URL=/api/ai`;
+      }
+
+      case 'echo': {
+        return args.join(' ');
       }
 
       case 'repo_status': {
@@ -763,7 +878,10 @@ Available commands:
 
     setHistory(prev => [...prev, { type: 'input', content: input.trim() }]);
 
-    const { command: rawCmd, args } = parseCommand(input);
+    const parsed = parseCommand(input);
+    const rawCmd = parsed.command; // lowercased command token
+    // preserve original argument casing for filesystem paths and echoes
+    const argsPreserve = input.trim().split(/\s+/).slice(1);
     const inputLower = input.trim().toLowerCase();
     setInput('');
     setIsLoading(true);
@@ -786,15 +904,133 @@ Available commands:
       return;
     }
 
-    if (rawCmd === 'clear') {
+    // Support lightweight aliases and no-op tokens
+    const effectiveCmd = commandAliases[rawCmd] || rawCmd;
+
+    // No-op for '.' and './'
+    if (rawCmd === '.' || rawCmd === './') {
+      setIsLoading(false);
+      inputRef.current?.focus();
+      return;
+    }
+
+    // Shortcuts: '..' -> cd .., '...' -> cd ../..
+    if (rawCmd === '..') {
+      setCwd(resolvePath(cwd, '..'));
+      setIsLoading(false);
+      inputRef.current?.focus();
+      return;
+    }
+    if (rawCmd === '...') {
+      setCwd(resolvePath(cwd, '../..'));
+      setIsLoading(false);
+      inputRef.current?.focus();
+      return;
+    }
+
+    // home shortcut
+    if (rawCmd === 'home') {
+      setCwd('/');
+      setIsLoading(false);
+      inputRef.current?.focus();
+      return;
+    }
+
+    if (effectiveCmd === 'clear') {
       setHistory([]);
       setIsLoading(false);
       inputRef.current?.focus();
       return;
     }
 
+    // Lightweight filesystem command handling to provide realistic terminal navigation
+    if (['ls', 'cd', 'pwd', 'cat', 'tree'].includes(effectiveCmd)) {
+      let fsOutput = '';
+      try {
+        switch (rawCmd) {
+          case 'ls': {
+            const target = argsPreserve[0] || '.';
+            const abs = resolvePath(cwd, target === '.' ? '' : target);
+            const res = listDirectory(abs);
+            fsOutput = res.error || (res.entries || []).join('  ');
+            break;
+          }
+          case 'cd': {
+            let target = argsPreserve[0] || '/';
+            if (target === '~') target = '/';
+            const abs = resolvePath(cwd, target);
+            const { node } = getNodeAtPath(abs);
+            if (!node) fsOutput = `cd: ${target}: No such directory`;
+            else if (node.type !== 'dir') fsOutput = `cd: ${target}: Not a directory`;
+            else { setCwd(abs); fsOutput = ''; }
+            break;
+          }
+          case 'pwd': {
+            fsOutput = cwd;
+            break;
+          }
+          case 'tree': {
+            const target = argsPreserve[0] || '.';
+            const abs = resolvePath(cwd, target === '.' ? '' : target);
+            const { node } = getNodeAtPath(abs);
+            if (!node) fsOutput = `tree: ${target}: No such directory`;
+            else if (node.type !== 'dir') fsOutput = `tree: ${target}: Not a directory`;
+            else {
+              const header = abs === '/' ? '.' : abs;
+              const body = renderTree(abs);
+              const countFiles = (n) => {
+                if (!n) return 0;
+                if (n.type === 'file') return 1;
+                return Object.values(n.children || {}).reduce((acc, c) => acc + countFiles(c), 0);
+              };
+              const files = countFiles(node);
+              const dirs = Object.values(node.children || {}).filter(c => c.type === 'dir').length;
+              fsOutput = `${header}\n${body}\n\n${files} files, ${dirs} directories`;
+            }
+            break;
+          }
+          case 'cat': {
+            const target = argsPreserve[0];
+            if (!target) {
+              fsOutput = 'Usage: cat <file>';
+            } else {
+              const abs = resolvePath(cwd, target);
+              const { node } = getNodeAtPath(abs);
+              if (!node) {
+                // preserve original user-facing target in the message
+                fsOutput = `cat: ${target}: No such file or directory`;
+              } else if (node.type === 'dir') {
+                fsOutput = `cat: ${target}: Is a directory`;
+              } else {
+                const content = typeof node.content === 'function' ? node.content() : (node.content || '');
+                fsOutput = content;
+              }
+            }
+            break;
+          }
+          default:
+            fsOutput = 'Command not implemented.';
+        }
+      } catch (err) {
+        fsOutput = `Error: ${err.message}`;
+      }
+
+      // trailing spacing for readability on certain commands
+      const trailingCommands = new Set(['cat', 'tree', 'neofetch']);
+      let finalFsOutput = fsOutput || '';
+      if (trailingCommands.has(effectiveCmd) && finalFsOutput && !finalFsOutput.endsWith('\n')) finalFsOutput += '\n';
+
+      setHistory(prev => [...prev, { type: 'output', content: finalFsOutput }]);
+      setIsLoading(false);
+      inputRef.current?.focus();
+      return;
+    }
+
     const cmd = resolveAlias(rawCmd);
-    let output = getCommandOutput(cmd, args);
+    // use preserved args for commands to keep casing (echo, etc.)
+    let output = getCommandOutput(cmd, argsPreserve);
+    // add trailing newline for neofetch
+    if (cmd === 'neofetch' && output && !output.endsWith('\n')) output += '\n';
 
     if (output === null) {
       const suggestion = findSimilar(rawCmd, commandNames, 3);
@@ -822,6 +1058,29 @@ Available commands:
 
   const displayItems = bootPhase ? bootLines : history;
 
+  // Render output with light styling for directories (tokens ending with '/')
+  const renderOutput = (content) => {
+    if (!content && content !== '') return null;
+    // split into lines and render each line; preserve empty lines
+    const lines = String(content).split('\n');
+    return lines.map((line, idx) => {
+      // split tokens by double space for ls-like outputs
+      const parts = line.split('  ');
+      return (
+        <div key={`line-${idx}`} className={line === '' ? 'mb-1' : ''}>
+          {parts.map((part, i) => {
+            if (part.endsWith('/')) {
+              return (
+                <span key={i} className="text-accent-400">{part}{i < parts.length - 1 ? '  ' : ''}</span>
+              );
+            }
+            return <span key={i}>{part}{i < parts.length - 1 ? '  ' : ''}</span>;
+          })}
+        </div>
+      );
+    });
+  };
+
   return (
     <Section id="terminal" className="bg-gradient-terminal">
       <PageContainer>
@@ -846,7 +1105,7 @@ Available commands:
                 <div className="w-3 h-3 rounded-full bg-yellow-500" />
                 <div className="w-3 h-3 rounded-full bg-green-500" />
               </div>
-              <p className="text-xs text-neutral-400 font-mono">deep@portfolio:~$</p>
+              <p className="text-xs text-neutral-400 font-mono">deep@portfolio:{cwd === '/' ? '~' : `~${cwd.slice(1)}`}$</p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
