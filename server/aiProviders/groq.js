@@ -185,13 +185,18 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
         }
 
         const reqStart = Date.now();
+        // detect if external signal already aborted
+        if (externalSignal && externalSignal.aborted) {
+          console.log(JSON.stringify({ event: 'provider_external_aborted_before_fetch', requestId, attempt }));
+        }
+        console.log(JSON.stringify({ event: 'provider_fetch_start', provider: 'groq', requestId, attempt }));
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
           signal: controller.signal,
         });
-
+        console.log(JSON.stringify({ event: 'provider_fetch_end', provider: 'groq', requestId, attempt, status: res.status }));
         const providerCallMs = Date.now() - reqStart;
         clearTimeout(timeoutId);
 
