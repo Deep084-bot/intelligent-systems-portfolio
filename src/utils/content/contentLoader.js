@@ -1,4 +1,4 @@
-import matter from 'gray-matter';
+import { parseFrontmatter } from './parseFrontmatter';
 
 // In-memory cache for content (in production, use Redis)
 const contentCache = new Map();
@@ -46,7 +46,7 @@ export class ContentLoader {
 
     try {
       const text = isRaw ? pathOrRaw : await (await fetch(pathOrRaw)).text();
-      const parsed = matter(text);
+      const parsed = parseFrontmatter(text);
       const data = {
         metadata: parsed.data || {},
         content: parsed.content || '',

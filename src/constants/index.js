@@ -1,4 +1,3 @@
-// Design system constants
 export const COLORS = {
   primary: '#5d6eff',
   primaryDark: '#3d48cc',
@@ -40,10 +39,8 @@ export const TRANSITION = {
   ease: { type: 'tween', duration: 0.3, ease: 'easeInOut' },
 };
 
-// Navbar
 export const NAVBAR_HEIGHT = 64;
 
-// Z-index layers
 export const Z_INDEX = {
   base: 1,
   dropdown: 10,
@@ -54,21 +51,19 @@ export const Z_INDEX = {
   tooltip: 300,
 };
 
-// Section spacing
 export const SECTION_PADDING = {
   mobile: '40px 20px',
   tablet: '60px 40px',
   desktop: '80px 60px',
 };
 
-// Terminal settings
 export const TERMINAL_CONFIG = {
-  typingSpeed: 50, // ms per character
-  cursorBlinkRate: 500, // ms
-  commandDelay: 300, // ms before output
+  typingSpeed: 30,
+  cursorBlinkRate: 500,
+  commandDelay: 200,
+  charDelay: 16,
 };
 
-// Skills data - this will eventually come from JSON
 export const SKILLS_DATA = [
   { category: 'Backend', skills: ['Node.js', 'Express', 'REST APIs', 'Database Design'] },
   { category: 'AI/ML', skills: ['LLMs', 'Prompt Engineering', 'Vector Databases', 'RAG'] },
@@ -76,30 +71,38 @@ export const SKILLS_DATA = [
   { category: 'Frontend', skills: ['React', 'Vite', 'Tailwind CSS', 'Framer Motion'] },
 ];
 
-// Terminal commands reference
 export const TERMINAL_COMMANDS = {
-  whoami: {
-    description: 'Display portfolio owner information',
-    usage: 'whoami',
-  },
-  skills: {
-    description: 'Show technical skills and expertise areas',
-    usage: 'skills',
-  },
-  projects: {
-    description: 'List featured projects and work',
-    usage: 'projects',
-  },
-  currently_learning: {
-    description: 'What I\'m currently learning and exploring',
-    usage: 'currently_learning',
-  },
-  help: {
-    description: 'Show all available commands',
-    usage: 'help',
-  },
-  clear: {
-    description: 'Clear terminal screen',
-    usage: 'clear',
-  },
+  whoami: { description: 'Portfolio owner information', usage: 'whoami', category: 'profile' },
+  skills: { description: 'Technical skills and expertise', usage: 'skills', category: 'tech' },
+  projects: { description: 'Featured engineering projects', usage: 'projects', category: 'work' },
+  currently_learning: { description: 'Current learning journey', usage: 'currently_learning', category: 'learning' },
+  dsa_stats: { description: 'DSA problem-solving statistics', usage: 'dsa_stats', category: 'tech' },
+  engineering_notes: { description: 'Recent technical articles', usage: 'engineering_notes', category: 'content' },
+  github: { description: 'GitHub profile and repos', usage: 'github', category: 'social' },
+  contact: { description: 'Contact information', usage: 'contact', category: 'social' },
+  system_focus: { description: 'Current engineering focus areas', usage: 'system_focus', category: 'learning' },
+  clear: { description: 'Clear terminal screen', usage: 'clear', category: 'system' },
+  help: { description: 'Show all commands', usage: 'help', category: 'system' },
+  ls: { description: 'List projects or items', usage: 'ls [projects|skills|notes]', category: 'browse' },
+  cat: { description: 'Display file contents', usage: 'cat [profile.txt|architecture.md|about.md]', category: 'browse' },
+  status: { description: 'System status overview', usage: 'status', category: 'system' },
+  stack: { description: 'Technology stack overview', usage: 'stack', category: 'tech' },
+  roadmap: { description: 'Learning and project roadmap', usage: 'roadmap', category: 'learning' },
+  open: { description: 'Open external links', usage: 'open [github|linkedin|email]', category: 'social' },
+  coffee: { description: 'Check developer coffee status', usage: 'coffee', category: 'easter-egg' },
+  'sudo': { description: 'Superuser commands', usage: 'sudo hire-deep', category: 'easter-egg' },
+  matrix: { description: 'Matrix-style terminal animation', usage: 'matrix', category: 'easter-egg' },
+  vibecheck: { description: 'Developer vibe check', usage: 'vibecheck', category: 'easter-egg' },
+  neofetch: { description: 'Portfolio system info', usage: 'neofetch', category: 'easter-egg' },
+  achievements: { description: 'DSA and project milestones', usage: 'achievements', category: 'easter-egg' },
+  repo_status: { description: 'Git repository status', usage: 'repo_status', category: 'easter-egg' },
+  ping: { description: 'Test backend connectivity', usage: 'ping [target]', category: 'easter-egg' },
+  ai: { description: 'AI service info', usage: 'ai status', category: 'easter-egg' },
+  easteregg: { description: 'Hidden engineering surprise', usage: 'easteregg', category: 'easter-egg' },
 };
+
+export const QUICK_COMMANDS = [
+  'whoami', 'skills', 'projects', 'currently_learning',
+  'dsa_stats', 'stack', 'status', 'help',
+  'neofetch', 'achievements', 'vibecheck', 'easteregg',
+];

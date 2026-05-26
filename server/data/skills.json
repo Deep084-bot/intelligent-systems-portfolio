@@ -1,0 +1,32 @@
+[
+  {
+    "category": "Backend Engineering",
+    "proficiency": "Intermediate",
+    "skills": ["Node.js", "Express.js", "RESTful APIs", "Database Design", "Microservices (basic)"],
+    "keywords": ["node", "express", "api", "rest", "backend", "microservices", "server"]
+  },
+  {
+    "category": "Frontend Development",
+    "proficiency": "Intermediate",
+    "skills": ["React", "Tailwind CSS", "HTML & CSS", "Responsive Design", "Web Performance"],
+    "keywords": ["react", "frontend", "css", "html", "ui", "responsive", "tailwind", "web"]
+  },
+  {
+    "category": "Databases & Storage",
+    "proficiency": "Intermediate",
+    "skills": ["PostgreSQL", "MongoDB", "Redis (basic)", "Database Indexing", "Query Optimization (basic)"],
+    "keywords": ["database", "postgresql", "mongodb", "redis", "sql", "nosql", "indexing", "query"]
+  },
+  {
+    "category": "DevOps & Deployment",
+    "proficiency": "Beginner",
+    "skills": ["Docker", "GitHub Actions", "Vercel / Render", "Linux (basics)", "Cloud Platforms (basics)"],
+    "keywords": ["docker", "devops", "deployment", "ci/cd", "github actions", "cloud", "linux"]
+  },
+  {
+    "category": "Problem-Solving",
+    "proficiency": "Advanced",
+    "skills": ["Data Structures", "Algorithms", "System Design (foundations)", "LeetCode"],
+    "keywords": ["algorithms", "data structures", "problem solving", "leetcode", "dsa", "competitive"]
+  }
+]

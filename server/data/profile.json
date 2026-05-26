@@ -1,0 +1,44 @@
+{
+  "name": "Deep Mehta",
+  "title": "Systems, Backend & AI Engineering Student",
+  "shortHeadline": "CS student focused on backend systems, distributed computing, AI engineering, and problem solving through consistent practice and hands-on projects.",
+  "location": "Gujarat, India",
+  "bio": "Computer Science student focused on backend engineering, distributed systems, and AI applications. Interested in understanding how scalable software systems are architected \u2014 from API design and database modeling to system behavior under load. Works through problems methodically across DSA platforms, builds practical backend projects, and explores AI engineering workflows. Curious about operating systems, computer networks, and what makes production systems reliable.",
+  "identity": {
+    "primaryRoles": ["Backend Engineering Student", "AI Engineering Learner", "Systems-Focused Developer", "Problem Solver"],
+    "corePositioning": "Engineering-focused student exploring backend systems, AI applications, scalable architectures, and intelligent software development.",
+    "portfolioMessage": "A student engineer focused on understanding systems deeply, building practical software seriously, and continuously improving through problem solving and hands-on engineering."
+  },
+  "technicalInterests": ["Backend Systems", "AI Engineering", "Distributed Systems", "Cybersecurity", "Problem Solving", "System Design", "APIs", "Databases", "DevOps", "Cloud Computing"],
+  "currentFocus": {
+    "academics": ["Computer Networks", "Operating Systems", "Machine Learning"],
+    "engineering": ["Backend Development", "AI Engineering Fundamentals", "System Design Fundamentals", "Scalable Backend Thinking"],
+    "projectFocus": ["Building practical engineering projects", "Improving architecture thinking", "Creating AI-integrated applications"]
+  },
+  "strengths": ["Problem Solving", "Backend Logic Development", "Algorithmic Thinking", "Learning System Internals", "Engineering Curiosity", "Technical Consistency"],
+  "comfortableTechnologies": {
+    "languages": ["Java", "JavaScript", "Python", "SQL"],
+    "backend": ["Node.js", "Express.js", "PostgreSQL"],
+    "frontend": ["React", "Tailwind CSS"],
+    "databases": ["PostgreSQL", "MongoDB"],
+    "devops": ["Docker", "GitHub Actions"],
+    "ai_ml": ["Python", "Pandas", "Gemini API", "Groq API"]
+  },
+  "currentlyLearning": ["AI Engineering Fundamentals", "Machine Learning", "Computer Networks", "Operating Systems", "DevOps Fundamentals", "Distributed Systems Concepts", "System Design Fundamentals"],
+  "careerDirection": ["AI Engineer", "Backend Engineer", "Systems Engineer"],
+  "engineeringMindset": {
+    "approach": "Focused on building practical systems while continuously improving engineering depth and technical understanding.",
+    "learningStyle": "Learns through projects, implementation, experimentation, and deep exploration of system behavior.",
+    "philosophy": "Strong engineering comes from understanding systems deeply, solving problems consistently, and building real applications thoughtfully."
+  },
+  "personalitySignals": ["Curious builder", "Engineering-focused learner", "Analytical thinker", "System-oriented developer", "Growth-driven technologist"],
+  "contact": {
+    "email": "dpmehta1211@gmail.com",
+    "github": "github.com/Deep084-bot",
+    "leetcode": "leetcode.com/u/Deep04_Mehta/",
+    "linkedin": "linkedin.com/in/deepmehta",
+    "codechef": "codechef.com/users/deep04_mehta",
+    "codeforces": "codeforces.com/profile/dpmehta1211",
+    "geeksforgeeks": "geeksforgeeks.org/profile/deep084"
+  }
+}

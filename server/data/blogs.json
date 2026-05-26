@@ -1,0 +1,24 @@
+[
+  {
+    "slug": "distributed-systems-case-study",
+    "title": "Designing Distributed Systems - A Case Study",
+    "date": "2024-05-10",
+    "featured": false,
+    "tags": ["Distributed Systems", "Architecture", "Case Study", "Consensus"],
+    "excerpt": "Deep dive into CAP theorem, consensus algorithms, and designing systems that survive failures. Lessons from building a distributed cache.",
+    "content": "Technical deep-dive into the principles and practices of building systems that span multiple machines. Covers CAP theorem (consistency, availability, partition tolerance), consistency models (strong, eventual, causal), consensus algorithms (Raft vs Paxos), distributed cache implementation with consistent hashing, write/read paths, failure handling, and lessons learned. Includes JavaScript pseudocode for Raft consensus, consistent hashing, cache replication, and failure recovery.",
+    "category": ["system-design", "backend"],
+    "keywords": ["distributed systems", "cap theorem", "consensus", "raft", "paxos", "cache", "consistent hashing", "replication", "failure", "scalability"]
+  },
+  {
+    "slug": "scalable-backend-systems",
+    "title": "Building Scalable Backend Systems",
+    "date": "2024-05-15",
+    "featured": true,
+    "tags": ["Backend Engineering", "Systems Design", "Scalability", "Performance"],
+    "excerpt": "How to architect backend systems that scale in principle. Lessons learned and design trade-offs.",
+    "content": "Overview of scaling backend systems from single server to distributed architecture. Covers evolution of scale, caching strategies (in-memory caching with Redis), database query optimization, monolithic vs microservice trade-offs, horizontal scaling, load balancing, and system design patterns. Includes JavaScript code examples for cached API endpoints and discusses when to introduce different scaling techniques.",
+    "category": ["backend", "system-design"],
+    "keywords": ["scalability", "backend", "caching", "redis", "database optimization", "load balancing", "microservices", "architecture", "performance"]
+  }
+]

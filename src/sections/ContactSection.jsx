@@ -1,64 +1,68 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Github, Linkedin, Twitter, ArrowRight } from 'lucide-react';
+import { Mail, Github, Linkedin, Code, ArrowRight, Send, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { Section, PageContainer, Stack, Flex } from '../layout';
 import { SectionTitle, Button, Input, Textarea } from '../primitives';
 import { FadeIn, SlideIn } from '../animations';
 
+import profileData from '../data/profile.json';
+const pc = profileData.contact || {};
+const SOCIAL_LINKS = [
+  { label: 'GitHub', url: pc.github ? `https://${pc.github}` : 'https://github.com/Deep084-bot', icon: Github },
+  { label: 'LinkedIn', url: pc.linkedin ? `https://${pc.linkedin}` : 'https://linkedin.com/in/deepmehta', icon: Linkedin },
+  { label: 'LeetCode', url: pc.leetcode ? `https://${pc.leetcode}` : 'https://leetcode.com/u/Deep04_Mehta/', icon: Code },
+  { label: 'Email', url: `mailto:${pc.email || 'dpmehta1211@gmail.com'}`, icon: Mail },
+];
+
+const PLATFORM_LINKS = [
+  { label: 'CodeChef', url: 'https://www.codechef.com/users/deep04_mehta', icon: ExternalLink },
+  { label: 'Codeforces', url: 'https://codeforces.com/profile/dpmehta1211', icon: ExternalLink },
+  { label: 'GeeksforGeeks', url: 'https://www.geeksforgeeks.org/profile/deep084?tab=activity', icon: ExternalLink },
+];
+
+const INITIAL_FORM = { name: '', email: '', message: '' };
+
 export const ContactSection = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: '',
-  });
+  const [formData, setFormData] = useState(INITIAL_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [status, setStatus] = useState(null); // null | 'success' | 'error'
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setStatus(null);
+    setErrorMessage('');
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const res = await fetch('/api/contact/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-    setIsSubmitted(true);
-    setFormData({ name: '', email: '', message: '' });
-    setIsSubmitting(false);
+      const data = await res.json();
 
-    // Reset success message after 3 seconds
-    setTimeout(() => setIsSubmitted(false), 3000);
+      if (!res.ok) {
+        throw new Error(data.error || `Request failed (${res.status})`);
+      }
+
+      setStatus('success');
+      setFormData(INITIAL_FORM);
+      setTimeout(() => setStatus(null), 5000);
+    } catch (err) {
+      setStatus('error');
+      setErrorMessage(err.message);
+      setTimeout(() => setStatus(null), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  const socialLinks = [
-    {
-      label: 'GitHub',
-      url: 'https://github.com',
-      icon: Github,
-    },
-    {
-      label: 'LinkedIn',
-      url: 'https://linkedin.com',
-      icon: Linkedin,
-    },
-    {
-      label: 'Twitter',
-      url: 'https://twitter.com',
-      icon: Twitter,
-    },
-    {
-      label: 'Email',
-      url: 'mailto:deep@example.com',
-      icon: Mail,
-    },
-  ];
 
   return (
     <Section id="contact" className="bg-gradient-dark">
@@ -77,7 +81,7 @@ export const ContactSection = () => {
               <Stack gap={8}>
                 {/* Email CTA */}
                 <motion.a
-                  href="mailto:deep@example.com"
+                  href={`mailto:${pc.email || 'dpmehta1211@gmail.com'}`}
                   whileHover={{ x: 10 }}
                   className="group"
                 >
@@ -87,7 +91,7 @@ export const ContactSection = () => {
                     </div>
                     <div>
                       <p className="font-semibold text-neutral-50 group-hover:text-primary-400 transition">Email</p>
-                      <p className="text-sm text-neutral-400">deep@example.com</p>
+                      <p className="text-sm text-neutral-400">{pc.email || 'dpmehta1211@gmail.com'}</p>
                     </div>
                     <ArrowRight className="w-5 h-5 text-neutral-600 group-hover:text-primary-400 transition ml-auto" />
                   </div>
@@ -97,7 +101,7 @@ export const ContactSection = () => {
                 <div>
                   <h3 className="text-sm font-semibold text-neutral-300 mb-3">Connect on Social</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {socialLinks.slice(0, 3).map((link) => {
+                    {SOCIAL_LINKS.slice(0, 3).map((link) => {
                       const Icon = link.icon;
                       return (
                         <motion.a
@@ -116,6 +120,29 @@ export const ContactSection = () => {
                   </div>
                 </div>
 
+                {/* DSA & Coding Platforms */}
+                <div>
+                  <h3 className="text-sm font-semibold text-neutral-300 mb-3">Coding Profiles</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {PLATFORM_LINKS.map((link) => {
+                      const Icon = link.icon;
+                      return (
+                        <motion.a
+                          key={link.label}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          whileHover={{ scale: 1.05 }}
+                          className="flex items-center gap-2 px-4 py-3 bg-neutral-800 border border-neutral-700 hover:border-accent-500/50 rounded-lg transition-all"
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span className="text-sm font-medium">{link.label}</span>
+                        </motion.a>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Quick Facts */}
                 <div className="space-y-3 p-4 bg-neutral-800/50 border border-neutral-700 rounded-lg">
                   <p className="text-sm text-neutral-300">
@@ -124,11 +151,11 @@ export const ContactSection = () => {
                   </p>
                   <p className="text-sm text-neutral-300">
                     <span className="text-accent-400 font-mono">→ </span>
-                    Interested in Backend, AI/ML, Systems
+                    Backend, AI/ML, Systems Engineering
                   </p>
                   <p className="text-sm text-neutral-300">
                     <span className="text-accent-400 font-mono">→ </span>
-                    Based in [Your Location]
+                    Gujarat, India
                   </p>
                 </div>
               </Stack>
@@ -136,7 +163,7 @@ export const ContactSection = () => {
 
             {/* Right Column - Contact Form */}
             <SlideIn direction="right" delay={0.2}>
-              {isSubmitted ? (
+              {status === 'success' ? (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -144,14 +171,14 @@ export const ContactSection = () => {
                 >
                   <div className="text-center space-y-4">
                     <div className="w-16 h-16 mx-auto rounded-full bg-success/20 border border-success/50 flex items-center justify-center">
-                      <span className="text-3xl">✓</span>
+                      <CheckCircle className="w-8 h-8 text-success" />
                     </div>
                     <h3 className="text-xl font-semibold text-neutral-50">Message Sent!</h3>
-                    <p className="text-neutral-400">I'll get back to you soon.</p>
+                    <p className="text-neutral-400">I'll review and respond soon.</p>
                   </div>
                 </motion.div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   <Input
                     label="Name"
                     type="text"
@@ -160,6 +187,8 @@ export const ContactSection = () => {
                     onChange={handleChange}
                     placeholder="Deep Mehta"
                     required
+                    minLength={1}
+                    maxLength={100}
                   />
                   <Input
                     label="Email"
@@ -178,7 +207,17 @@ export const ContactSection = () => {
                     placeholder="Tell me about your project or opportunity..."
                     rows={5}
                     required
+                    minLength={10}
+                    maxLength={2000}
                   />
+
+                  {status === 'error' && (
+                    <div className="flex items-center gap-2 p-3 bg-error/10 border border-error/30 rounded-lg text-sm text-error">
+                      <AlertCircle size={16} />
+                      {errorMessage || 'Something went wrong. Please try again.'}
+                    </div>
+                  )}
+
                   <Button
                     variant="primary"
                     size="lg"
@@ -186,11 +225,20 @@ export const ContactSection = () => {
                     disabled={isSubmitting}
                     className="w-full"
                   >
-                    {isSubmitting ? 'Sending...' : 'Send Message'}
-                    {!isSubmitting && <ArrowRight className="w-5 h-5" />}
+                    {isSubmitting ? (
+                      <>
+                        <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        Send Message
+                        <Send className="w-4 h-4" />
+                      </>
+                    )}
                   </Button>
                   <p className="text-xs text-neutral-500 text-center">
-                    I'll respond within 24 hours
+                    I typically respond within 24 hours
                   </p>
                 </form>
               )}

@@ -7,7 +7,7 @@
       "description": "Designed and implemented a backend-focused university management system (role-based APIs, PostgreSQL schemas, transactional workflows).",
       "date": "2026-01-01",
       "icon": "server",
-      "proof": "https://github.com/deepmehta/sums"
+      "proof": "https://github.com/Deep084-bot/sums"
     },
     {
       "id": "portfolio-website",
@@ -16,7 +16,7 @@
       "description": "Built a dynamic portfolio with Markdown-driven engineering notes and a Gemini-powered assistant for contextual interactions.",
       "date": "2026-05-01",
       "icon": "browser",
-      "proof": "https://github.com/deepmehta/portfolio-website"
+      "proof": "https://github.com/Deep084-bot/portfolio-website"
     },
     {
       "id": "github-analyzer",
@@ -25,7 +25,7 @@
       "description": "Developed a repository analytics dashboard using GitHub APIs and Chart.js.",
       "date": "2026-04-01",
       "icon": "chart",
-      "proof": "https://github.com/deepmehta/github-analyzer"
+      "proof": "https://github.com/Deep084-bot/github-analyzer"
     },
     {
       "id": "school-api",
@@ -34,7 +34,7 @@
       "description": "Implemented REST APIs for managing school data with geolocation-based sorting and reporting.",
       "date": "2026-02-01",
       "icon": "database",
-      "proof": "https://github.com/deepmehta/school-api"
+      "proof": "https://github.com/Deep084-bot/school-api"
     },
     {
       "id": "dsa-practice",
@@ -43,7 +43,7 @@
       "description": "Consistent practice across LeetCode, CodeChef, and GeeksforGeeks focused on medium and selected hard problems.",
       "date": "2026-05-01",
       "icon": "puzzle",
-      "proof": "https://leetcode.com/deepmehta"
+      "proof": "https://leetcode.com/u/Deep04_Mehta/"
     },
     {
       "id": "hackout-finalist",

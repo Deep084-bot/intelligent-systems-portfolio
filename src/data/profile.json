@@ -1,9 +1,9 @@
 {
   "name": "Deep Mehta",
   "title": "Systems, Backend & AI Engineering Student",
-  "shortHeadline": "Building intelligent backend systems, scalable applications, and engineering-focused software.",
+  "shortHeadline": "CS student focused on backend systems, distributed computing, AI engineering, and problem solving through consistent practice and hands-on projects.",
   "location": "Gujarat, India",
-  "bio": "Computer Science student focused on backend engineering, AI systems, distributed systems fundamentals, and problem solving. Passionate about understanding how scalable software systems work internally and applying engineering thinking to real-world applications. Strong interest in AI engineering, backend architecture, APIs, databases, and system-level concepts, with a growing focus on building intelligent and production-oriented software systems.",
+  "bio": "Computer Science student focused on backend engineering, distributed systems, and AI applications. Interested in understanding how scalable software systems are architected — from API design and database modeling to system behavior under load. Works through problems methodically across DSA platforms, builds practical backend projects, and explores AI engineering workflows. Curious about operating systems, computer networks, and what makes production systems reliable.",
   "identity": {
     "primaryRoles": [
       "Backend Engineering Student",
@@ -124,6 +124,15 @@
     "System-oriented developer",
     "Growth-driven technologist"
   ],
+  "contact": {
+    "email": "dpmehta1211@gmail.com",
+    "github": "github.com/Deep084-bot",
+    "leetcode": "leetcode.com/u/Deep04_Mehta/",
+    "linkedin": "linkedin.com/in/deepmehta",
+    "codechef": "codechef.com/users/deep04_mehta",
+    "codeforces": "codeforces.com/profile/dpmehta1211",
+    "geeksforgeeks": "geeksforgeeks.org/profile/deep084"
+  },
   "aiAssistantTone": {
     "style": "Technical, thoughtful, concise, and engineering-focused.",
     "avoid": [

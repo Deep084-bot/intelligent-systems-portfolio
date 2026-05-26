@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import matter from 'gray-matter';
+import { parseFrontmatter } from '../../utils/content/parseFrontmatter';
 import { ContentValidator } from '../../utils/content/contentValidator';
 import { ContentFormatter } from '../../utils/content/contentFormatter';
 
@@ -22,7 +22,7 @@ export function useBlogs() {
         for (const [path, resolver] of entries) {
           try {
             const raw = await resolver();
-            const parsed = matter(raw);
+            const parsed = parseFrontmatter(raw);
             const metadata = parsed.data || {};
             const content = parsed.content || '';
 

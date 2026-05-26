@@ -4,6 +4,7 @@ import HeroSection from './sections/HeroSection';
 import TerminalSection from './sections/TerminalSection';
 import ProjectsSection from './sections/ProjectsSection';
 import ContactSection from './sections/ContactSection';
+import FooterSection from './sections/FooterSection';
 import {
   DSADashboardSection,
   AIAssistantSection,
@@ -29,6 +30,7 @@ function App() {
       <EngineeringNotesSection />
       <GitHubIntelligenceSection />
       <ContactSection />
+      <FooterSection />
     </LayoutContainer>
   );
 }

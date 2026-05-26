@@ -1,0 +1,21 @@
+{
+  "totalSolved": 741,
+  "byDifficulty": { "easy": 200, "medium": 430, "hard": 111 },
+  "byCategory": [
+    { "name": "Arrays & Strings", "count": 140 },
+    { "name": "Trees & Graphs", "count": 160 },
+    { "name": "Dynamic Programming", "count": 120 },
+    { "name": "Hash Tables & Sets", "count": 80 },
+    { "name": "Linked Lists", "count": 50 },
+    { "name": "Stacks & Queues", "count": 70 },
+    { "name": "Heaps & Sorting", "count": 60 },
+    { "name": "Binary Search", "count": 51 }
+  ],
+  "platforms": [
+    { "name": "LeetCode", "solved": 741, "rating": 1679 },
+    { "name": "CodeChef", "rating": 1600 },
+    { "name": "Codeforces", "rating": 0 },
+    { "name": "GeeksforGeeks", "solved": 0 }
+  ],
+  "stats": { "currentStreak": 45, "bestStreak": 120, "averageAccuracy": "92%", "totalTime": "850 hours" }
+}

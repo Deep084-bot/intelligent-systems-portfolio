@@ -1,64 +1,46 @@
 {
   "commands": [
-    {
-      "name": "whoami",
-      "description": "Who am I?",
-      "category": "profile",
-      "hidden": false
-    },
-    {
-      "name": "skills",
-      "description": "View my technical skills",
-      "category": "tech",
-      "hidden": false
-    },
-    {
-      "name": "projects",
-      "description": "Show featured projects",
-      "category": "work",
-      "hidden": false
-    },
-    {
-      "name": "achievements",
-      "description": "View achievements & badges",
-      "category": "achievements",
-      "hidden": false
-    },
-    {
-      "name": "dsa",
-      "description": "Data Structures & Algorithms stats",
-      "category": "tech",
-      "hidden": false
-    },
-    {
-      "name": "currently-learning",
-      "description": "What I'm learning right now",
-      "category": "learning",
-      "hidden": false
-    },
-    {
-      "name": "blog",
-      "description": "Recent engineering blogs",
-      "category": "content",
-      "hidden": false
-    },
-    {
-      "name": "contact",
-      "description": "How to reach me",
-      "category": "contact",
-      "hidden": false
-    },
-    {
-      "name": "help",
-      "description": "Show available commands",
-      "category": "system",
-      "hidden": false
-    },
-    {
-      "name": "clear",
-      "description": "Clear terminal screen",
-      "category": "system",
-      "hidden": false
-    }
+    { "name": "whoami", "description": "Portfolio owner information", "category": "profile", "hidden": false },
+    { "name": "skills", "description": "Technical skills with proficiency levels", "category": "tech", "hidden": false },
+    { "name": "projects", "description": "Featured engineering projects", "category": "work", "hidden": false },
+    { "name": "dsa", "description": "DSA problem-solving statistics", "category": "tech", "hidden": false },
+    { "name": "achievements", "description": "Milestones & achievements", "category": "achievements", "hidden": false },
+    { "name": "contact", "description": "Contact information", "category": "contact", "hidden": false },
+    { "name": "blog", "description": "Engineering blog posts", "category": "content", "hidden": false },
+    { "name": "roadmap", "description": "Current learning roadmap", "category": "learning", "hidden": false },
+    { "name": "focus", "description": "Engineering focus areas", "category": "learning", "hidden": false },
+    { "name": "currently_reading", "description": "Books & resources", "category": "learning", "hidden": false },
+    { "name": "stack", "description": "Backend & devops stack", "category": "tech", "hidden": false },
+    { "name": "status", "description": "System status overview", "category": "system", "hidden": false },
+    { "name": "history", "description": "Show command history", "category": "system", "hidden": false },
+    { "name": "clear", "description": "Clear terminal screen", "category": "system", "hidden": false },
+    { "name": "help", "description": "Show all available commands", "category": "system", "hidden": false },
+    { "name": "coffee", "description": "Developer coffee status", "category": "easter-egg", "hidden": false },
+    { "name": "sudo", "description": "Superuser (try: sudo hire-deep)", "category": "easter-egg", "hidden": false },
+    { "name": "vibecheck", "description": "Developer vibe check", "category": "easter-egg", "hidden": false },
+    { "name": "neofetch", "description": "Portfolio system info", "category": "easter-egg", "hidden": false },
+    { "name": "matrix", "description": "Movie reference", "category": "easter-egg", "hidden": false },
+    { "name": "easteregg", "description": "Hidden surprise", "category": "easter-egg", "hidden": false },
+    { "name": "commit", "description": "Random git commit message", "category": "easter-egg", "hidden": false },
+    { "name": "motivation", "description": "Engineering quote", "category": "easter-egg", "hidden": false },
+    { "name": "deploy", "description": "Fake CI/CD deployment logs", "category": "system", "hidden": false },
+    { "name": "clear cache", "description": "Fake cache cleanup", "category": "system", "hidden": false },
+    { "name": "grep bugs", "description": "Search for bugs in code", "category": "easter-egg", "hidden": false },
+    { "name": "ping", "description": "Test connectivity (ping backend)", "category": "system", "hidden": false },
+    { "name": "ai", "description": "AI service status (ai status)", "category": "system", "hidden": false },
+    { "name": "logs", "description": "Backend server logs", "category": "system", "hidden": false },
+    { "name": "api health", "description": "Service health checks", "category": "system", "hidden": false },
+    { "name": "docker ps", "description": "Running containers", "category": "system", "hidden": false },
+    { "name": "top", "description": "Process monitor", "category": "system", "hidden": false },
+    { "name": "npm", "description": "Dev server status", "category": "system", "hidden": false },
+    { "name": "repo_status", "description": "Git repository status", "category": "system", "hidden": false },
+    { "name": "resume", "description": "Resume information", "category": "contact", "hidden": false },
+    { "name": "github", "description": "Open GitHub profile", "category": "social", "hidden": false },
+    { "name": "open", "description": "Open external links", "category": "social", "hidden": false },
+    { "name": "ls", "description": "List files/directories", "category": "filesystem", "hidden": false },
+    { "name": "cd", "description": "Change directory", "category": "filesystem", "hidden": false },
+    { "name": "pwd", "description": "Print working directory", "category": "filesystem", "hidden": false },
+    { "name": "cat", "description": "Display file contents", "category": "filesystem", "hidden": false },
+    { "name": "tree", "description": "Directory structure", "category": "filesystem", "hidden": false }
   ]
 }

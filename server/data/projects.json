@@ -1,0 +1,74 @@
+[
+  {
+    "id": "portfolio-website",
+    "title": "Portfolio Website",
+    "shortDescription": "An engineering-focused portfolio showcasing projects, engineering notes, and an AI assistant using React, Vite, and an Express backend.",
+    "tags": ["Frontend", "Backend", "AI", "React", "Vite", "Express"],
+    "status": "Complete",
+    "featured": true,
+    "overview": {
+      "problem": "Traditional portfolios are static and don't reflect engineering depth or system thinking.",
+      "solution": "Built a dynamic, JSON/Markdown-driven portfolio with a terminal-inspired UI and an AI assistant that understands project and note context."
+    },
+    "architecture": "React + Vite frontend, Express backend providing AI and content APIs. Content is driven by JSON and Markdown files for easy updates.",
+    "challenges": ["Designing a reusable content pipeline for JSON and Markdown", "Rendering engineering notes safely with syntax highlighting", "Integrating a lightweight AI assistant without overengineering"],
+    "learnings": "Improved content architecture, markdown rendering, and clean backend integration for AI-assisted interactions.",
+    "tech": ["React", "Vite", "Tailwind CSS", "Node.js", "Express", "Gemini API", "Groq API"],
+    "category": ["frontend", "backend", "ai", "projects"],
+    "keywords": ["portfolio", "ai assistant", "react", "vite", "express", "markdown", "gemini", "groq", "chatbot"]
+  },
+  {
+    "id": "sums",
+    "title": "SUMS - Smart University Management System",
+    "shortDescription": "Role-based university management system focusing on academic workflows and placement processes.",
+    "tags": ["Backend", "PostgreSQL", "Node.js"],
+    "status": "Complete",
+    "featured": true,
+    "overview": {
+      "problem": "University administrative workflows were fragmented and required role-based access control and transactional integrity.",
+      "solution": "Designed normalized PostgreSQL schemas and role-based APIs to support Students, Faculty, and Admin workflows reliably."
+    },
+    "architecture": "Express.js backend, PostgreSQL with normalized schemas, clear role-based routing and validation middleware.",
+    "challenges": ["Designing a BCNF-like normalized schema that supports role-based workflows", "Implementing transactional operations and validation across modules"],
+    "learnings": "Database normalization practices, API design for role-based systems, and validation pipelines.",
+    "tech": ["Node.js", "Express.js", "PostgreSQL", "SQL"],
+    "category": ["backend", "databases", "projects"],
+    "keywords": ["university", "management", "postgresql", "role-based", "rbac", "api", "express", "database", "normalization"]
+  },
+  {
+    "id": "github-analyzer",
+    "title": "GitHub Project Analyzer",
+    "shortDescription": "A small analytics dashboard that surfaces repository metrics and language distributions using GitHub APIs.",
+    "tags": ["Backend", "APIs", "Visualization"],
+    "status": "Complete",
+    "featured": false,
+    "overview": {
+      "problem": "Developers and small teams need quick insights into repository metrics.",
+      "solution": "Built a simple API-backed dashboard that aggregates GitHub repo stats and visualizes language usage and stars/forks trends."
+    },
+    "architecture": "Express backend calling GitHub REST APIs, frontend visualizations with Chart.js/EJS for rapid prototyping.",
+    "challenges": ["Handling API rate limits", "Designing clean visualizations for small datasets"],
+    "learnings": "API integration patterns, rate limit handling strategies, and data visualization basics.",
+    "tech": ["Node.js", "Express.js", "Axios", "Chart.js"],
+    "category": ["backend", "devops", "projects"],
+    "keywords": ["github", "analytics", "api", "visualization", "dashboard", "metrics", "chart"]
+  },
+  {
+    "id": "school-api",
+    "title": "School Management API",
+    "shortDescription": "REST APIs for managing school data with geolocation-based sorting and basic reporting.",
+    "tags": ["Backend", "MySQL", "APIs"],
+    "status": "Complete",
+    "featured": false,
+    "overview": {
+      "problem": "Schools require structured APIs for student, staff, and location-based queries.",
+      "solution": "Implemented CRUD APIs with geolocation features and documented endpoints for maintainable backend workflows."
+    },
+    "architecture": "Express.js backend with MySQL, simple reporting endpoints and Postman-documented APIs.",
+    "challenges": ["Designing flexible query endpoints", "Documenting APIs for maintainability"],
+    "learnings": "Practical API design, geolocation querying, and deployment basics.",
+    "tech": ["Node.js", "Express.js", "MySQL", "Postman"],
+    "category": ["backend", "databases", "projects"],
+    "keywords": ["school", "api", "crud", "mysql", "geolocation", "rest", "postman"]
+  }
+]
