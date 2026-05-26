@@ -1,5 +1,5 @@
 const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
-const TIMEOUT_MS = 12_000; // per-provider attempt timeout
+const TIMEOUT_MS = 10_000; // per-provider attempt timeout (reduced to keep total under frontend timeout)
 const MAX_SYSTEM_CHARS = 20_000; // reduce oversized prompts to improve latency
 
 const MAX_RETRIES = 1; // keep total attempts low so total latency stays under frontend timeout
