@@ -115,11 +115,12 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
   }
 
   async function doSend(promptArgs) {
-    const { systemPrompt, history = [], question, maxTokens = 512, temperature = 0.2, model } = promptArgs || {};
+    const { systemPrompt, history = [], question, maxTokens = 512, temperature = 0.2, model, signal: externalSignal, requestId } = promptArgs || {};
     const useModel = model || process.env.GROQ_MODEL || DEFAULT_MODEL;
     const hasKey = !!apiKey;
 
     if (!hasKey) {
+      console.log(JSON.stringify({ event: 'provider_request_mock', provider: 'groq', requestId }));
       return {
         text: `[MOCK GROQ:${useModel}] ${(question || '').slice(0, 200)}...`,
         tokensUsed: Math.round((question || '').length / 4),
@@ -131,31 +132,55 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
 
     // circuit breaker check
     if (circuitBreaker.isOpen()) {
-      console.log(JSON.stringify({ event: 'provider_request', provider: 'groq', status: 'circuit_open' }));
-      // Immediately return a graceful, normalized error object so caller can surface a friendly message
+      console.log(JSON.stringify({ event: 'provider_request', provider: 'groq', status: 'circuit_open', requestId }));
       const err = new Error(getStatusMessage(503));
       err.statusCode = 503;
       throw err;
     }
 
     const safeSystem = truncateSystemPrompt(systemPrompt);
-    const messages = [ { role: 'system', content: safeSystem }, ...history, { role: 'user', content: question || '' } ];
-    const endpoint = process.env.GROQ_ENDPOINT || 'https://api.groq.com/openai/v1/chat/completions';
-    const payload = { model: useModel, messages, temperature, max_tokens: maxTokens };
 
-    console.log(JSON.stringify({ event: 'provider_request', provider: 'groq', model: useModel }));
+    // validate and normalize messages strictly to { role, content }
+    const normalizeMsg = (m) => {
+      if (!m || typeof m !== 'object') return null;
+      const role = (m.role || '').toString().trim().toLowerCase();
+      const content = (m.content ?? m.text ?? '').toString().trim();
+      if (!content) return null;
+      if (!['system', 'user', 'assistant'].includes(role)) return null;
+      return { role, content };
+    };
+
+    const messages = [];
+    const sys = normalizeMsg({ role: 'system', content: safeSystem });
+    if (sys) messages.push(sys);
+    (history || []).forEach(h => {
+      const nm = normalizeMsg(h);
+      if (nm) messages.push(nm);
+    });
+    const userMsg = normalizeMsg({ role: 'user', content: question || '' });
+    if (userMsg) messages.push(userMsg);
+
+    const endpoint = process.env.GROQ_ENDPOINT || 'https://api.groq.com/openai/v1/chat/completions';
+    const payload = { model: useModel, messages, temperature, max_completion_tokens: maxTokens };
+
+    console.log(JSON.stringify({ event: 'provider_request', provider: 'groq', model: useModel, requestId }));
 
     let lastErr = null;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       const controller = new AbortController();
+      // wire external signal to internal controller so route can cancel
+      if (externalSignal) {
+        if (externalSignal.aborted) controller.abort(externalSignal.reason);
+        else externalSignal.addEventListener('abort', () => controller.abort(externalSignal.reason), { once: true });
+      }
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
       const start = Date.now();
 
       try {
         if (attempt > 0) {
           const delay = backoffDelay(attempt - 1);
-          console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, delayMs: delay }));
+          console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, delayMs: delay, requestId }));
           await new Promise(r => setTimeout(r, delay));
         }
 
@@ -169,7 +194,6 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
         clearTimeout(timeoutId);
 
         if (!res.ok) {
-          // don't expose provider body; map to normalized message
           const status = res.status;
           const message = getStatusMessage(status);
           const err = new Error(message);
@@ -177,15 +201,14 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
 
           if (isRetryable(err) && attempt < MAX_RETRIES) {
             lastErr = err;
-            console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, status }));
+            console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, status, requestId }));
             continue;
           }
 
-          // track failure for circuit breaker on retryable status codes
           if (RETRYABLE_STATUSES.has(status)) circuitBreaker.recordFailure();
           else circuitBreaker.recordSuccess();
 
-          console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', status }));
+          console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', status, requestId }));
           throw err;
         }
 
@@ -193,7 +216,7 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
         try { j = await res.json(); } catch (e) {
           clearTimeout(timeoutId);
           circuitBreaker.recordFailure();
-          console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', status: 502 }));
+          console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', status: 502, requestId }));
           const err = new Error('AI provider temporarily unavailable.');
           err.statusCode = 502;
           throw err;
@@ -202,7 +225,7 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
         circuitBreaker.recordSuccess();
         const latencyMs = Date.now() - start;
         const normalized = normalizeResp(j);
-        console.log(JSON.stringify({ event: 'provider_success', provider: 'groq', latencyMs, attempt }));
+        console.log(JSON.stringify({ event: 'provider_success', provider: 'groq', latencyMs, attempt, requestId }));
 
         return {
           text: normalized.text,
@@ -216,45 +239,40 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
 
         const isAbort = fetchErr && fetchErr.name === 'AbortError';
         if (isAbort) {
-          console.log(JSON.stringify({ event: 'provider_timeout', provider: 'groq' }));
+          console.log(JSON.stringify({ event: 'provider_timeout', provider: 'groq', requestId }));
           circuitBreaker.recordFailure();
           const err = new Error('AI request timed out.');
           err.statusCode = 408;
           throw err;
         }
 
-        // If the error carries a statusCode (we threw it above), respect retry rules
         if (fetchErr && fetchErr.statusCode) {
           if (isRetryable(fetchErr) && attempt < MAX_RETRIES) {
             lastErr = fetchErr;
-            console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, status: fetchErr.statusCode }));
+            console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, status: fetchErr.statusCode, requestId }));
             continue;
           }
-          // non-retryable or exhausted
           circuitBreaker.recordFailure();
-          console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', status: fetchErr.statusCode }));
+          console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', status: fetchErr.statusCode, requestId }));
           throw fetchErr;
         }
 
-        // network/error scenarios
         if (isRetryable(fetchErr) && attempt < MAX_RETRIES) {
           lastErr = fetchErr;
-          console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, msg: (fetchErr.message || '').slice(0,120) }));
+          console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, msg: (fetchErr.message || '').slice(0,120), requestId }));
           continue;
         }
 
-        // final fallback sanitized error
         circuitBreaker.recordFailure();
-        console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', msg: (fetchErr && fetchErr.message || '').slice(0,120) }));
+        console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', msg: (fetchErr && fetchErr.message || '').slice(0,120), requestId }));
         const err = new Error('AI provider temporarily unavailable.');
         err.statusCode = 503;
         throw err;
       }
     }
 
-    // exhausted retries
     circuitBreaker.recordFailure();
-    console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', msg: 'retries exhausted' }));
+    console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', msg: 'retries exhausted', requestId }));
     const finalErr = new Error('AI provider temporarily unavailable.');
     finalErr.statusCode = 503;
     throw finalErr;
