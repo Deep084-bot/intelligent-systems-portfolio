@@ -1,8 +1,8 @@
 const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
-const TIMEOUT_MS = 15_000;
-const MAX_SYSTEM_CHARS = 30_000;
+const TIMEOUT_MS = 12_000; // per-provider attempt timeout
+const MAX_SYSTEM_CHARS = 20_000; // reduce oversized prompts to improve latency
 
-const MAX_RETRIES = 2; // number of retry attempts (not counting first try)
+const MAX_RETRIES = 1; // keep total attempts low so total latency stays under frontend timeout
 
 const CB_FAILURE_THRESHOLD = 3;
 const CB_OPEN_DURATION_MS = 20_000; // 20s as requested
@@ -106,10 +106,10 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
     return queue;
   }
 
-  // exponential backoff with jitter (ms)
+  // exponential backoff with jitter (ms) — keep small to avoid long retries
   function backoffDelay(attempt) {
-    const base = 300; // base ms
-    const exp = Math.min(30_000, base * Math.pow(2, attempt));
+    const base = 200; // base ms
+    const exp = Math.min(5_000, base * Math.pow(2, attempt));
     const jitter = Math.floor(Math.random() * 200);
     return exp + jitter;
   }
@@ -180,10 +180,11 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
       try {
         if (attempt > 0) {
           const delay = backoffDelay(attempt - 1);
-          console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, delayMs: delay, requestId }));
+          console.log(JSON.stringify({ event: 'provider_retry_wait', provider: 'groq', attempt, delayMs: delay, requestId }));
           await new Promise(r => setTimeout(r, delay));
         }
 
+        const reqStart = Date.now();
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -191,6 +192,7 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
           signal: controller.signal,
         });
 
+        const providerCallMs = Date.now() - reqStart;
         clearTimeout(timeoutId);
 
         if (!res.ok) {
@@ -201,14 +203,14 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
 
           if (isRetryable(err) && attempt < MAX_RETRIES) {
             lastErr = err;
-            console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, status, requestId }));
+            console.log(JSON.stringify({ event: 'provider_retry', provider: 'groq', attempt, status, requestId, provider_latency_ms: providerCallMs }));
             continue;
           }
 
           if (RETRYABLE_STATUSES.has(status)) circuitBreaker.recordFailure();
           else circuitBreaker.recordSuccess();
 
-          console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', status, requestId }));
+          console.log(JSON.stringify({ event: 'provider_failure', provider: 'groq', status, requestId, provider_latency_ms: providerCallMs }));
           throw err;
         }
 
@@ -225,7 +227,7 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
         circuitBreaker.recordSuccess();
         const latencyMs = Date.now() - start;
         const normalized = normalizeResp(j);
-        console.log(JSON.stringify({ event: 'provider_success', provider: 'groq', latencyMs, attempt, requestId }));
+        console.log(JSON.stringify({ event: 'provider_success', provider: 'groq', latencyMs, attempt, requestId, provider_latency_ms: latencyMs, provider_call_ms: providerCallMs }));
 
         return {
           text: normalized.text,

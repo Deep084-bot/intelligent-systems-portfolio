@@ -34,6 +34,7 @@ function errorStatus(err) {
 
 router.post('/chat', async (req, res) => {
   const logMeta = { ts: new Date().toISOString(), id: Math.random().toString(36).slice(2, 8) };
+  const requestStart = Date.now();
 
   // per-request controller so client disconnects can cancel provider calls
   const controller = new AbortController();
@@ -75,16 +76,22 @@ router.post('/chat', async (req, res) => {
     }
 
     let ctx;
+    const retrievalStart = Date.now();
     try {
       ctx = await retrieveRelevantContext({ category, query: question });
     } catch {
       clearTimeout(timeoutHandle);
       return safeJson(res, 500, { error: 'AI assistant is temporarily unavailable.' });
     }
+    const retrievalMs = Date.now() - retrievalStart;
 
     const contextStr = (ctx && ctx.context) || '';
+    const promptBuildStart = Date.now();
     const systemPrompt = buildPrompt(contextStr);
-    const normalizedHistory = normalizeHistory(history);
+    const promptBuildMs = Date.now() - promptBuildStart;
+
+    // keep history trimmed to recent turns to limit prompt size and latency
+    const normalizedHistory = normalizeHistory(history).slice(-6);
 
     console.log(JSON.stringify({
       event: 'chat_request', id: logMeta.id, requestId: reqId,
@@ -113,10 +120,17 @@ router.post('/chat', async (req, res) => {
         });
       }
 
+      const providerLatency = result.latencyMs || 0;
+      const totalMs = Date.now() - requestStart;
       console.log(JSON.stringify({
         event: 'chat_response', id: logMeta.id, requestId: reqId,
-        answerLen: answer.length, latencyMs: result.latencyMs || 0,
+        answerLen: answer.length, provider_latency_ms: providerLatency,
+        retrieval_latency_ms: retrievalMs, prompt_build_ms: promptBuildMs,
+        total_request_ms: totalMs,
       }));
+
+      // lightweight performance metric event
+      console.log(JSON.stringify({ event: 'metric', provider_latency_ms: providerLatency, retrieval_latency_ms: retrievalMs, total_request_ms: totalMs }));
 
       safeJson(res, 200, { answer, requestId: reqId });
     } catch (err) {
@@ -124,9 +138,10 @@ router.post('/chat', async (req, res) => {
       if (res.headersSent) return;
       const statusCode = errorStatus(err);
       const msg = err.message || 'AI assistant is temporarily unavailable.';
+      const totalMs = Date.now() - requestStart;
       console.error(JSON.stringify({
         event: 'provider_error', id: logMeta.id, requestId: reqId, statusCode,
-        msg: msg.slice(0, 300),
+        msg: msg.slice(0, 300), retrieval_latency_ms: retrievalMs ?? null, prompt_build_ms: promptBuildMs ?? null, total_request_ms: totalMs,
       }));
       // do not expose raw error; return normalized message
       safeJson(res, statusCode, { error: msg, requestId: reqId });
