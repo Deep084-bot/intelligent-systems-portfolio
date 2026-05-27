@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { chat } from '../api/ai';
+import { getPortfolioContext } from '../context/portfolioContext';
 
 const TYPING_CHUNK_SIZE = 5;
 const TYPING_INTERVAL_MS = 40;
@@ -60,7 +61,15 @@ export default function useAI() {
         .filter((m) => m.role === 'user' || (m.role === 'assistant' && m.text))
         .slice(-6);
 
-      const { answer } = await chat(text, history, controller.signal);
+      // Get portfolio context for system prompt
+      const portfolioContext = getPortfolioContext();
+
+      const { answer } = await chat(text, history, controller.signal, {
+        systemPrompt: portfolioContext.systemPrompt,
+        education: portfolioContext.education,
+        projects: portfolioContext.projects,
+        skills: portfolioContext.skills,
+      });
 
       if (cancelledRef.current) return;
 
@@ -135,6 +144,7 @@ export default function useAI() {
   }, [updateMessages]);
 
   const reset = useCallback(() => {
+    // Cancel any in-flight work and clear UI state, but preserve refs so future requests work
     cancelledRef.current = true;
     sendingRef.current = false;
     if (debounceRef.current) {
@@ -142,12 +152,16 @@ export default function useAI() {
       debounceRef.current = null;
     }
     if (abortRef.current) {
-      abortRef.current.abort();
+      try { abortRef.current.abort(); } catch (e) { /* ignore */ }
       abortRef.current = null;
     }
     setError(null);
+    setLoading(false);
     setMessages([]);
     messagesRef.current = [];
+
+    // Allow new requests shortly after cancellation completes
+    setTimeout(() => { cancelledRef.current = false; sendingRef.current = false; }, 50);
   }, []);
 
   const retry = useCallback(() => {

@@ -40,10 +40,15 @@ export const ContactSection = () => {
     setErrorMessage('');
 
     try {
-      const res = await fetch('/api/contact/send', {
+      const formPayload = new FormData();
+      formPayload.append('name', formData.name);
+      formPayload.append('email', formData.email);
+      formPayload.append('message', formData.message);
+
+      const res = await fetch('https://formspree.io/f/mzdgwyow', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: formPayload,
+        headers: { 'Accept': 'application/json' },
       });
 
       const data = await res.json();

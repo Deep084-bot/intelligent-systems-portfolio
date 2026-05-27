@@ -10,12 +10,23 @@ const PROJECTS = projectsData.projects || [];
 
 function ImageWithFallback({ src, alt, title }) {
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   if (failed) return <PlaceholderBlock title={title} />;
+
+  const candidates = [src, src.startsWith('/') ? src.slice(1) : '/' + src, src.replace(/\\/g, '/')];
+  const current = candidates[attempt] || src;
+
   return (
     <motion.img
-      src={src}
+      src={current}
       alt={alt}
-      onError={() => setFailed(true)}
+      onError={() => {
+        if (attempt < candidates.length - 1) {
+          setAttempt(attempt + 1);
+        } else {
+          setFailed(true);
+        }
+      }}
       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
     />
   );

@@ -58,6 +58,7 @@ export default function ChatAssistant() {
   const [pending, setPending] = useState(false);
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -68,13 +69,20 @@ export default function ChatAssistant() {
   }, []);
 
   const scrollToBottom = useCallback(() => {
+    // Auto-scroll only when the user is already near the bottom to avoid interrupting manual scrolls
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      const el = messagesContainerRef.current;
+      if (!el) return;
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distanceFromBottom < 160) {
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      }
     });
   }, []);
 
   useEffect(() => { scrollToBottom(); }, [messages, loading, scrollToBottom]);
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  // Do NOT autofocus on mount to avoid page jump/auto-scroll to this section.
+  // input will be focused after user interaction or programmatic focus after actions.
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -108,12 +116,23 @@ export default function ChatAssistant() {
 
   const isBusy = loading || pending;
 
+  // determine if assistant has already provided content (used to hide thinking bubble once content appears)
+  const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+  const assistantHasContent = !!(lastAssistant && lastAssistant.text && String(lastAssistant.text).trim().length > 0);
+
+  // local thinking bubble visibility to avoid duplicates and ensure immediate cleanup
+  const [showThinking, setShowThinking] = useState(false);
+  useEffect(() => {
+    if (loading && !assistantHasContent) setShowThinking(true);
+    else setShowThinking(false);
+  }, [loading, assistantHasContent]);
+
   return (
-    <div className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-start justify-between px-4 md:px-6 py-4 border-b border-neutral-700">
+    <div className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden flex flex-col h-[560px] w-full shadow-lg">
+      {/* Header - always visible */}
+      <div className="flex items-start justify-between px-6 md:px-8 py-4 border-b border-neutral-700 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center shrink-0">
             <Bot className="w-5 h-5 text-primary-400" />
           </div>
           <div className="min-w-0">
@@ -128,7 +147,7 @@ export default function ChatAssistant() {
           </div>
         </div>
         <button
-          onClick={() => { reset(); inputRef.current?.focus(); }}
+          onClick={() => { reset(); setPending(false); setShowThinking(false); inputRef.current?.focus(); }}
           disabled={isBusy}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs text-neutral-400 hover:text-neutral-200 transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Reset conversation"
@@ -138,14 +157,10 @@ export default function ChatAssistant() {
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex flex-col gap-2 max-h-96 overflow-y-auto px-4 md:px-6 py-4" role="log" aria-live="polite">
-        {messages.length === 0 && !loading ? (
-          <div className="text-center py-10">
-            <Bot className="w-12 h-12 mx-auto text-neutral-700 mb-3" />
-            <p className="text-neutral-500 text-sm">Start a conversation — try one of the suggested prompts below.</p>
-          </div>
-        ) : (
+      {/* Messages Viewport - always mounted, fixed height */}
+      <div ref={messagesContainerRef} className="relative flex-1 min-h-0 overflow-y-auto px-6 md:px-8 py-5 bg-neutral-950/30">
+        {/* Messages list */}
+        <div className="flex flex-col gap-3">
           <AnimatePresence mode="popLayout">
             {messages.map((m, i) => (
               <motion.div
@@ -153,7 +168,7 @@ export default function ChatAssistant() {
                 variants={msgVariants}
                 initial="hidden"
                 animate="visible"
-                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} mb-1`}
               >
                 <div
                   className={`${
@@ -162,7 +177,7 @@ export default function ChatAssistant() {
                       : isErrorMessage(m.text)
                         ? 'bg-error/10 border border-error/30 rounded-2xl rounded-bl-md'
                         : 'bg-neutral-800 border border-neutral-700 rounded-2xl rounded-bl-md'
-                  } p-3.5 max-w-[88%] sm:max-w-[80%] break-words`}
+                  } p-4 max-w-[85%] break-words`}
                 >
                   {m.role === 'assistant' ? (
                     <div className="prose prose-invert prose-sm max-w-none prose-code:before:content-none prose-code:after:content-none prose-pre:p-0 prose-pre:bg-transparent prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5">
@@ -195,67 +210,77 @@ export default function ChatAssistant() {
                 </div>
               </motion.div>
             ))}
-          </AnimatePresence>
-        )}
 
-        {/* Thinking indicator */}
-        {loading && (
-          <motion.div
-            key="thinking"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-start"
-          >
-            <div className="bg-neutral-800 border border-neutral-700 rounded-2xl rounded-bl-md p-3.5">
-              <div className="flex items-center gap-2.5">
-                <div className="flex gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+            {/* Thinking bubble - single instance, mutually exclusive with content */}
+            {showThinking && (
+              <motion.div
+                key="thinking"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="flex justify-start mb-1"
+              >
+                <div className="bg-neutral-800 border border-neutral-700 rounded-2xl rounded-bl-md p-4 max-w-[85%]">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <span className="text-xs text-neutral-400 font-mono">Thinking...</span>
+                  </div>
                 </div>
-                <span className="text-xs text-neutral-400 font-mono">Thinking...</span>
+              </motion.div>
+            )}
+
+            {/* Retry button */}
+            {!loading && messages.length > 0 && isErrorMessage(messages[messages.length - 1]?.text) && (
+              <motion.div
+                key="retry"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-center mt-2"
+              >
+                <button
+                  onClick={handleRetry}
+                  disabled={isBusy}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-lg text-xs text-neutral-400 hover:text-neutral-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCcw size={13} />
+                  Retry
+                </button>
+              </motion.div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </AnimatePresence>
+        </div>
+
+        {/* Empty state overlay - absolutely positioned, behind messages */}
+        {messages.length === 0 && !showThinking && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center px-4">
+              <Bot className="w-12 h-12 mx-auto text-neutral-700 mb-4" />
+              <p className="text-neutral-500 text-sm mb-5">Start a conversation — try one of the suggested prompts below.</p>
+              <div className="flex flex-wrap gap-2 justify-center max-w-full">
+                {SUGGESTED.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => handleSuggested(s)}
+                    disabled={isBusy}
+                    className="text-xs px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-neutral-600 rounded-lg font-mono text-neutral-300 transition disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-
-        {/* Retry button shown after error messages */}
-        {!loading && messages.length > 0 && isErrorMessage(messages[messages.length - 1]?.text) && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center mt-1">
-            <button
-              onClick={handleRetry}
-              disabled={isBusy}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-lg text-xs text-neutral-400 hover:text-neutral-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCcw size={13} />
-              Retry
-            </button>
-          </motion.div>
-        )}
-
-        <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggestions */}
-      {messages.length === 0 && (
-        <div className="px-4 md:px-6 pb-4">
-          <div className="flex flex-wrap gap-1.5">
-            {SUGGESTED.map(s => (
-              <button
-                key={s}
-                onClick={() => handleSuggested(s)}
-                disabled={isBusy}
-                className="text-xs px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 hover:border-neutral-600 rounded-lg font-mono text-neutral-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="flex gap-2 items-center border-t border-neutral-700 px-4 md:px-6 py-3">
+      {/* Input - always pinned to bottom */}
+      <form onSubmit={handleSubmit} className="flex gap-2 items-center border-t border-neutral-700 px-6 md:px-8 py-4 bg-neutral-900 shrink-0">
         <input
           ref={inputRef}
           value={input}
@@ -268,7 +293,7 @@ export default function ChatAssistant() {
         <button
           type="submit"
           disabled={isBusy || !input.trim()}
-          className="p-2.5 bg-primary-600 hover:bg-primary-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-white transition"
+          className="p-2.5 bg-primary-600 hover:bg-primary-500 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg text-white transition shrink-0"
         >
           <Send size={18} />
         </button>

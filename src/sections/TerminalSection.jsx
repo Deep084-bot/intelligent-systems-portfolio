@@ -217,7 +217,7 @@ function findSimilar(cmd, candidates, threshold = 3) {
 }
 
 export const TerminalSection = () => {
-  const [bootPhase, setBootPhase] = useState(true);
+  const [bootPhase, setBootPhase] = useState(false);
   const [bootIndex, setBootIndex] = useState(0);
   const [bootLines, setBootLines] = useState([]);
   const [history, setHistory] = useState([]);
@@ -227,6 +227,58 @@ export const TerminalSection = () => {
   const [cwd, setCwd] = useState('/');
   const terminalRef = useRef(null);
   const inputRef = useRef(null);
+  const userAtBottomRef = useRef(true);
+
+  // Observability / command center state (right-side panel)
+  const [obsLogs, setObsLogs] = useState(() => MOCK_LOGS.slice(-6));
+  const [serviceHealth] = useState(MOCK_HEALTH);
+
+  // track whether user scrolled away from bottom to avoid forcing scroll
+  useEffect(() => {
+    const el = terminalRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      userAtBottomRef.current = distanceFromBottom < 200;
+    };
+    el.addEventListener('scroll', onScroll);
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Simulate lightweight computation panel updates (visual only)
+  const [compLines, setCompLines] = useState([]);
+  useEffect(() => {
+    const pool = [
+      'tokens: 0.00 -> 12.8k',
+      'embedding.dim=1536',
+      'inference.latency=34ms',
+      'retrieval.chunks=8',
+      'prompt.tokens=482',
+      'memory.used=128MB',
+      'cpu: 4.2%',
+      'gpu: 0%',
+      'vector.sim=0.8723',
+    ];
+    const iv = setInterval(() => {
+      const now = new Date();
+      const time = now.toTimeString().split(' ')[0];
+      const msg = pool[Math.floor(Math.random() * pool.length)];
+      const entry = `[${time}] ${msg}`;
+      setCompLines(prev => [...prev.slice(-26), entry]);
+    }, 900 + Math.floor(Math.random() * 700));
+    return () => clearInterval(iv);
+  }, []);
+
+  // Start terminal boot sequence after app signals it's ready
+  useEffect(() => {
+    const onLoaded = () => {
+      setBootLines([]);
+      setBootIndex(0);
+      setBootPhase(true);
+    };
+    window.addEventListener('app:loaded', onLoaded);
+    return () => window.removeEventListener('app:loaded', onLoaded);
+  }, []);
 
   const commandNames = useMemo(() => [
     'whoami', 'skills', 'projects', 'achievements', 'dsa', 'blog',
@@ -247,9 +299,10 @@ export const TerminalSection = () => {
     if (bootIndex >= BOOT_LINES.length) {
       const t = setTimeout(() => {
         setBootPhase(false);
-        setHistory([
-          { type: 'output', content: 'Type "help" to see available commands.' },
-        ]);
+        // Persist boot lines in history permanently + add welcome message
+        const bootHistory = BOOT_LINES.map(line => ({ type: 'output', content: line.text }));
+        setHistory(bootHistory);
+        setBootLines([]);
       }, 400);
       return () => clearTimeout(t);
     }
@@ -262,14 +315,19 @@ export const TerminalSection = () => {
   }, [bootPhase, bootIndex]);
 
   useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    const el = terminalRef.current;
+    if (!el) return;
+    // Auto-scroll when user is near the bottom or when terminal is actively producing output
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    // Only auto-scroll when user is already at/near bottom — respect manual scrolls
+    const shouldAuto = userAtBottomRef.current || distanceFromBottom < 300;
+    if (shouldAuto) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
-  }, [history, bootLines]);
+  }, [history, bootLines, isLoading]);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  // Do not autofocus terminal input on mount to avoid scrolling the page on load.
+  // inputRef.current?.focus();
 
   const addOutput = useCallback((content) => {
     setHistory(prev => [...prev, { type: 'output', content }]);
@@ -885,6 +943,8 @@ Available commands:
     const inputLower = input.trim().toLowerCase();
     setInput('');
     setIsLoading(true);
+    // resume auto-follow on new command
+    userAtBottomRef.current = true;
 
     await delay(TERMINAL_CONFIG.commandDelay || 200);
 
@@ -1020,7 +1080,21 @@ Available commands:
       let finalFsOutput = fsOutput || '';
       if (trailingCommands.has(effectiveCmd) && finalFsOutput && !finalFsOutput.endsWith('\n')) finalFsOutput += '\n';
 
-      setHistory(prev => [...prev, { type: 'output', content: finalFsOutput }]);
+      // Stream outputs line-by-line for immersive terminal feel on certain commands
+      const streamCommands = new Set(['cat', 'tree', 'logs', 'neofetch']);
+      if (streamCommands.has(effectiveCmd)) {
+        const lines = finalFsOutput.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          // push each line as a separate output item for natural scrolling
+          setHistory(prev => [...prev, { type: 'output', content: line }]);
+          // small random delay to simulate streaming
+          await delay(18 + Math.floor(Math.random() * 36));
+        }
+      } else {
+        setHistory(prev => [...prev, { type: 'output', content: finalFsOutput }]);
+      }
+
       setIsLoading(false);
       inputRef.current?.focus();
       return;
@@ -1093,100 +1167,134 @@ Available commands:
           </FadeIn>
 
           <motion.div
-            className="rounded-lg border border-neutral-700 overflow-hidden shadow-lg shadow-primary/10"
+            className="w-full rounded-lg border border-neutral-700/50 overflow-hidden shadow-xl shadow-primary/5 flex flex-col md:flex-row h-[440px] md:h-[580px]"
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
           >
-            <div className="bg-neutral-800 border-b border-neutral-700 px-4 py-3 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-              </div>
-              <p className="text-xs text-neutral-400 font-mono">deep@portfolio:{cwd === '/' ? '~' : `~${cwd.slice(1)}`}$</p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCopy}
-                  className="p-1.5 hover:bg-neutral-700 rounded transition text-neutral-400 hover:text-neutral-200"
-                  title="Copy output"
-                >
-                  <Copy size={16} />
-                </button>
-                <button
-                  onClick={handleClear}
-                  className="p-1.5 hover:bg-neutral-700 rounded transition text-neutral-400 hover:text-neutral-200"
-                  title="Clear terminal"
-                >
-                  <RotateCcw size={16} />
-                </button>
-              </div>
-            </div>
-
-            <div
-              ref={terminalRef}
-              className="bg-terminal-bg p-4 sm:p-6 font-mono text-sm text-terminal-text h-96 overflow-y-auto"
-            >
-              {bootPhase && (
-                <div className="mb-2 text-accent-400 text-xs">
-                  {bootLines.map((line, i) => (
-                    <div key={i} className="mb-1">{line.content}</div>
-                  ))}
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                  >_</motion.span>
+            {/* Left: Terminal (fixed height, internal scrolling) */}
+            <div className="w-full md:w-[70%] flex flex-col min-h-0">
+              <div className="bg-neutral-800/80 border-b border-neutral-700/50 px-5 py-3 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
                 </div>
-              )}
-              <AnimatePresence mode="popLayout">
-                {displayItems.map((item, index) => (
-                  <motion.div
-                    key={`${bootPhase ? 'boot' : 'hist'}-${index}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-2 whitespace-pre-wrap break-words"
+                <p className="text-xs text-neutral-400 font-mono">deep@portfolio:{cwd === '/' ? '~' : `~${cwd.slice(1)}`}$</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCopy}
+                    className="p-1.5 hover:bg-neutral-700 rounded transition text-neutral-400 hover:text-neutral-200"
+                    title="Copy output"
                   >
-                    {item.type === 'input' ? (
-                      <div className="text-accent-400">
-                        <span>$ </span>
-                        <span className="text-terminal-text">{item.content}</span>
-                      </div>
-                    ) : (
-                      <div className="text-neutral-300 text-xs leading-relaxed">
-                        {item.content}
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+                    <Copy size={16} />
+                  </button>
+                  <button
+                    onClick={handleClear}
+                    className="p-1.5 hover:bg-neutral-700 rounded transition text-neutral-400 hover:text-neutral-200"
+                    title="Clear terminal"
+                  >
+                    <RotateCcw size={16} />
+                  </button>
+                </div>
+              </div>
 
-                {isLoading && (
-                  <motion.div
-                    animate={{ opacity: [1, 0.5, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                    className="text-accent-400"
-                  >
-                    ⟳ Processing...
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div className="flex-1 min-h-0 flex flex-col">
+                <div
+                  ref={terminalRef}
+                  className="bg-terminal-bg p-5 sm:p-7 font-mono text-sm leading-relaxed text-terminal-text flex-1 min-h-0 overflow-y-auto"
+                >
+                  {bootPhase && (
+                    <div className="mb-2 text-accent-400 text-xs">
+                      {bootLines.map((line, i) => (
+                        <div key={i} className="mb-1">{line.content}</div>
+                      ))}
+                      <motion.span
+                        animate={{ opacity: [1, 0] }}
+                        transition={{ duration: 0.5, repeat: Infinity }}
+                      >_</motion.span>
+                    </div>
+                  )}
+                  <AnimatePresence mode="popLayout">
+                    {displayItems.map((item, index) => (
+                      <motion.div
+                        key={`${bootPhase ? 'boot' : 'hist'}-${index}`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-2 whitespace-pre-wrap break-words"
+                      >
+                        {item.type === 'input' ? (
+                          <div className="text-accent-400">
+                            <span>$ </span>
+                            <span className="text-terminal-text">{item.content}</span>
+                          </div>
+                        ) : (
+                          <div className="text-neutral-300 text-xs leading-relaxed">
+                            {item.content}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+
+                    {isLoading && (
+                      <motion.div
+                        animate={{ opacity: [1, 0.5, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className="text-accent-400"
+                      >
+                        ⟳ Processing...
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <form
+                  onSubmit={handleCommand}
+                  className="bg-neutral-800/80 border-t border-neutral-700/50 px-5 sm:px-7 py-3 flex items-center gap-3"
+                >
+                  <span className="text-terminal-prompt">$</span>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Type 'help' for commands..."
+                    className="flex-1 bg-transparent text-terminal-text outline-none text-sm font-mono placeholder-neutral-600"
+                    disabled={isLoading || bootPhase}
+                  />
+                </form>
+              </div>
             </div>
 
-            <form
-              onSubmit={handleCommand}
-              className="bg-neutral-800 border-t border-neutral-700 px-4 sm:px-6 py-3 flex items-center gap-2"
-            >
-              <span className="text-terminal-prompt">$</span>
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type 'help' for commands..."
-                className="flex-1 bg-transparent text-terminal-text outline-none text-sm font-mono placeholder-neutral-600"
-                disabled={isLoading || bootPhase}
-              />
-            </form>
+            {/* Right: Computation Panel */}
+            <div className="hidden md:flex flex-col w-full md:w-[30%] bg-neutral-900 border-l border-neutral-800 min-h-0">
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                <div className="px-4 py-3 border-b border-neutral-800">
+                  <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Computation Logs</h4>
+                </div>
+                <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 font-mono text-xs text-neutral-300">
+                  <div className="flex flex-col gap-1">
+                    {compLines.map((l, i) => (
+                      <div key={i} className="text-[11px] text-neutral-400 leading-relaxed">{l}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-neutral-800 bg-neutral-950 px-4 py-3 flex flex-col gap-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-neutral-500">Inference:</span>
+                  <span className="text-cyan-400 font-mono">ACTIVE</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-neutral-500">Vector DB:</span>
+                  <span className="text-green-400 font-mono">CONNECTED</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-neutral-500">Latency:</span>
+                  <span className="text-amber-400 font-mono">34ms</span>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
           <FadeIn delay={0.2}>
