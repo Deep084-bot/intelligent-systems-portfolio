@@ -42,6 +42,34 @@ export const HeroSection = () => {
   const skills = skillsData.skills || [];
   const { codingProfiles } = profileDataModule;
 
+  const profileImage = (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.3, duration: 0.7, ease: 'easeOut' }}
+    >
+      <div className="relative">
+        <div className="w-52 sm:w-56 lg:w-72 h-52 sm:h-56 lg:h-72 rounded-xl overflow-hidden border border-neutral-600/60 bg-neutral-800/80 shadow-lg shadow-neutral-900/40">
+          <img
+            src="/images/profile.png"
+            alt={p.name || 'Deep Mehta'}
+            onError={() => setPhotoError(true)}
+            className={`w-full h-full object-contain ${photoError ? 'hidden' : ''}`}
+            style={{ filter: 'grayscale(40%) contrast(105%)' }}
+          />
+          {photoError && (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-4xl font-mono font-bold text-neutral-400">
+                {p.name?.split(' ').map(n => n[0]).join('') || 'DM'}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="absolute -inset-0.5 rounded-xl border border-primary-500/10 pointer-events-none" />
+      </div>
+    </motion.div>
+  );
+
   return (
     <Section
       id="hero"
@@ -61,10 +89,10 @@ export const HeroSection = () => {
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-20 min-h-screen flex items-center">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 lg:py-20 min-h-screen flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 w-full items-center">
           {/* Left Column — Text Content — 3/5 width */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="lg:col-span-3 space-y-6 lg:space-y-8">
             <SlideIn direction="down" delay={0.1} distance={50}>
               <h1 className="text-display leading-tight text-neutral-50">
                 {p.name?.split(' ')[0] || 'Deep'}
@@ -87,6 +115,11 @@ export const HeroSection = () => {
                 </motion.span>
               </div>
             </SlideIn>
+
+            {/* Mobile profile image — between role and description, hidden on desktop */}
+            <div className="flex justify-center lg:hidden">
+              {profileImage}
+            </div>
 
             <FadeIn delay={0.3}>
               <p className="text-sm sm:text-base text-accent-400 font-mono mb-2 tracking-wide">
@@ -157,33 +190,9 @@ export const HeroSection = () => {
             </SlideIn>
           </div>
 
-          {/* Right Column — Profile Image — 2/5 width */}
-          <div className="lg:col-span-2 flex justify-center lg:justify-end">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.7, ease: 'easeOut' }}
-            >
-              <div className="relative">
-                <div className="w-56 h-56 sm:w-64 sm:h-64 lg:w-72 lg:h-72 rounded-xl overflow-hidden border border-neutral-600/60 bg-neutral-800/80 shadow-lg shadow-neutral-900/40">
-                  <img
-                    src="/images/profile.png"
-                    alt={p.name || 'Deep Mehta'}
-                    onError={() => setPhotoError(true)}
-                    className={`w-full h-full object-contain ${photoError ? 'hidden' : ''}`}
-                    style={{ filter: 'grayscale(40%) contrast(105%)' }}
-                  />
-                  {photoError && (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-4xl font-mono font-bold text-neutral-400">
-                        {p.name?.split(' ').map(n => n[0]).join('') || 'DM'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="absolute -inset-0.5 rounded-xl border border-primary-500/10 pointer-events-none" />
-              </div>
-            </motion.div>
+          {/* Right Column — Profile Image — 2/5 width (desktop only) */}
+          <div className="lg:col-span-2 justify-center lg:justify-end hidden lg:flex">
+            {profileImage}
           </div>
         </div>
       </div>

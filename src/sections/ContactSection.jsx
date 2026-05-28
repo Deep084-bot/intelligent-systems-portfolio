@@ -70,7 +70,19 @@ export const ContactSection = () => {
   };
 
   return (
-    <Section id="contact" className="bg-gradient-dark">
+    <Section id="contact" className="bg-gradient-dark relative">
+      {/* Ambient glow — large screens only */}
+      <div className="hidden lg:block absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden="true">
+        <motion.div
+          className="absolute -right-16 top-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
+          style={{
+            background: 'radial-gradient(circle at center, rgba(41,182,246,0.04), transparent 70%)',
+          }}
+          animate={{ scale: [1, 1.06, 1], x: [0, -12, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
+
       <PageContainer>
         <Stack gap={12}>
           <FadeIn>

@@ -1,405 +1,190 @@
-# AI Portfolio - PHASE 1 Frontend Implementation Complete ✅
+# Deep Mehta — Engineering Portfolio
 
-A premium, production-quality portfolio website for a CS student focused on Backend Engineering, AI/ML, and Distributed Systems. Features terminal-inspired UI, modern SaaS aesthetics, and AI-focused design.
+Production-ready engineering portfolio with an interactive AI assistant, LeetCode telemetry, and a backend-first architecture. Built as a systems-oriented alternative to conventional portfolio templates.
 
-## 🎯 Project Overview
+## Live
 
-This is PHASE 1: **Frontend Foundation** - A fully functional, responsive frontend with:
-- Premium design system with dark theme
-- Interactive terminal section
-- Featured projects showcase
-- Placeholder sections for advanced features
-- Smooth animations and transitions
-- Mobile-responsive layout
+`https://deepmehta.dev`
 
-**Future Phases** will include:
-- Backend API integration
-- AI chatbot powered by Gemini API
-- Dynamic content loading from database
-- GitHub API integration
-- Full analytics and SEO optimization
+## Features
 
-## 🚀 Quick Start
+- **AI Assistant** — context-grounded chat powered by Groq (Llama 3.1) or Gemini. Retrieves project, skill, and technical context to answer questions conversationally. Identity is roleplayed via system prompt, not scraped from retrieval.
+- **LeetCode Telemetry** — live solved-count dashboard with contest profile, streak tracking, and engineering status signals. Data fetched via Express proxy with 30-minute cache.
+- **Interactive Terminal** — command-line interface accepting `whoami`, `skills`, `projects`, `currently_learning`, and more. Typing animation, command history, quick-invoke buttons.
+- **Education & Certifications** — two-column dashboard with degree details, CGPA, achievement highlights, certification cards with a dark modal viewer.
+- **Projects** — filtered card grid with architecture descriptions, technology tags, GitHub links.
+- **Contact** — form with Formspree integration, social and coding profile links.
+- **Loading Screen** — phase-based boot-sequence animation that overlays content until the React tree is ready.
+- **Responsive Design** — mobile-first layout with Tailwind breakpoints. Scroll-position stabilization on load. No autofocus on AI or terminal inputs to prevent page jump.
+- **SEO** — OpenGraph, Twitter Card, meta description, keywords, sitemap.xml, robots.txt, terminal-style favicon.
+- **Certificate Preview** — dark modal lightbox with lazy-loaded images for linked and unlinked certificates.
+- **Resume** — downloadable PDF in the hero CTA.
 
-### Prerequisites
-- Node.js 18+ installed
-- npm or yarn package manager
+## Tech Stack
 
-### Installation & Setup
+| Layer     | Technologies |
+|-----------|-------------|
+| Frontend  | React 18, Vite 4, Tailwind CSS 3, Framer Motion 10, Lucide React, Zustand |
+| Backend   | Node.js, Express 4, CORS, dotenv |
+| AI        | Groq SDK (default), Google Generative AI (fallback) |
+| Data      | Static JSON files (projects, skills, profile, achievements, DSA stats, terminal commands) |
+| External  | Formspree (contact), LeetCode GraphQL (telemetry) |
+| Deployment| Vite build → `dist/`, static hosting (Vercel-ready) |
 
-```bash
-# 1. Navigate to project directory
-cd ai-portfolio
+## Architecture
 
-# 2. Install dependencies
-npm install
-
-# 3. Start development server
-npm run dev
+```
+Client                         Server (Express :4000)
+──────                         ─────────────────────
+index.html                     POST /api/ai/chat
+  └─ main.jsx                    ├─ classifier.js (category detection)
+      └─ App.jsx                 ├─ retrieval/index.js (chunking + scoring)
+          ├─ HeroSection         ├─ prompt/builder.js (identity + context)
+          ├─ TerminalSection     └─ aiProviders/groq.js or gemini.js
+          ├─ Education...
+          ├─ LeetCodeTelemetry   GET  /api/leetcode/:username
+          ├─ Projects             └─ leetcodeService.js (cache + GraphQL)
+          ├─ AI Assistant        POST /api/contact
+          ├─ Contact              └─ file-based JSONL logging
+          └─ Footer
 ```
 
-The app will automatically open at `http://localhost:5173`
+### AI flow
 
-### Build for Production
+1. User submits a question via the `ChatAssistant` React component.
+2. `POST /api/ai/chat` receives the message and conversation history.
+3. `classifier.js` detects the category (project, skill, education, DSA, general).
+4. `retrieval/index.js` chunks and scores relevant JSON data for that category.
+5. `prompt/builder.js` assembles a system prompt with a short roleplay identity section and appended context.
+6. The provider (Groq by default) sends `[system, history..., user]` and returns the response.
 
-```bash
-npm run build          # Creates optimized build in /dist
-npm run preview        # Preview production build locally
-```
+### Prompt design
 
-## 📁 Project Structure
+- Identity is **statically defined** in the system prompt — retrieval never handles personal information.
+- The model is instructed to speak as a first-person roleplay of Deep Mehta, not as an external assistant.
+- Forbidden phrases include `"I don't have information..."`, `"Based on the provided context..."`, and similar hedging.
+- System prompt identity section is under 500 characters for identity + examples to maximize instruction adherence on smaller models.
+
+## Project Structure
 
 ```
 ai-portfolio/
 ├── src/
-│   ├── components/
-│   │   ├── primitives/        # Reusable UI building blocks
-│   │   │   └── index.jsx      # Button, Card, Badge, Input, etc.
-│   │   └── layout/            # Layout components
-│   │       └── index.jsx      # Navbar, Section, Container, etc.
-│   ├── sections/              # Full-width page sections
-│   │   ├── HeroSection.jsx    # Hero with identity & CTA
-│   │   ├── TerminalSection.jsx # Interactive terminal
-│   │   ├── ProjectsSection.jsx # Featured projects
-│   │   ├── PlaceholderSections.jsx # DSA, AI, Notes, GitHub
-│   │   └── ContactSection.jsx # Contact form
-│   ├── animations/            # Framer Motion wrappers
-│   │   └── index.jsx          # FadeIn, SlideIn, ScrollTrigger, etc.
-│   ├── hooks/                 # Custom React hooks
-│   │   └── index.js           # useTypewriter, useScrollAnimation, etc.
-│   ├── utils/                 # Utility functions
-│   │   └── index.js           # Helpers, formatters, parsers
-│   ├── constants/             # App constants & config
-│   │   └── index.js           # Colors, breakpoints, terminal config
-│   ├── styles/
-│   │   └── globals.css        # Global styles & Tailwind layer components
-│   ├── content/               # Content files (JSON/Markdown) - for PHASE 2
-│   │   ├── projects/
-│   │   ├── notes/
-│   │   └── skills/
-│   ├── App.jsx                # Main app component
-│   └── main.jsx               # React entry point
-├── index.html                 # HTML entry point
-├── package.json               # Dependencies & scripts
-├── tailwind.config.js         # Tailwind design system config
-├── postcss.config.js          # PostCSS configuration
-└── vite.config.js             # Vite configuration
+│   ├── components/         # Primitives, layout, AI chat, molecules
+│   ├── sections/           # Page sections (Hero, Terminal, Contact, etc.)
+│   ├── animations/         # Framer Motion wrappers (FadeIn, SlideIn, etc.)
+│   ├── hooks/              # Custom hooks (useAI, useLeetCode, useTerminalCommands)
+│   ├── api/                # Chat API client
+│   ├── data/               # JSON files for projects, skills, profile, DSA, achievements
+│   ├── utils/              # Content loaders, validators, formatters
+│   ├── context/            # Master profile and data context
+│   ├── styles/             # Tailwind globals
+│   ├── App.jsx
+│   └── main.jsx            # Entry point (scroll restoration disabled)
+├── server/
+│   ├── routes/             # Express routers (ai.js, contact.js, leetcode.js)
+│   ├── aiProviders/        # Groq and Gemini provider wrappers (circuit breaker, retry)
+│   ├── prompt/             # System prompt builder
+│   ├── retrieval/          # Context chunking, scoring, assembly
+│   ├── classifiers/        # Question category detection
+│   ├── services/           # LeetCode service (cached GraphQL)
+│   ├── middleware/         # Rate limiting
+│   ├── index.js            # Express server entry
+│   └── .env                # Server environment (gitignored)
+├── public/
+│   ├── favicon.svg         # Terminal-style ">_" icon
+│   ├── og-image.svg        # OpenGraph preview (1200×630)
+│   ├── robots.txt
+│   ├── sitemap.xml
+│   ├── images/             # Profile photo, certificates, project images
+│   └── assets/             # Resume PDF
+├── index.html              # SEO meta tags, OpenGraph, Twitter card, fonts
+├── package.json
+├── tailwind.config.js
+└── vite.config.js          # Dev server proxies /api → :4000
 ```
 
-## 🎨 Design System
+## Local Development
 
-### Color Palette
-- **Primary**: `#5d6eff` (Deep Blue) - Main accent
-- **Accent**: `#29b6f6` (Cyan) - AI/Tech highlights
-- **Neutral**: Gray scale (`#0f0f0f` to `#ffffff`)
-- **Status**: Success `#10b981`, Warning `#f59e0b`, Error `#ef4444`
-
-### Typography
-- **Sans**: Inter (body text & UI)
-- **Mono**: JetBrains Mono / Fira Code (code & terminal)
-- **Scale**: xs (12px) → 7xl (72px)
-
-### Spacing
-- Base unit: 4px
-- Consistent spacing: xs (4px) → 4xl (96px)
-- Section padding: 16px-24px (mobile) → 80px-96px (desktop)
-
-### Animations
-- **Smooth transitions**: 200-300ms default
-- **Scroll triggers**: Lazy animations on viewport entry
-- **Framer Motion**: Spring physics for natural motion
-- **Respects prefers-reduced-motion**
-
-## 🧩 Component Architecture
-
-### Reusable Primitives (`src/components/primitives/`)
-```javascript
-// Button
-<Button variant="primary" size="md">Click me</Button>
-
-// Card
-<Card hover className="p-4">Content</Card>
-
-// Badge
-<Badge variant="accent">AI/ML</Badge>
-
-// Input
-<Input label="Name" type="text" />
-
-// Terminal Block
-<TerminalBlock prompt="$">command here</TerminalBlock>
-```
-
-### Layout Components (`src/components/layout/`)
-```javascript
-// Navbar - Fixed navigation
-<Navbar />
-
-// Section - Full-width sections with padding
-<Section id="projects"><PageContainer>...</PageContainer></Section>
-
-// Grid/Flex - Responsive layout helpers
-<Grid cols={3} gap={6}>{children}</Grid>
-<Flex direction="col" align="center" gap={4}>{children}</Flex>
-
-// Stack - Vertical layout with consistent spacing
-<Stack gap={8}>{children}</Stack>
-```
-
-### Animation Wrappers (`src/animations/`)
-```javascript
-// Fade in on view
-<FadeIn delay={0.2}>{children}</FadeIn>
-
-// Slide in from direction
-<SlideIn direction="up" distance={50}>{children}</SlideIn>
-
-// Scroll trigger with variants
-<ScrollTrigger variant="fadeUp">{children}</ScrollTrigger>
-
-// Stagger children
-<StaggerContainer staggerDelay={0.1}>
-  <StaggerItem>{children}</StaggerItem>
-</StaggerContainer>
-```
-
-### Custom Hooks (`src/hooks/`)
-```javascript
-// Typewriter animation
-const { displayedText, isComplete } = useTypewriter(text, speed);
-
-// Scroll animation trigger
-const { ref, isInView } = useScrollAnimation();
-
-// Window size responsive
-const { width, height } = useWindowSize();
-
-// Media query
-const isMobile = useMediaQuery('(max-width: 768px)');
-```
-
-## 🎯 Sections Overview
-
-### Hero Section
-- Strong typography & identity messaging
-- Animated role cycler
-- CTA buttons (Contact & GitHub)
-- Decorative code block
-- Scroll indicator
-
-### Terminal Section
-- Interactive command-line interface
-- Commands: `whoami`, `skills`, `projects`, `currently_learning`
-- Realistic terminal styling
-- Command history with typing animation
-- Quick command buttons
-- Copy & clear functionality
-
-### Projects Section
-- Dynamic project cards
-- Architecture details for each project
-- Key features & impact metrics
-- Technology tags
-- GitHub & live demo links
-- Staggered animation on scroll
-
-### DSA Dashboard (Placeholder)
-- Stats display (problems solved, difficulty breakdown)
-- Category progress bars
-- Ready for LeetCode API integration
-
-### AI Assistant (Placeholder)
-- Chat interface UI
-- Prepared for Gemini API integration
-
-### Engineering Notes (Placeholder)
-- Blog/notes grid layout
-- Ready for markdown content loading
-
-### GitHub Intelligence (Placeholder)
-- Repository stats display
-- Prepared for GitHub API integration
-
-### Contact Section
-- Contact form with validation
-- Social media links
-- Email CTA
-- Success message animation
-
-## 🎬 Animations & Motion
-
-### Built-in Animation Utilities
-- **FadeIn**: Smooth opacity transition
-- **SlideIn**: Directional slide with fade (up, down, left, right)
-- **ScaleIn**: Scale + fade entrance
-- **StaggerContainer/Item**: Sequential child animations
-- **HoverScale**: Interactive hover effects
-- **FloatingAnimation**: Continuous floating motion
-- **TypewriterAnimation**: Character-by-character reveal
-- **ScrollTrigger**: Lazy animations on viewport entry
-
-### Animation Philosophy
-- Purposeful motion that guides user attention
-- Smooth, not flashy (optimized for performance)
-- Respects `prefers-reduced-motion` setting
-- Never distracting from content
-
-## 📱 Responsive Design
-
-### Breakpoints
-- **xs**: 320px (small phones)
-- **sm**: 640px (phones)
-- **md**: 768px (tablets)
-- **lg**: 1024px (small laptops)
-- **xl**: 1280px (desktops)
-- **2xl**: 1536px (large displays)
-
-### Strategy
-- Mobile-first approach
-- Touch-friendly interactions
-- Optimized terminal width for all screens
-- Adaptive imagery & typography scaling
-
-## 🔧 Configuration
-
-### Tailwind Design Tokens (`tailwind.config.js`)
-- 900+ lines of design system configuration
-- Color scales, typography, spacing, shadows
-- Custom animations & gradients
-- Responsive utilities
-
-### TypeScript Support (Optional)
-Can add TypeScript by installing:
 ```bash
-npm install -D typescript @types/react @types/react-dom
+# 1. Install frontend dependencies
+npm install
+
+# 2. Install server dependencies
+cd server && npm install && cd ..
+
+# 3. Start the backend (terminal 1)
+cd server && npm run dev
+
+# 4. Start the frontend dev server (terminal 2)
+npm run dev
 ```
 
-## 🚀 Development Workflow
+The Vite dev server proxies `/api` requests to `localhost:4000`, so the frontend works seamlessly with the backend during development.
 
-### Best Practices Implemented
-1. **Component Composition**: Small, focused, reusable components
-2. **Separation of Concerns**: Animations, layouts, primitives separated
-3. **Performance**: Lazy animations, optimized re-renders, proper memoization
-4. **Accessibility**: Semantic HTML, ARIA attributes, keyboard support
-5. **Maintainability**: Clear naming, consistent patterns, documented code
-6. **Scalability**: Easy to add new sections & content types
+### Production build
 
-### Adding New Sections
-```javascript
-// 1. Create section file
-// src/sections/NewSection.jsx
-
-import { Section, PageContainer } from '../components/layout';
-import { SectionTitle } from '../components/primitives';
-import { FadeIn } from '../animations';
-
-export const NewSection = () => (
-  <Section id="new-section">
-    <PageContainer>
-      <SectionTitle title="New Section" />
-      {/* Content */}
-    </PageContainer>
-  </Section>
-);
-
-// 2. Import in App.jsx
-import NewSection from './sections/NewSection';
-
-// 3. Add to App component
-<NewSection />
+```bash
+npm run build          # Outputs to dist/
+npm run preview        # Preview the production build
 ```
 
-### Adding New Components
-Place in `src/components/primitives/` or `src/components/layout/`
+## Environment Variables
 
-### Styling
-- Use Tailwind classes for everything
-- Custom components in `globals.css` `@layer components`
-- Design tokens in `tailwind.config.js`
+Create `server/.env` for the backend:
 
-## 📊 Performance
+```
+AI_PROVIDER=groq                          # groq | gemini
+GROQ_API_KEY=                             # https://console.groq.com
+GROQ_MODEL=llama-3.1-8b-instant           # or llama-3.3-70b-versatile
+GROQ_ENDPOINT=                            # optional API endpoint override
+GEMINI_API_KEY=                           # https://aistudio.google.com
+GEMINI_MODEL=gemini-2.0-flash             # or gemini-1.5-pro
+RATE_LIMIT_AI=4                           # max AI requests per window
+PORT=4000                                 # server port
+```
 
-- Lazy animations using Framer Motion
-- Code-split sections ready (Vite handles this)
-- Optimized bundle size (~150KB gzipped)
-- CSS-in-JS eliminated (pure Tailwind)
-- No unnecessary re-renders (React.memo prepared)
+The root `.env` controls Vite client config (gitignored):
 
-## 🔒 Security
+```
+VITE_API_BASE_URL=/
+VITE_APP_NAME=Deep's Portfolio
+VITE_APP_ENV=production
+```
 
-- No hardcoded sensitive data
-- Form validation ready
-- XSS prevention via React JSX
-- Environment variables ready for PHASE 2
+## AI Assistant Overview
 
-## 📚 Next Steps (PHASE 2+)
+The assistant uses a **roleplay-style system prompt** — the model speaks as Deep Mehta in first person, not as a generic chatbot answering questions about a profile. Identity is injected statically (name, college, CGPA, focus areas) and never fetched from retrieval, preventing conflicting signals.
 
-### Backend Integration
-- Express API setup
-- Database schema design
-- API endpoints for projects, notes, skills
+**Retrieval grounding:** user questions are classified by topic, then relevant chunks from the JSON data sources are scored and assembled into a context block appended to the system prompt. The context includes project descriptions, skill breakdowns, education details, and DSA stats.
 
-### AI Integration
-- Gemini API integration
-- Prompt engineering for context-aware responses
-- Chat history & memory management
+**Anti-hedging constraints:** the system prompt explicitly forbids phrases like "I don't have information about..." and "Based on the provided context...". The model is told to answer directly or respond briefly if something is unknown.
 
-### Content Management
-- JSON-based content loader
-- Markdown renderer for technical notes
-- Dynamic project gallery
+**Providers:** Groq (default with `llama-3.1-8b-instant`) with circuit breaker, exponential backoff, and configurable retry. Gemini (fallback). Mock mode when no API key is present — useful for development.
 
-### GitHub Integration
-- GitHub API integration
-- Repository statistics
-- Contribution graph
-- Real-time activity feed
+## Deployment
 
-### Analytics & SEO
-- Google Analytics setup
-- Meta tags & OG images
-- Sitemap generation
-- Open Graph optimization
+1. Build the frontend: `npm run build`
+2. Deploy `dist/` to a static host (Vercel, Netlify, etc.)
+3. Deploy `server/` to a Node.js host (Railway, Render, Fly.io, etc.)
+4. Set environment variables on the server host
+5. Point the frontend's API calls to the server URL
 
-## 🛠️ Tech Stack
+## Performance Notes
 
-### Frontend
-- **React 18.2**: UI library
-- **Vite 4.4**: Build tool & dev server
-- **Tailwind CSS 3.3**: Utility-first styling
-- **Framer Motion 10.16**: Animation library
-- **Lucide React 0.263**: Icon library
-- **Zustand 4.4**: State management (optional, ready for use)
+- Chunk size warning (~685 KB) is non-blocking. The largest contributors are `react-markdown` and `framer-motion`. Code-splitting these is a future optimization.
+- Images use `loading="lazy"` and `object-contain` sizing.
+- The LeetCode proxy caches responses for 30 minutes to avoid rate limits.
+- AI responses are limited to 512 tokens with trimmed conversation history (6 recent turns).
+- Background elements use pointer-events-none and are hidden on mobile.
+- Scroll restoration is disabled at the entry point (`main.jsx`) for reliable top-of-page loading.
 
-### Styling
-- **PostCSS**: CSS processing
-- **Autoprefixer**: Vendor prefixing
+## Author
 
-## 📖 Learning Resources
+**Deep Mehta**  
+BTech Computer Science — IIIT Vadodara  
+Backend Engineering · Distributed Systems · AI Engineering  
 
-### Tailwind CSS
-- [Tailwind Docs](https://tailwindcss.com)
-- Custom design system in `tailwind.config.js`
-
-### Framer Motion
-- [Framer Motion Docs](https://www.framer.com/motion/)
-- Examples in `src/animations/`
-
-### React Best Practices
-- Component composition patterns
-- Hook usage guidelines
-- Performance optimization
-
-## 🤝 Contributing
-
-This is a personal portfolio project. Feel free to use as a template!
-
-## 📝 License
-
-MIT - Feel free to use for personal or commercial projects
-
----
-
-**Built with ❤️ for professional AI/Systems engineers**
-
-Need help? Check the code comments or explore the component architecture.
+- GitHub: [Deep084-bot](https://github.com/Deep084-bot)
+- LinkedIn: [deepmehta](https://linkedin.com/in/deepmehta)
+- LeetCode: [Deep04_Mehta](https://leetcode.com/u/Deep04_Mehta/)
