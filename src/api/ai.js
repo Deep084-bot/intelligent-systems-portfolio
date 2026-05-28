@@ -1,4 +1,4 @@
-export async function chat(question, history = [], parentSignal = null, context = null) {
+export async function chat(question, history = [], parentSignal = null) {
   // generate a unique requestId for tracing
   const requestId = Math.random().toString(36).slice(2, 10);
 
@@ -17,10 +17,6 @@ export async function chat(question, history = [], parentSignal = null, context 
 
   try {
     const payload = { question, history, requestId };
-    if (context) {
-      payload.context = context;
-    }
-
     const resp = await fetch('/api/ai/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

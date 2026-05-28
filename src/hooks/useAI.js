@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
 import { chat } from '../api/ai';
-import { getPortfolioContext } from '../context/portfolioContext';
 
 const TYPING_CHUNK_SIZE = 5;
 const TYPING_INTERVAL_MS = 40;
@@ -61,15 +60,7 @@ export default function useAI() {
         .filter((m) => m.role === 'user' || (m.role === 'assistant' && m.text))
         .slice(-6);
 
-      // Get portfolio context for system prompt
-      const portfolioContext = getPortfolioContext();
-
-      const { answer } = await chat(text, history, controller.signal, {
-        systemPrompt: portfolioContext.systemPrompt,
-        education: portfolioContext.education,
-        projects: portfolioContext.projects,
-        skills: portfolioContext.skills,
-      });
+      const { answer } = await chat(text, history, controller.signal);
 
       if (cancelledRef.current) return;
 
