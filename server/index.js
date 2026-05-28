@@ -10,6 +10,7 @@ import express from 'express';
 import cors from 'cors';
 import aiRouter from './routes/ai.js';
 import contactRouter from './routes/contact.js';
+import leetcodeRouter from './routes/leetcode.js';
 import rateLimitMiddleware from './middleware/rateLimit.js';
 
 const app = express();
@@ -33,6 +34,7 @@ app.use(rateLimitMiddleware);
 
 app.use('/api/ai', aiRouter);
 app.use('/api/contact', contactRouter);
+app.use('/api/leetcode', leetcodeRouter);
 
 // Global error handler — catches JSON parse failures and uncaught errors
 app.use((err, _req, res, _next) => {

@@ -10,9 +10,10 @@ export const Navbar = ({ className, ...props }) => {
   const navItems = [
     { label: 'Home', href: '#hero' },
     { label: 'Terminal', href: '#terminal' },
+    { label: 'Education', href: '#education' },
+    { label: 'Telemetry', href: '#leetcode' },
     { label: 'Projects', href: '#projects' },
-    { label: 'DSA', href: '#dsa' },
-    { label: 'Notes', href: '#notes' },
+    { label: 'AI', href: '#ai-assistant' },
     { label: 'Contact', href: '#contact' },
   ];
 
@@ -124,7 +125,7 @@ export const Section = ({
     id={id}
     className={cn(
       'w-full',
-      padding && 'py-16 sm:py-20 md:py-24 lg:py-32',
+      padding && 'py-12 sm:py-16 md:py-20 lg:py-24',
       className
     )}
     {...props}

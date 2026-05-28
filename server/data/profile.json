@@ -3,6 +3,11 @@
   "title": "Systems, Backend & AI Engineering Student",
   "shortHeadline": "CS student focused on backend systems, distributed computing, AI engineering, and problem solving through consistent practice and hands-on projects.",
   "location": "Gujarat, India",
+  "institution": "IIIT Vadodara",
+  "institutionFull": "Indian Institute of Information Technology, Vadodara",
+  "degree": "BTech Computer Science & Engineering",
+  "cgpa": 8.88,
+  "degreePeriod": "2022-2026",
   "bio": "Computer Science student focused on backend engineering, distributed systems, and AI applications. Interested in understanding how scalable software systems are architected \u2014 from API design and database modeling to system behavior under load. Works through problems methodically across DSA platforms, builds practical backend projects, and explores AI engineering workflows. Curious about operating systems, computer networks, and what makes production systems reliable.",
   "identity": {
     "primaryRoles": ["Backend Engineering Student", "AI Engineering Learner", "Systems-Focused Developer", "Problem Solver"],

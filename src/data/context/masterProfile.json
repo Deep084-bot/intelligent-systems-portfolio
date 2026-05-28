@@ -1,0 +1,113 @@
+{
+  "personal": {
+    "name": "Deep Mehta",
+    "institution": "Indian Institute of Information Technology, Vadodara",
+    "degree": "BTech Computer Science & Engineering",
+    "cgpa": 8.88,
+    "years": "2022–2026",
+    "location": "Gujarat, India"
+  },
+  "education": {
+    "degree": "Bachelor of Technology (BTech) in Computer Science & Engineering",
+    "school": "Indian Institute of Information Technology, Vadodara",
+    "cgpa": 8.88,
+    "duration": "2022–2026",
+    "coursework": [
+      "Data Structures & Algorithms",
+      "Operating Systems",
+      "Database Management Systems",
+      "Computer Networks",
+      "Web Development",
+      "Software Engineering",
+      "System Design",
+      "Distributed Systems"
+    ],
+    "highlights": [
+      "Strong focus on backend engineering and distributed systems",
+      "Active in competitive programming and DSA practice",
+      "Exploring AI/ML integration in systems"
+    ]
+  },
+  "skills": {
+    "backend": ["Node.js", "Express.js", "REST APIs", "CRUD Architecture", "Middleware Systems", "Authentication Basics"],
+    "databases": ["PostgreSQL", "MongoDB", "MySQL", "Schema Design", "SQL Querying", "Relational Modeling"],
+    "frontend": ["React", "Vite", "Tailwind CSS", "Responsive UI", "Component Architecture"],
+    "languages": ["Java", "C++", "Python", "JavaScript", "SQL"],
+    "engineering_foundations": ["Data Structures", "Algorithms", "OOP", "DBMS", "Operating Systems", "Computer Networks"],
+    "currently_exploring": ["System Design", "Docker", "DevOps", "Distributed Systems", "AI Engineering", "Redis"]
+  },
+  "achievements": [
+    {
+      "title": "DAIICT HackOut 2025 Finalist",
+      "detail": "Advanced to finals in a competitive hackathon focused on backend and systems solutions."
+    },
+    {
+      "title": "Joint Secretary, Encore Music Club",
+      "detail": "Leadership role managing club operations and organizing events."
+    },
+    {
+      "title": "3-Time District Kala Mahakumbh Winner",
+      "detail": "Achieved district-level recognition in classical performing arts."
+    }
+  ],
+  "projects": [
+    {
+      "name": "Smart University Management System",
+      "description": "Role-based academic and placement management system built with Express.js, PostgreSQL, and Node.js. Features BCNF-normalized schemas and RBAC."
+    },
+    {
+      "name": "GitHub Project Analyzer",
+      "description": "Analytics dashboard that aggregates repository metrics using GitHub's REST API. Built with React, Chart.js, and Node.js."
+    },
+    {
+      "name": "School Management API",
+      "description": "REST APIs with geolocation-based features for school data management. Built with Express.js and MySQL."
+    },
+    {
+      "name": "Engineering Portfolio",
+      "description": "Full-stack portfolio with terminal-inspired UI and AI assistant using React, Vite, Express, and LLM APIs."
+    }
+  ],
+  "competitive_programming": {
+    "totalSolved": 741,
+    "byDifficulty": { "easy": 200, "medium": 430, "hard": 111 },
+    "leetcode": { "username": "Deep04_Mehta", "rating": 1679 },
+    "codechef": { "username": "deep04_mehta", "rating": 1600 },
+    "codeforces": { "username": "dpmehta1211" },
+    "geeksforgeeks": { "username": "deep084" },
+    "streak": { "current": 45, "best": 120 },
+    "focus": "Implementation consistency, medium-level algorithmic problems"
+  },
+  "currently_learning": [
+    "System Design Fundamentals",
+    "Distributed Systems Concepts",
+    "Docker & Containerization",
+    "DevOps Workflows",
+    "AI Engineering Patterns",
+    "Computer Networks",
+    "Operating Systems"
+  ],
+  "philosophy": {
+    "approach": "Prefers building real systems over chasing buzzwords. Learning comes from hands-on debugging, iteration, and consistent practice.",
+    "principles": [
+      "Clarity and reliability over complexity",
+      "Fundamentals-first approach",
+      "Systems thinking",
+      "Technical depth over breadth"
+    ],
+    "focus_areas": [
+      "Backend engineering and API design",
+      "Distributed systems architecture",
+      "Database systems (SQL & NoSQL)",
+      "System design and scalability",
+      "Competitive programming and DSA",
+      "AI systems integration"
+    ]
+  },
+  "contact": {
+    "email": "dpmehta1211@gmail.com",
+    "github": "github.com/Deep084-bot",
+    "linkedin": "linkedin.com/in/deepmehta",
+    "leetcode": "leetcode.com/u/Deep04_Mehta/"
+  }
+}

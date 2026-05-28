@@ -1,63 +1,24 @@
 {
   "skills": [
     {
-      "category": "Backend Engineering",
-      "icon": "server",
-      "proficiency": "Intermediate",
-      "skills": [
-        { "name": "Node.js", "level": 3 },
-        { "name": "Express.js", "level": 3 },
-        { "name": "RESTful APIs", "level": 3 },
-        { "name": "Database Design", "level": 3 },
-        { "name": "Microservices (basic)", "level": 2 }
-      ]
+      "category": "Backend & APIs",
+      "skills": ["Node.js", "Express.js", "REST APIs", "CRUD Architecture", "Middleware Systems", "Authentication Basics"]
     },
     {
-      "category": "Frontend Development",
-      "icon": "layout",
-      "proficiency": "Intermediate",
-      "skills": [
-        { "name": "React", "level": 3 },
-        { "name": "Tailwind CSS", "level": 2 },
-        { "name": "HTML & CSS", "level": 3 },
-        { "name": "Responsive Design", "level": 3 },
-        { "name": "Web Performance", "level": 3 }
-      ]
+      "category": "Databases",
+      "skills": ["PostgreSQL", "MongoDB", "MySQL", "Schema Design Fundamentals", "SQL Querying", "Relational Modeling"]
     },
     {
-      "category": "Databases & Storage",
-      "icon": "database",
-      "proficiency": "Intermediate",
-      "skills": [
-        { "name": "PostgreSQL", "level": 3 },
-        { "name": "MongoDB", "level": 3 },
-        { "name": "Redis (basic)", "level": 2 },
-        { "name": "Database Indexing", "level": 3 },
-        { "name": "Query Optimization (basic)", "level": 3 }
-      ]
+      "category": "Frontend",
+      "skills": ["React", "Tailwind CSS", "Vite", "Responsive UI", "Component Architecture"]
     },
     {
-      "category": "DevOps & Deployment",
-      "icon": "cloud",
-      "proficiency": "Beginner",
-      "skills": [
-        { "name": "Docker", "level": 2 },
-        { "name": "GitHub Actions", "level": 2 },
-        { "name": "Vercel / Render", "level": 2 },
-        { "name": "Linux (basics)", "level": 2 },
-        { "name": "Cloud Platforms (basics)", "level": 2 }
-      ]
+      "category": "Engineering Foundations",
+      "skills": ["Data Structures", "Algorithms", "OOP", "DBMS", "Operating Systems", "Computer Networks"]
     },
     {
-      "category": "Problem-Solving",
-      "icon": "puzzle",
-      "proficiency": "Advanced",
-      "skills": [
-        { "name": "Data Structures", "level": 4 },
-        { "name": "Algorithms", "level": 4 },
-        { "name": "System Design (foundations)", "level": 3 },
-        { "name": "LeetCode", "level": 4 }
-      ]
+      "category": "Currently Exploring",
+      "skills": ["System Design", "Docker", "DevOps Fundamentals", "Distributed Systems Concepts", "AI Engineering Workflows", "Redis"]
     }
   ]
 }

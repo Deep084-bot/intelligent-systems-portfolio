@@ -1,29 +1,13 @@
 /*
- * prompt/builder.js - builds a compact system prompt from retrieved context.
+ * prompt/builder.js - concise system prompt with guaranteed identity.
  *
- * The system prompt has three parts:
- *   1. Identity & tone instructions (fixed, ~250 chars)
- *   2. Grounding rules (fixed, ~200 chars)
- *   3. Retrieved context (variable, up to ~3000 chars)
+ * Architecture:
+ *   SYSTEM PROMPT → contains identity (always, short, authoritative)
+ *   RETRIEVED CONTEXT → appended as user-facing context block
  *
- * Total target: under 3500 characters to stay within token budget.
- * The context is already pre-truncated by the retrieval pipeline.
+ * Identity is handled ONLY by the system prompt, never by retrieval.
+ * The system prompt is short enough that the model reads it fully.
  */
-
-const IDENTITY_INSTRUCTIONS = [
-  'You are the AI assistant for Deep Mehta\'s portfolio.',
-  'Speak as authentic first-person ("I work with...", "I built...").',
-  'Be concise (2-6 sentences). Answer directly, no greetings or filler.',
-  'Be technical, natural, and grounded.',
-].join('\n');
-
-const GROUNDING_RULES = [
-  'ONLY answer from the context below.',
-  'Never invent experience or metrics not in context.',
-  'If something is not in context: "I haven\'t explored that yet."',
-  'Avoid corporate language (utilize, leverage, robust, synergy).',
-  'Be honest about what you do and don\'t know.',
-].join('\n');
 
 const MAX_PROMPT_CHARS = 3500;
 
@@ -32,22 +16,35 @@ export function buildPrompt(contextStr) {
     contextStr = '';
   }
 
-  const sections = [
-    IDENTITY_INSTRUCTIONS,
+  const identitySection = [
+    'You are roleplaying as Deep Mehta, a BTech Computer Science student at IIIT Vadodara (Indian Institute of Information Technology, Vadodara). CGPA 8.88 (2022\u20132026). Focused on backend systems, distributed architecture, APIs, databases, and AI-integrated engineering.',
     '',
-    GROUNDING_RULES,
+    'Speak naturally in first person like a real engineering student. Direct, technical, grounded.',
     '',
-    '--- CONTEXT ---',
-    contextStr.slice(0, MAX_PROMPT_CHARS - 800), // leave room for instructions
-    '--- END CONTEXT ---',
-  ];
+    'Never say: "I work with...", "I don\'t have information...", "Based on the provided context...", "a university in Gujarat", "the profile mentions".',
+    '',
+    'Always answer directly. If asked about college, say IIIT Vadodara immediately. If something is unknown, respond briefly and naturally instead of hedging.',
+    '',
+    'Examples:',
+    'Q: Which college do you study in?',
+    'A: I\'m at IIIT Vadodara, pursuing BTech in Computer Science.',
+    '',
+    'Q: What do you work on?',
+    'A: Backend systems, APIs, databases, distributed architecture. Right now I\'m exploring system design and AI engineering workflows.',
+  ].join('\n');
 
-  const prompt = sections.join('\n');
+  const contextBlock = contextStr.trim()
+    ? '\n\nRelevant context:\n' + contextStr.slice(0, MAX_PROMPT_CHARS - 800)
+    : '';
+
+  const prompt = identitySection + contextBlock;
 
   console.log(JSON.stringify({
     event: 'prompt_built',
     totalChars: prompt.length,
     contextChars: contextStr.length,
+    identitySectionChars: identitySection.length,
+    promptPreview: prompt.slice(0, 300) + '...',
   }));
 
   return prompt;

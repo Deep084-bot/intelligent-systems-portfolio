@@ -30,7 +30,7 @@ Focus Areas: ${profile.focusAreas.map(a => a.title).join(', ')}`,
         if (!skills.length) return 'No skills loaded';
         return skills.map(category => 
           `${category.category}:\n  ${category.skills.map(s => 
-            `• ${s.name} (Level ${s.level}/5)`
+            `• ${typeof s === 'string' ? s : s.name}`
           ).join('\n  ')}`
         ).join('\n\n');
       },

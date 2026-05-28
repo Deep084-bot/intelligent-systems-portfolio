@@ -8,7 +8,6 @@ import ProjectsSection from './sections/ProjectsSection';
 import ContactSection from './sections/ContactSection';
 import FooterSection from './sections/FooterSection';
 import {
-  DSADashboardSection,
   AIAssistantSection,
 } from './sections/PlaceholderSections';
 import LoadingScreen from './components/primitives/LoadingScreen';
@@ -17,8 +16,9 @@ import './styles/globals.css';
 function App() {
   const [showLoader, setShowLoader] = useState(true);
 
-  // Smooth scroll behavior
+  // Force scroll to top on mount; enable smooth scrolling after
   useEffect(() => {
+    window.scrollTo(0, 0);
     document.documentElement.style.scrollBehavior = 'smooth';
   }, []);
 
@@ -39,7 +39,6 @@ function App() {
       <EducationAchievementsSection />
       <LeetCodeTelemetrySection />
       <ProjectsSection />
-      <DSADashboardSection />
       <AIAssistantSection />
       <ContactSection />
       <FooterSection />

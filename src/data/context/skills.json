@@ -1,0 +1,56 @@
+{
+  "backend": {
+    "category": "Backend & APIs",
+    "skills": [
+      { "name": "Node.js", "context": "REST APIs, async runtime, backend services" },
+      { "name": "Express.js", "context": "Route handling, middleware, CRUD APIs" },
+      { "name": "REST API Design", "context": "HTTP semantics, resource modeling, status codes" }
+    ]
+  },
+  "databases": {
+    "category": "Databases",
+    "skills": [
+      { "name": "PostgreSQL", "context": "Schema design, SQL queries, relational modeling" },
+      { "name": "MongoDB", "context": "Document storage, basic aggregation" },
+      { "name": "MySQL", "context": "Querying, basic schema design" }
+    ]
+  },
+  "frontend": {
+    "category": "Frontend",
+    "skills": [
+      { "name": "React", "context": "Components, hooks, state management" },
+      { "name": "Vite", "context": "Build tooling, dev server" },
+      { "name": "Tailwind CSS", "context": "Utility-first styling, responsive design" }
+    ]
+  },
+  "languages": {
+    "category": "Languages",
+    "skills": [
+      { "name": "Java", "context": "OOP, backend services" },
+      { "name": "C++", "context": "DSA, competitive programming" },
+      { "name": "Python", "context": "Scripts, AI/ML exploration" },
+      { "name": "JavaScript", "context": "Full-stack development" },
+      { "name": "SQL", "context": "Querying, relational design" }
+    ]
+  },
+  "foundations": {
+    "category": "Engineering Foundations",
+    "skills": [
+      "Data Structures & Algorithms",
+      "Object-Oriented Programming",
+      "Database Management Systems",
+      "Operating Systems",
+      "Computer Networks"
+    ]
+  },
+  "exploring": {
+    "category": "Currently Exploring",
+    "skills": [
+      { "name": "System Design", "context": "Scalability, trade-offs, architecture patterns" },
+      { "name": "Docker", "context": "Containerization basics" },
+      { "name": "DevOps", "context": "CI/CD, deployment workflows" },
+      { "name": "Distributed Systems", "context": "Concepts, consistency models" },
+      { "name": "AI Engineering", "context": "LLM APIs, integration patterns" }
+    ]
+  }
+}

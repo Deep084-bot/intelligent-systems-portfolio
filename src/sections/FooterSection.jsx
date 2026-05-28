@@ -18,13 +18,24 @@ const LINKS_RIGHT = [
 
 export const FooterSection = () => (
   <footer className="border-t border-neutral-800 bg-neutral-950">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-10">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 sm:gap-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-12">
+      {/* Tech Stack & Architecture Note */}
+      <div className="mb-8 pb-8 border-b border-neutral-800/60 space-y-3">
+        <p className="text-xs text-neutral-600 font-mono uppercase tracking-wide">Tech Stack</p>
+        <p className="text-sm text-neutral-400 max-w-3xl leading-relaxed">
+          Built with React, Vite, Tailwind CSS, Express.js, PostgreSQL, and AI APIs.
+          Designed with a systems-engineering approach: efficient data flow, minimal dependencies,
+          backend-focused architecture, and real-time telemetry integration.
+        </p>
+      </div>
+
+      {/* Main Footer Content */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 sm:gap-8 mb-8">
         <div>
           <p className="text-sm text-neutral-500">
             &copy; {new Date().getFullYear()} {profileData.name || 'Deep Mehta'}
           </p>
-          <p className="text-xs text-neutral-600 mt-1">Backend &middot; AI Engineering &middot; Problem Solving</p>
+          <p className="text-xs text-neutral-600 mt-1">Backend • Distributed Systems • AI Engineering</p>
         </div>
         <div className="flex items-center gap-6">
           {LINKS_LEFT.map((link) => {
@@ -44,8 +55,10 @@ export const FooterSection = () => (
           })}
         </div>
       </div>
-      <div className="mt-6 pt-6 border-t border-neutral-800/60 flex flex-wrap items-center gap-x-5 gap-y-2">
-        <span className="text-xs text-neutral-600">Coding Profiles</span>
+
+      {/* Coding Profiles */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <span className="text-xs text-neutral-600 font-mono">Competitive Programming</span>
         {LINKS_RIGHT.map((link) => {
           const Icon = link.icon;
           return (

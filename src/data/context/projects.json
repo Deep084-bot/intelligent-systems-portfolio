@@ -1,0 +1,95 @@
+{
+  "projects": [
+    {
+      "id": "university-system",
+      "name": "Smart University Academic & Placement System",
+      "focus": "Backend Systems Design",
+      "description": "Enterprise-scale backend system for managing academic and placement workflows at a university",
+      "tech": ["Express.js", "PostgreSQL", "Node.js"],
+      "keyArchitectures": [
+        "BCNF normalized database schema",
+        "Role-based access control (RBAC)",
+        "Transactional workflow patterns"
+      ],
+      "challenges": [
+        "Designing normalized schema to avoid data anomalies",
+        "Implementing transaction handling for concurrent operations",
+        "Managing role-based permissions across multiple entities"
+      ],
+      "learnings": [
+        "Database normalization principles (BCNF)",
+        "ACID properties and transaction isolation",
+        "Authorization patterns in multi-role systems"
+      ]
+    },
+    {
+      "id": "github-analyzer",
+      "name": "GitHub Project Analyzer",
+      "focus": "API Integration & Data Visualization",
+      "description": "Analytics dashboard that fetches GitHub repository data and visualizes project metrics",
+      "tech": ["GitHub REST API", "React", "Chart.js", "Node.js"],
+      "keyArchitectures": [
+        "External API integration",
+        "Rate-limit aware pagination",
+        "Real-time data dashboard"
+      ],
+      "challenges": [
+        "Handling GitHub API rate limiting",
+        "Processing large JSON responses efficiently",
+        "Building responsive visualization components"
+      ],
+      "learnings": [
+        "REST API consumption best practices",
+        "Rate-limit strategies and caching",
+        "Data visualization patterns"
+      ]
+    },
+    {
+      "id": "school-api",
+      "name": "School Management API",
+      "focus": "Geolocation & Backend Services",
+      "description": "Express.js backend API for managing school data with geolocation-based features",
+      "tech": ["Express.js", "MySQL", "Node.js"],
+      "keyArchitectures": [
+        "Geolocation-based sorting algorithms",
+        "Efficient database indexing",
+        "Scalable API design"
+      ],
+      "challenges": [
+        "Implementing efficient geolocation queries",
+        "Optimizing database for spatial data",
+        "Ensuring API reliability"
+      ],
+      "learnings": [
+        "Geospatial database queries",
+        "Query optimization and indexing",
+        "Production API deployment"
+      ]
+    },
+    {
+      "id": "portfolio",
+      "name": "Engineering Portfolio Website",
+      "focus": "Full-Stack Systems Integration",
+      "description": "This portfolio: React frontend + Express backend with AI assistant, LeetCode telemetry, and AI integration",
+      "tech": ["React", "Vite", "Express.js", "Tailwind CSS", "Groq AI API"],
+      "keyArchitectures": [
+        "Frontend-backend API integration",
+        "AI system prompt engineering",
+        "Real-time data fetching (LeetCode telemetry)",
+        "Responsive design system"
+      ],
+      "challenges": [
+        "Balancing rich UI with minimal overhead",
+        "Integrating multiple external APIs",
+        "Managing async state and loading states",
+        "Creating realistic AI assistant context"
+      ],
+      "learnings": [
+        "Full-stack systems thinking",
+        "AI system prompt design",
+        "API caching and optimization",
+        "Component-based architecture at scale"
+      ]
+    }
+  ]
+}

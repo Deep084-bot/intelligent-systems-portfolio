@@ -1,32 +1,27 @@
 [
   {
-    "category": "Backend Engineering",
-    "proficiency": "Intermediate",
-    "skills": ["Node.js", "Express.js", "RESTful APIs", "Database Design", "Microservices (basic)"],
-    "keywords": ["node", "express", "api", "rest", "backend", "microservices", "server"]
+    "category": "Backend & APIs",
+    "skills": ["Node.js", "Express.js", "REST APIs", "CRUD Architecture", "Middleware Systems", "Authentication Basics"],
+    "keywords": ["node", "express", "api", "rest", "backend", "server", "crud", "middleware"]
   },
   {
-    "category": "Frontend Development",
-    "proficiency": "Intermediate",
-    "skills": ["React", "Tailwind CSS", "HTML & CSS", "Responsive Design", "Web Performance"],
-    "keywords": ["react", "frontend", "css", "html", "ui", "responsive", "tailwind", "web"]
+    "category": "Databases",
+    "skills": ["PostgreSQL", "MongoDB", "MySQL", "Schema Design Fundamentals", "SQL Querying", "Relational Modeling"],
+    "keywords": ["database", "postgresql", "mongodb", "mysql", "sql", "nosql", "schema", "query"]
   },
   {
-    "category": "Databases & Storage",
-    "proficiency": "Intermediate",
-    "skills": ["PostgreSQL", "MongoDB", "Redis (basic)", "Database Indexing", "Query Optimization (basic)"],
-    "keywords": ["database", "postgresql", "mongodb", "redis", "sql", "nosql", "indexing", "query"]
+    "category": "Frontend",
+    "skills": ["React", "Tailwind CSS", "Vite", "Responsive UI", "Component Architecture"],
+    "keywords": ["react", "frontend", "css", "tailwind", "ui", "component"]
   },
   {
-    "category": "DevOps & Deployment",
-    "proficiency": "Beginner",
-    "skills": ["Docker", "GitHub Actions", "Vercel / Render", "Linux (basics)", "Cloud Platforms (basics)"],
-    "keywords": ["docker", "devops", "deployment", "ci/cd", "github actions", "cloud", "linux"]
+    "category": "Engineering Foundations",
+    "skills": ["Data Structures", "Algorithms", "OOP", "DBMS", "Operating Systems", "Computer Networks"],
+    "keywords": ["dsa", "algorithms", "data structures", "oop", "dbms", "os", "networks"]
   },
   {
-    "category": "Problem-Solving",
-    "proficiency": "Advanced",
-    "skills": ["Data Structures", "Algorithms", "System Design (foundations)", "LeetCode"],
-    "keywords": ["algorithms", "data structures", "problem solving", "leetcode", "dsa", "competitive"]
+    "category": "Currently Exploring",
+    "skills": ["System Design", "Docker", "DevOps Fundamentals", "Distributed Systems Concepts", "AI Engineering Workflows", "Redis"],
+    "keywords": ["learning", "exploring", "system design", "docker", "devops", "distributed", "ai"]
   }
 ]

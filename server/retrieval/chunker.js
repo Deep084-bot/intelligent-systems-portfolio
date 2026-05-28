@@ -153,22 +153,21 @@ export function createSkillChunks(skills) {
 
     const catLower = s.category?.toLowerCase() || '';
     const catMap = {
-      'backend engineering': ['backend'],
-      'frontend development': ['general'],
-      'databases & storage': ['databases', 'backend'],
-      'devops & deployment': ['devops'],
-      'problem-solving': ['dsa'],
+      'backend & apis': ['backend'],
+      'databases': ['databases', 'backend'],
+      'frontend': ['general'],
+      'engineering foundations': ['dsa', 'general'],
+      'currently exploring': ['learning', 'general'],
     };
 
     return {
-      id: `skill-${catLower.replace(/\s+/g, '-')}`,
+      id: `skill-${catLower.replace(/[^a-z0-9]+/g, '-')}`,
       category: catMap[catLower] || ['general'],
-      content: `[SKILLS] ${s.category} (${s.proficiency || 'N/A'}): ${skillNames.join(', ')}`,
+      content: `[SKILLS] ${s.category}: ${skillNames.join(', ')}`,
       keywords: [
         catLower,
         ...skillNames.map(n => n.toLowerCase()),
         ...(Array.isArray(s.keywords) ? s.keywords : []),
-        'skills', 'proficient', 'experienced',
       ],
       source: 'skill',
       weight: 1,
@@ -185,44 +184,31 @@ export function createDSATreeChunks(dsa) {
     chunks.push({
       id: 'dsa-overview',
       category: ['dsa'],
-      content: `[DSA] Total Problems Solved: ${dsa.totalSolved} (Easy: ${byDiff.easy || 0}, Medium: ${byDiff.medium || 0}, Hard: ${byDiff.hard || 0})`,
+      content: `[COMPETITIVE PROGRAMMING] Total Problems Solved: ${dsa.totalSolved} (Easy: ${byDiff.easy || 0}, Medium: ${byDiff.medium || 0}, Hard: ${byDiff.hard || 0})`,
       keywords: ['dsa', 'problems', 'solved', 'leetcode', 'coding', 'competitive', 'algorithm', 'data structure'],
       source: 'dsa',
       weight: 3,
     });
   }
 
-  if (dsa.byCategory?.length) {
-    const categories = dsa.byCategory.map(c => `${c.name}: ${c.count}`).join(', ');
+  if (dsa.platforms?.length) {
+    const platforms = dsa.platforms.map(p => `${p.name}${p.solved ? ': ' + p.solved + ' solved' : ''}${p.rating ? ', rating ' + p.rating : ''}`.trim()).join('; ');
     chunks.push({
-      id: 'dsa-categories',
+      id: 'dsa-platforms',
       category: ['dsa'],
-      content: `[DSA] By Topic: ${categories}`,
-      keywords: ['arrays', 'strings', 'trees', 'graphs', 'dp', 'dynamic programming', 'linked list', 'stack', 'queue', 'heaps', 'sorting', 'binary search', 'hash table'],
+      content: `[COMPETITIVE PROGRAMMING] Platforms: ${platforms}${dsa.focus ? `. Focus: ${dsa.focus}` : ''}`,
+      keywords: ['leetcode', 'codechef', 'codeforces', 'geeksforgeeks', 'rating', 'platform', 'contest', 'competitive'],
       source: 'dsa',
       weight: 2,
     });
   }
 
-  if (dsa.platforms?.length) {
-    const platforms = dsa.platforms.map(p => `${p.name}: ${p.solved ? p.solved + ' solved' : ''}${p.rating ? ' rating ' + p.rating : ''}`.trim()).join(', ');
+  if (dsa.streak?.current > 0) {
     chunks.push({
-      id: 'dsa-platforms',
+      id: 'dsa-streak',
       category: ['dsa'],
-      content: `[DSA] Platforms: ${platforms}`,
-      keywords: ['leetcode', 'codechef', 'codeforces', 'geeksforgeeks', 'rating', 'platform'],
-      source: 'dsa',
-      weight: 1,
-    });
-  }
-
-  if (dsa.stats) {
-    const stats = Object.entries(dsa.stats).map(([k, v]) => `${k}: ${v}`).join(', ');
-    chunks.push({
-      id: 'dsa-stats',
-      category: ['dsa'],
-      content: `[DSA] Stats: ${stats}`,
-      keywords: ['streak', 'accuracy', 'time', 'hours', 'consistency'],
+      content: `[COMPETITIVE PROGRAMMING] Current Streak: ${dsa.streak.current} days (Best: ${dsa.streak.best || dsa.streak.current})`,
+      keywords: ['streak', 'consistency', 'daily', 'practice'],
       source: 'dsa',
       weight: 1,
     });

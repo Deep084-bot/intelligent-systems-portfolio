@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <line x1="0" y1="0" x2="1200" y2="0" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="0" y1="629" x2="1200" y2="629" stroke="#1a1a1a" stroke-width="2"/>
+  <rect x="40" y="40" width="1120" height="550" rx="8" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+  <text x="60" y="110" font-family="monospace" font-size="18" fill="#333">$</text>
+  <text x="80" y="110" font-family="monospace" font-size="18" fill="#38bdf8">cat /home/deep/identity</text>
+  <text x="60" y="160" font-family="monospace" font-size="16" fill="#666">{</text>
+  <text x="80" y="200" font-family="monospace" font-size="42" font-weight="700" fill="#e2e8f0">Deep Mehta</text>
+  <text x="80" y="255" font-family="monospace" font-size="22" fill="#38bdf8">Backend &amp; Systems Engineer</text>
+  <text x="60" y="310" font-family="monospace" font-size="16" fill="#666">role: "BTech CSE @ IIIT Vadodara",</text>
+  <text x="60" y="345" font-family="monospace" font-size="16" fill="#666">focus: ["distributed systems", "APIs", "databases", "AI engineering"],</text>
+  <text x="60" y="380" font-family="monospace" font-size="16" fill="#666">stack: ["Node.js", "React", "PostgreSQL", "MongoDB", "Java", "Python"],</text>
+  <text x="60" y="430" font-family="monospace" font-size="16" fill="#666">}</text>
+  <text x="60" y="490" font-family="monospace" font-size="14" fill="#444">$ echo "production-ready systems" | curl -s https://deepmehta.dev</text>
+  <rect x="60" y="515" width="280" height="36" rx="4" fill="#1a1a1a"/>
+  <text x="75" y="539" font-family="monospace" font-size="14" fill="#38bdf8">&gt; deepmehta.dev</text>
+</svg>

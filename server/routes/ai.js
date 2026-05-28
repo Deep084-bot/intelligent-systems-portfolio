@@ -93,10 +93,18 @@ router.post('/chat', async (req, res) => {
     // keep history trimmed to recent turns to limit prompt size and latency
     const normalizedHistory = normalizeHistory(history).slice(-6);
 
+    // DEBUG: log the exact system prompt and user message the model will see
+    const debugMessages = `[SYS] ${systemPrompt.slice(0, 1000)}...[HIST] ${normalizedHistory.length} msgs[Q] ${question.slice(0, 200)}`;
     console.log(JSON.stringify({
       event: 'chat_request', id: logMeta.id, requestId: reqId,
       category, contextSize: contextStr.length,
+      systemPromptSize: systemPrompt.length,
+      systemPromptHead: systemPrompt.slice(0, 500),
+      systemPromptTail: systemPrompt.slice(-200),
       historyLen: normalizedHistory.length,
+      questionPreview: question.slice(0, 200),
+      containsIIIT: systemPrompt.includes('IIIT Vadodara'),
+      containsDirectAnswer: systemPrompt.includes('Always answer directly'),
     }));
 
     try {

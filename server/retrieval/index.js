@@ -22,20 +22,14 @@ function dedupeChunks(chunks) {
   return out;
 }
 
-function buildProfileSummary(profile) {
-  if (!profile) return '';
+/*
+ * Retrieval provides ONLY technical depth — projects, skills, architecture.
+ * Identity is handled exclusively by the system prompt (prompt/builder.js).
+ * This separation prevents conflicting signals.
+ */
+function assembleContext(selectedChunks) {
   const parts = [];
-  if (profile.name) parts.push(profile.name);
-  if (profile.title) parts.push(profile.title);
-  if (profile.shortHeadline) parts.push(profile.shortHeadline);
-  return `--- PROFILE ---\n${parts.join(' — ')}`;
-}
-
-function assembleContext(selectedChunks, profileSummary) {
-  const parts = [];
-  if (profileSummary) parts.push(profileSummary);
-
-  let totalLen = profileSummary?.length || 0;
+  let totalLen = 0;
 
   for (const chunk of selectedChunks) {
     const text = safeText(chunk && chunk.content);
@@ -126,11 +120,9 @@ export async function retrieveRelevantContext({ category, query } = {}) {
     throw dedupeErr;
   }
 
-  const profileSummary = buildProfileSummary(data.profile);
-
   let context;
   try {
-    context = assembleContext(deduped, profileSummary);
+    context = assembleContext(deduped);
   } catch (assembleErr) {
     console.error(JSON.stringify({
       event: 'retrieval_assemble_error', msg: assembleErr.message, stack: assembleErr.stack?.slice(0, 500),
@@ -138,16 +130,15 @@ export async function retrieveRelevantContext({ category, query } = {}) {
     throw assembleErr;
   }
 
-  // Fallback: if context is too small, build a minimal identity-only context
+  // If retrieval returned nothing, return empty — identity is handled by system prompt
   if (!context || context.trim().length < 50) {
-    const fallback = profileSummary || 'Deep Mehta — CS student, backend and AI engineering learner.';
-    console.log(JSON.stringify({ event: 'retrieval_fallback', contextLen: context?.length }));
+    console.log(JSON.stringify({ event: 'retrieval_empty', category: cat }));
     return {
-      context: fallback,
+      context: '',
       category: cat,
       chunkCount: 0,
       sources: [],
-      contextLength: fallback.length,
+      contextLength: 0,
     };
   }
 

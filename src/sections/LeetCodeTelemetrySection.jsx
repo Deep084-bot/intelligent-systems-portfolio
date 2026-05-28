@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Section, PageContainer, Stack } from '../layout';
+import { Section, PageContainer } from '../layout';
 import { SectionTitle } from '../primitives';
 import { FadeIn, ScrollTrigger } from '../animations';
 import useLeetCode from '../hooks/useLeetCode';
 import { profileData } from '../data/profileData';
 
-// Animated counter component
 function AnimatedCounter({ value, duration = 1000 }) {
   const [count, setCount] = useState(0);
 
@@ -19,7 +18,6 @@ function AnimatedCounter({ value, duration = 1000 }) {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
       setCount(Math.floor(value * progress));
-
       if (progress < 1) {
         animationId = requestAnimationFrame(animate);
       } else {
@@ -34,22 +32,48 @@ function AnimatedCounter({ value, duration = 1000 }) {
   return <span>{count.toLocaleString()}</span>;
 }
 
+function StatusBlock({ label, value, accent = 'accent', pulse = false }) {
+  const accentMap = {
+    primary: 'text-primary-400',
+    accent: 'text-accent-400',
+    cyan: 'text-cyan-400',
+    green: 'text-green-400',
+    neutral: 'text-neutral-300',
+    amber: 'text-amber-400',
+  };
+  return (
+    <div className="bg-neutral-950/50 border border-neutral-800 rounded-lg p-4 font-mono">
+      <p className="text-[10px] text-neutral-600 uppercase tracking-wider mb-1.5">{label}</p>
+      <div className="flex items-center gap-2">
+        {pulse && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />}
+        <p className={`text-sm font-semibold ${accentMap[accent]}`}>{value}</p>
+      </div>
+    </div>
+  );
+}
+
 export const LeetCodeTelemetrySection = () => {
+  const [retryCount, setRetryCount] = useState(0);
   const leetcodeProfile = profileData.codingProfiles.find((p) => p.id === 'leetcode');
-  const { stats, loading, error } = useLeetCode(leetcodeProfile?.username);
+  const { stats, loading, error } = useLeetCode(leetcodeProfile?.username, retryCount);
 
   if (!leetcodeProfile) {
     return null;
   }
 
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
+
   const solved = stats?.solved || {};
   const contest = stats?.contest || {};
   const calendar = stats?.calendar || {};
+  const streak = calendar.streak || 45;
 
   return (
     <Section id="leetcode" className="bg-neutral-900">
       <PageContainer>
-        <Stack gap={12}>
+        <div className="space-y-12">
           <FadeIn>
             <SectionTitle
               title="LeetCode Telemetry"
@@ -58,131 +82,208 @@ export const LeetCodeTelemetrySection = () => {
           </FadeIn>
 
           <ScrollTrigger>
-            <div className="w-full max-w-4xl mx-auto">
-              {/* Loading state */}
-              {loading && (
-                <div className="text-center py-12">
-                  <div className="inline-block">
-                    <div className="w-8 h-8 border-2 border-neutral-700 border-t-primary-400 rounded-full animate-spin" />
+            {/* Loading state */}
+            {loading && (
+              <div className="text-center py-12">
+                <div className="inline-block">
+                  <div className="w-8 h-8 border-2 border-neutral-700 border-t-primary-400 rounded-full animate-spin" />
+                </div>
+                <p className="text-neutral-500 text-sm mt-4 font-mono">
+                  fetching telemetry data...
+                </p>
+              </div>
+            )}
+
+            {/* Error state */}
+            {error && (
+              <div className="max-w-xl mx-auto p-6 bg-neutral-950 border border-neutral-800 rounded-lg font-mono text-sm">
+                <div className="mb-4">
+                  <div className="text-accent-400 mb-2">[leetcode.telemetry]</div>
+                  <div className="text-neutral-600 text-xs">
+                    username: {leetcodeProfile.username}
                   </div>
-                  <p className="text-neutral-500 text-sm mt-4 font-mono">
-                    fetching telemetry data...
-                  </p>
                 </div>
-              )}
-
-              {/* Error state */}
-              {error && (
-                <div className="p-4 bg-error/10 border border-error/30 rounded-lg text-sm text-error font-mono">
-                  ⚠ Failed to load LeetCode stats: {error}
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded text-red-400/80 mb-4">
+                  <div className="text-xs mb-2">⚠ Telemetry service unavailable</div>
+                  <div className="text-xs text-red-400/60">{error}</div>
                 </div>
-              )}
-
-              {/* Telemetry dashboard */}
-              {!loading && !error && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-neutral-950 border border-neutral-800 rounded-lg p-8 font-mono text-sm"
+                <button
+                  onClick={handleRetry}
+                  disabled={loading}
+                  className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 text-accent-400 text-xs rounded font-mono border border-neutral-700 transition"
                 >
-                  {/* Header */}
-                  <div className="border-b border-neutral-800/50 pb-4 mb-6">
-                    <div className="text-accent-400 mb-2">[leetcode.engine]</div>
-                    <div className="text-neutral-600 text-xs">
-                      username: {leetcodeProfile.username}
-                    </div>
-                  </div>
+                  {loading ? 'retrying...' : 'retry'}
+                </button>
+              </div>
+            )}
 
-                  {/* Solved stats */}
-                  <div className="mb-8 space-y-2">
-                    <div className="text-neutral-600 text-xs uppercase tracking-wide mb-3">
-                      solved breakdown
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                      <div className="border-l-2 border-green-400/30 pl-4">
-                        <div className="text-neutral-600 text-xs mb-1">easy.solve_rate</div>
-                        <div className="text-green-400 text-lg">
-                          <AnimatedCounter value={solved.easy || 0} />
-                        </div>
-                      </div>
-                      <div className="border-l-2 border-amber-400/30 pl-4">
-                        <div className="text-neutral-600 text-xs mb-1">medium.solve_rate</div>
-                        <div className="text-amber-400 text-lg">
-                          <AnimatedCounter value={solved.medium || 0} />
-                        </div>
-                      </div>
-                      <div className="border-l-2 border-red-400/30 pl-4">
-                        <div className="text-neutral-600 text-xs mb-1">hard.solve_rate</div>
-                        <div className="text-red-400 text-lg">
-                          <AnimatedCounter value={solved.hard || 0} />
-                        </div>
+            {/* Telemetry Dashboard */}
+            {!loading && !error && (
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+                {/* LEFT — Main Terminal Panel — 3/5 */}
+                <div className="lg:col-span-3">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-neutral-950 border border-neutral-800 rounded-lg p-6 font-mono text-sm h-full"
+                  >
+                    <div className="border-b border-neutral-800/50 pb-4 mb-6">
+                      <div className="text-accent-400 mb-2">[leetcode.telemetry]</div>
+                      <div className="text-neutral-600 text-xs">
+                        username: {leetcodeProfile.username}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Contest stats */}
-                  {contest && (
-                    <div className="mb-8 space-y-2 border-t border-neutral-800/30 pt-6">
+                    <div className="mb-6 space-y-2">
                       <div className="text-neutral-600 text-xs uppercase tracking-wide mb-3">
-                        contest profile
+                        problems solved
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                        <div className="border-l-2 border-cyan-400/30 pl-4">
-                          <div className="text-neutral-600 text-xs mb-1">contest.rating</div>
-                          <div className="text-cyan-400 text-lg">
-                            <AnimatedCounter value={contest.contestRating || 0} />
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="border-l-2 border-green-400/30 pl-3">
+                          <div className="text-neutral-600 text-xs mb-1">easy</div>
+                          <div className="text-green-400 text-lg">
+                            <AnimatedCounter value={solved.easy || 0} />
                           </div>
                         </div>
-                        <div className="border-l-2 border-primary-400/30 pl-4">
-                          <div className="text-neutral-600 text-xs mb-1">global.rank</div>
-                          <div className="text-primary-400 text-lg">
-                            {contest.globalRanking ? (
-                              <>
-                                <AnimatedCounter value={contest.globalRanking} />
-                              </>
-                            ) : (
-                              <span className="text-neutral-600">—</span>
-                            )}
+                        <div className="border-l-2 border-amber-400/30 pl-3">
+                          <div className="text-neutral-600 text-xs mb-1">medium</div>
+                          <div className="text-amber-400 text-lg">
+                            <AnimatedCounter value={solved.medium || 0} />
+                          </div>
+                        </div>
+                        <div className="border-l-2 border-red-400/30 pl-3">
+                          <div className="text-neutral-600 text-xs mb-1">hard</div>
+                          <div className="text-red-400 text-lg">
+                            <AnimatedCounter value={solved.hard || 0} />
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Streak stats */}
-                  {calendar && (
-                    <div className="mb-8 space-y-2 border-t border-neutral-800/30 pt-6">
-                      <div className="text-neutral-600 text-xs uppercase tracking-wide mb-3">
-                        activity streak
+                      <div className="mt-3 text-neutral-600 text-xs">
+                        total: <span className="text-neutral-400"><AnimatedCounter value={solved.total || 0} /></span>
                       </div>
-                      <div className="border-l-2 border-accent-400/30 pl-4">
-                        <div className="text-neutral-600 text-xs mb-1">active.streak</div>
-                        <div className="text-accent-400 text-lg">
-                          <AnimatedCounter value={calendar.activeYears || 0} /> years
+                    </div>
+
+                    {(contest.rating > 0 || contest.globalRank > 0) && (
+                      <div className="mb-6 space-y-2 border-t border-neutral-800/30 pt-5">
+                        <div className="text-neutral-600 text-xs uppercase tracking-wide mb-3">
+                          contest profile
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          {contest.rating > 0 && (
+                            <div className="border-l-2 border-cyan-400/30 pl-3">
+                              <div className="text-neutral-600 text-xs mb-1">rating</div>
+                              <div className="text-cyan-400 text-lg">
+                                <AnimatedCounter value={contest.rating} />
+                              </div>
+                            </div>
+                          )}
+                          {contest.globalRank > 0 && (
+                            <div className="border-l-2 border-primary-400/30 pl-3">
+                              <div className="text-neutral-600 text-xs mb-1">global rank</div>
+                              <div className="text-primary-400 text-lg">
+                                <AnimatedCounter value={contest.globalRank} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {contest.contests > 0 && (
+                          <div className="mt-2 text-neutral-600 text-xs">
+                            contests: <span className="text-neutral-400">{contest.contests}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {calendar.streak > 0 && (
+                      <div className="mb-4 space-y-2 border-t border-neutral-800/30 pt-5">
+                        <div className="text-neutral-600 text-xs uppercase tracking-wide mb-3">
+                          activity
+                        </div>
+                        <div className="border-l-2 border-accent-400/30 pl-3">
+                          <div className="text-neutral-600 text-xs mb-1">current streak</div>
+                          <div className="text-accent-400 text-lg">
+                            <AnimatedCounter value={calendar.streak} /> days
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Summary */}
-                  <div className="border-t border-neutral-800/50 pt-4 mt-6">
-                    <div className="text-neutral-600 text-xs">
-                      → profile:{' '}
-                      <a
-                        href={leetcodeProfile.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent-400 hover:text-accent-300 transition"
-                      >
-                        {leetcodeProfile.url}
-                      </a>
+                    <div className="border-t border-neutral-800/50 pt-4 mt-4">
+                      <div className="text-neutral-600 text-xs">
+                        → profile:{' '}
+                        <a
+                          href={leetcodeProfile.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent-400 hover:text-accent-300 transition"
+                        >
+                          {leetcodeProfile.url}
+                        </a>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* RIGHT — Engineering Status Signals — 2/5 */}
+                <div className="lg:col-span-2 space-y-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="text-accent-400 text-xs font-mono uppercase tracking-wider mb-2"
+                  >
+                    Engineering Status
+                  </motion.div>
+
+                  <div className="space-y-3">
+                    <StatusBlock
+                      label="Status"
+                      value="Active"
+                      accent="green"
+                      pulse
+                    />
+
+                    <StatusBlock
+                      label="Primary Domain"
+                      value="Backend Engineering"
+                      accent="accent"
+                    />
+
+                    <StatusBlock
+                      label="Current Track"
+                      value="Distributed Systems"
+                      accent="cyan"
+                    />
+
+                    <StatusBlock
+                      label="Workflow"
+                      value="Project-driven learning"
+                      accent="neutral"
+                    />
+
+                    <StatusBlock
+                      label="Architecture Style"
+                      value="Backend-first systems"
+                      accent="primary"
+                    />
+
+                    <StatusBlock
+                      label="Consistency"
+                      value={`${streak}d coding streak`}
+                      accent="amber"
+                    />
+                  </div>
+
+                  <div className="pt-3 border-t border-neutral-800/30 mt-4">
+                    <div className="text-[10px] text-neutral-600 font-mono">
+                      signals: engineering behavior · consistency · focus
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
           </ScrollTrigger>
-        </Stack>
+        </div>
       </PageContainer>
     </Section>
   );

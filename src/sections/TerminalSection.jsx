@@ -9,14 +9,12 @@ import { Copy, RotateCcw } from 'lucide-react';
 import profileData from '../data/profile.json';
 import projectsData from '../data/projects.json';
 import skillsData from '../data/skills.json';
-import dsaStatsData from '../data/dsa-stats.json';
 import achievementsData from '../data/achievements.json';
 
 
 const PROFILE = profileData;
 const PROJECTS = projectsData.projects || [];
 const SKILLS = skillsData.skills || [];
-const DSA = dsaStatsData.dsa || {};
 const ACHIEVEMENTS = achievementsData.achievements || [];
 
 const BOOT_LINES = [
@@ -28,6 +26,7 @@ const BOOT_LINES = [
   { text: 'Starting backend services...', delay: 150 },
   { text: 'AI subsystem online.', delay: 300 },
   { text: 'Session restored. Ready.', delay: 200 },
+  { text: 'Type "help" for available commands.', delay: 150 },
 ];
 
 const GIT_MESSAGES = [
@@ -247,6 +246,17 @@ export const TerminalSection = () => {
 
   // Simulate lightweight computation panel updates (visual only)
   const [compLines, setCompLines] = useState([]);
+
+  // Determine semantic color for a log message
+  const getLogColor = (message) => {
+    if (message.includes('CONNECTED') || message.includes('vector.db')) return 'text-green-400';
+    if (message.includes('ACTIVE') || message.includes('inference') || message.includes('latency') || message.includes('similarity')) return 'text-cyan-400';
+    if (message.includes('latency') || message.includes('ms') || message.includes('cpu') || message.includes('gpu')) return 'text-amber-400';
+    if (message.includes('error') || message.includes('failed') || message.includes('unavailable')) return 'text-red-400/70';
+    if (message.includes('warning') || message.includes('warn')) return 'text-orange-400/70';
+    return 'text-neutral-400';
+  };
+
   useEffect(() => {
     const pool = [
       'tokens: 0.00 -> 12.8k',
@@ -258,6 +268,8 @@ export const TerminalSection = () => {
       'cpu: 4.2%',
       'gpu: 0%',
       'vector.sim=0.8723',
+      'vector.db=CONNECTED',
+      'inference=ACTIVE',
     ];
     const iv = setInterval(() => {
       const now = new Date();
@@ -352,8 +364,8 @@ Personality: ${PROFILE.personalitySignals?.join(', ')}`;
 
       case 'skills': {
         return SKILLS.map(cat => {
-          const names = cat.skills.map(s => `  • ${s.name || s} (Level ${s.level || '?'}/5)`).join('\n');
-          return `${cat.category} [${cat.proficiency || 'N/A'}]\n${names}`;
+          const names = cat.skills.map(s => `  • ${typeof s === 'string' ? s : s.name}`).join('\n');
+          return `${cat.category}\n${names}`;
         }).join('\n\n');
       }
 
@@ -372,19 +384,7 @@ Personality: ${PROFILE.personalitySignals?.join(', ')}`;
       }
 
       case 'dsa': {
-        if (!DSA.totalSolved) return 'DSA stats not available.';
-        return `Problem-Solving Stats:
-  Total Solved: ${DSA.totalSolved}
-  Easy: ${DSA.byDifficulty?.easy || 0} | Medium: ${DSA.byDifficulty?.medium || 0} | Hard: ${DSA.byDifficulty?.hard || 0}
-
-Top Categories:
-${(DSA.byCategory || []).slice(0, 5).map(c => `  • ${c.name}: ${c.count} problems`).join('\n')}
-
-Platforms:
-${(DSA.platforms || []).map(p => `  • ${p.name}: ${p.solved || 'Rating: ' + p.rating || 'N/A'}`).join('\n')}
-
-Current Streak: ${DSA.stats?.currentStreak || 'N/A'} days | Best: ${DSA.stats?.bestStreak || 'N/A'} days
-Accuracy: ${DSA.stats?.averageAccuracy || 'N/A'}`;
+        return 'DSA & competitive programming stats are displayed in the dedicated LeetCode section. Use "scroll" or navigate to view telemetry.';
       }
 
       case 'blog': {
@@ -566,9 +566,8 @@ ${getRandomElement(vibes)}
       ██            ██      Shell:    /bin/portfolio
         ████████████        DE:       Tailwind UI
                             Terminal: Interactive Mode
- 
+
   Projects: ${PROJECTS.length} featured
-  DSA:      ${DSA.totalSolved || 'N/A'} problems solved
   Location: ${PROFILE.location}
   Interests: ${PROFILE.technicalInterests?.slice(0, 3).join(', ')}`;
       }
@@ -1272,10 +1271,10 @@ Available commands:
                 <div className="px-4 py-3 border-b border-neutral-800">
                   <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Computation Logs</h4>
                 </div>
-                <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 font-mono text-xs text-neutral-300">
+                <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 font-mono text-xs">
                   <div className="flex flex-col gap-1">
                     {compLines.map((l, i) => (
-                      <div key={i} className="text-[11px] text-neutral-400 leading-relaxed">{l}</div>
+                      <div key={i} className={`text-[11px] leading-relaxed ${getLogColor(l)}`}>{l}</div>
                     ))}
                   </div>
                 </div>
