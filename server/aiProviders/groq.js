@@ -32,18 +32,24 @@ function truncateSystemPrompt(prompt) {
 function normalizeResp(raw) {
   if (!raw) return { text: '', tokensUsed: 0 };
   if (typeof raw === 'string') return { text: raw, tokensUsed: Math.round(raw.length / 4) };
-  if (raw.choices && raw.choices.length && raw.choices[0].message && typeof raw.choices[0].message.content === 'string') {
-    const text = raw.choices[0].message.content;
-    return { text, tokensUsed: raw.usage?.total_tokens || Math.round(text.length / 4) };
+
+  const content = raw?.choices?.[0]?.message?.content;
+  if (typeof content === 'string') {
+    return { text: content, tokensUsed: raw?.usage?.total_tokens || Math.round(content.length / 4) };
   }
-  if (raw.output) {
-    const text = Array.isArray(raw.output) ? raw.output.map(o => o.text || JSON.stringify(o)).join('\n') : String(raw.output);
-    return { text, tokensUsed: raw.usage?.total_tokens || Math.round(text.length / 4) };
+
+  if (raw?.output) {
+    const text = Array.isArray(raw.output)
+      ? raw.output.map(o => o?.text || JSON.stringify(o)).join('\n')
+      : String(raw.output);
+    return { text, tokensUsed: raw?.usage?.total_tokens || Math.round(text.length / 4) };
   }
-  if (raw.generated_text) {
+
+  if (raw?.generated_text) {
     const text = String(raw.generated_text);
-    return { text, tokensUsed: raw.usage?.total_tokens || Math.round(text.length / 4) };
+    return { text, tokensUsed: raw?.usage?.total_tokens || Math.round(text.length / 4) };
   }
+
   return { text: JSON.stringify(raw), tokensUsed: Math.round(JSON.stringify(raw).length / 4) };
 }
 
@@ -161,7 +167,7 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
     if (userMsg) messages.push(userMsg);
 
     const endpoint = process.env.GROQ_ENDPOINT || 'https://api.groq.com/openai/v1/chat/completions';
-    const payload = { model: useModel, messages, temperature, max_completion_tokens: maxTokens };
+    const payload = { model: useModel, messages, temperature, max_tokens: maxTokens };
 
     console.log(JSON.stringify({ event: 'provider_request', provider: 'groq', model: useModel, requestId }));
 
@@ -230,17 +236,31 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
           throw err;
         }
 
+        const rawModel = j?.model || useModel;
+        const rawFinish = j?.choices?.[0]?.finish_reason || null;
+        const rawTokens = j?.usage?.total_tokens ?? null;
+        const rawContentLen = (j?.choices?.[0]?.message?.content || '').length;
+        console.log(JSON.stringify({
+          event: 'provider_groq_raw', requestId, model: rawModel, finish_reason: rawFinish,
+          total_tokens: rawTokens, content_length: rawContentLen, has_choices: !!j?.choices?.length,
+        }));
+
         // Log full response details for debugging (non-sensitive parts)
         const respPreview = (() => {
           try {
-            return j.choices?.[0]?.message?.content?.slice(0, 120) || JSON.stringify(j).slice(0, 120);
+            return j?.choices?.[0]?.message?.content?.slice(0, 120) || String(JSON.stringify(j)).slice(0, 120);
           } catch (e) { return null; }
         })();
 
         circuitBreaker.recordSuccess();
         const latencyMs = Date.now() - start;
         const normalized = normalizeResp(j);
-        console.log(JSON.stringify({ event: 'provider_success', provider: 'groq', latencyMs, attempt, requestId, provider_latency_ms: latencyMs, provider_call_ms: providerCallMs, groq_request_id: groqRequestId, response_preview: respPreview }));
+        console.log(JSON.stringify({
+          event: 'provider_success', provider: 'groq', model: rawModel, latencyMs,
+          attempt, requestId, provider_latency_ms: latencyMs, provider_call_ms: providerCallMs,
+          groq_request_id: groqRequestId, response_preview: respPreview,
+          reply_length: normalized?.text?.length ?? 0, tokens_used: normalized?.tokensUsed ?? 0,
+        }));
 
         return {
           text: normalized.text,

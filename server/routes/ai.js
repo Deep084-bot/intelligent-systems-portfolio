@@ -9,7 +9,11 @@ const REQUEST_TIMEOUT_MS = 60_000; // temporarily extended for connectivity debu
 
 function safeJson(res, status, data) {
   if (res.headersSent) return;
-  try { res.status(status).json(data); } catch {}
+  try { res.status(status).json(data); } catch { /* ignore */ }
+}
+
+function toErrorPayload(statusCode, message, requestId) {
+  return { success: false, status: statusCode, message, requestId };
 }
 
 function normalizeHistory(history) {
@@ -41,7 +45,7 @@ router.post('/chat', async (req, res) => {
   const reqId = req.body?.requestId || Math.random().toString(36).slice(2, 10);
 
   const timeoutHandle = setTimeout(() => {
-    if (!res.headersSent) safeJson(res, 504, { error: 'The request timed out. Please try again.' });
+    if (!res.headersSent) safeJson(res, 504, toErrorPayload(504, 'The request timed out. Please try again.', reqId));
     try { controller.abort(); } catch {}
   }, REQUEST_TIMEOUT_MS);
 
@@ -55,16 +59,16 @@ router.post('/chat', async (req, res) => {
     const { question, history } = req.body || {};
     if (!question || typeof question !== 'string' || !question.trim()) {
       clearTimeout(timeoutHandle);
-      return safeJson(res, 400, { error: 'Please provide a question.' });
+      return safeJson(res, 400, toErrorPayload(400, 'Please provide a question.', reqId));
     }
 
     let provider;
     try {
       provider = getProvider();
     } catch (providerErr) {
-      console.error(JSON.stringify({ event: 'provider_init_failed', msg: providerErr.message }));
+      console.error(JSON.stringify({ event: 'provider_init_failed', msg: String(providerErr?.message || 'unknown').slice(0, 300) }));
       clearTimeout(timeoutHandle);
-      return safeJson(res, 502, { error: 'AI provider unavailable.' });
+      return safeJson(res, 502, toErrorPayload(502, 'AI provider unavailable.', reqId));
     }
 
     let category;
@@ -72,7 +76,7 @@ router.post('/chat', async (req, res) => {
       category = detectCategory(question);
     } catch {
       clearTimeout(timeoutHandle);
-      return safeJson(res, 500, { error: 'AI assistant is temporarily unavailable.' });
+      return safeJson(res, 500, toErrorPayload(500, 'AI assistant is temporarily unavailable.', reqId));
     }
 
     let ctx;
@@ -81,7 +85,7 @@ router.post('/chat', async (req, res) => {
       ctx = await retrieveRelevantContext({ category, query: question });
     } catch {
       clearTimeout(timeoutHandle);
-      return safeJson(res, 500, { error: 'AI assistant is temporarily unavailable.' });
+      return safeJson(res, 500, toErrorPayload(500, 'AI assistant is temporarily unavailable.', reqId));
     }
     const retrievalMs = Date.now() - retrievalStart;
 
@@ -119,17 +123,17 @@ router.post('/chat', async (req, res) => {
         requestId: reqId,
       });
 
-      const answer = (result && result.text) ? result.text.trim() : '';
+      const answer = result?.text?.trim?.() ?? '';
       clearTimeout(timeoutHandle);
 
       if (!answer) {
         return safeJson(res, 200, {
-          answer: 'I received your question but generated an empty response. Please try rephrasing.',
+          success: true, message: 'I received your question but generated an empty response. Please try rephrasing.',
           requestId: reqId,
         });
       }
 
-      const providerLatency = result.latencyMs || 0;
+      const providerLatency = result?.latencyMs || 0;
       const totalMs = Date.now() - requestStart;
       console.log(JSON.stringify({
         event: 'chat_response', id: logMeta.id, requestId: reqId,
@@ -141,27 +145,31 @@ router.post('/chat', async (req, res) => {
       // lightweight performance metric event
       console.log(JSON.stringify({ event: 'metric', provider_latency_ms: providerLatency, retrieval_latency_ms: retrievalMs, total_request_ms: totalMs }));
 
-      safeJson(res, 200, { answer, requestId: reqId });
+      safeJson(res, 200, { success: true, answer, requestId: reqId });
     } catch (err) {
       clearTimeout(timeoutHandle);
       if (res.headersSent) return;
       const statusCode = errorStatus(err);
-      const msg = err.message || 'AI assistant is temporarily unavailable.';
+      const errMsg = err?.message || 'AI assistant is temporarily unavailable.';
       const totalMs = Date.now() - requestStart;
       console.error(JSON.stringify({
         event: 'provider_error', id: logMeta.id, requestId: reqId, statusCode,
-        msg: msg.slice(0, 300), retrieval_latency_ms: retrievalMs ?? null, prompt_build_ms: promptBuildMs ?? null, total_request_ms: totalMs,
+        msg: String(errMsg).slice(0, 300), retrieval_latency_ms: retrievalMs ?? null,
+        prompt_build_ms: promptBuildMs ?? null, total_request_ms: totalMs,
+        stack: String(err?.stack || '').slice(0, 500) || null,
       }));
-      // do not expose raw error; return normalized message
-      safeJson(res, statusCode, { error: msg, requestId: reqId });
+      safeJson(res, statusCode, toErrorPayload(statusCode, errMsg, reqId));
     }
   } catch (err) {
     clearTimeout(timeoutHandle);
     if (res.headersSent) return;
+    const fatalMsg = err?.message || 'AI assistant is temporarily unavailable.';
     console.error(JSON.stringify({
-      event: 'chat_fatal', id: logMeta.id, msg: err.message?.slice(0, 300),
+      event: 'chat_fatal', id: logMeta.id, requestId: reqId,
+      msg: String(fatalMsg).slice(0, 300),
+      stack: String(err?.stack || '').slice(0, 500) || null,
     }));
-    safeJson(res, 500, { error: 'AI assistant is temporarily unavailable.' });
+    safeJson(res, 500, toErrorPayload(500, 'AI assistant is temporarily unavailable.', reqId));
   }
 });
 

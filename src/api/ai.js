@@ -1,9 +1,19 @@
+const TIMEOUT_MS = 30_000;
+
+function parseErrorBody(status, bodyText) {
+  try {
+    const parsed = JSON.parse(bodyText);
+    return parsed?.message || parsed?.error || `Server error (${status})`;
+  } catch {
+    return `Server error (${status})`;
+  }
+}
+
 export async function chat(question, history = [], parentSignal = null) {
-  // generate a unique requestId for tracing
   const requestId = Math.random().toString(36).slice(2, 10);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30_000);
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   let cleanup = null;
   if (parentSignal) {
@@ -27,32 +37,35 @@ export async function chat(question, history = [], parentSignal = null) {
     clearTimeout(timeoutId);
     if (cleanup) cleanup();
 
+    let bodyText;
+    try {
+      bodyText = await resp.text();
+    } catch {
+      throw Object.assign(new Error('AI assistant is temporarily unavailable.'), { status: 0, requestId });
+    }
+
     if (!resp.ok) {
-      let msg = `Server error (${resp.status})`;
-      let retryAfter = null;
-      let unavailable = false;
-      try {
-        const parsed = await resp.json();
-        msg = parsed.error || msg;
-      } catch {}
-      if (resp.status === 429 || resp.status === 503) {
-        const ra = resp.headers.get('Retry-After');
-        retryAfter = ra ? parseInt(ra, 10) : null;
-        unavailable = true;
-      }
-      if (resp.status === 504) {
-        msg = 'Request timed out. Please try again.';
-      }
-      const err = new Error(msg);
-      err.status = resp.status;
-      err.retryAfter = retryAfter;
-      err.unavailable = resp.status === 503 || resp.status === 502;
-      err.requestId = requestId;
+      const msg = parseErrorBody(resp.status, bodyText);
+      const err = Object.assign(new Error(msg), {
+        status: resp.status,
+        retryAfter: resp.headers.get('Retry-After') ? parseInt(resp.headers.get('Retry-After'), 10) : null,
+        unavailable: resp.status === 503 || resp.status === 502,
+        requestId,
+      });
       throw err;
     }
 
-    const data = await resp.json();
-    // attach requestId for frontend tracing
+    let data;
+    try {
+      data = JSON.parse(bodyText);
+    } catch {
+      throw Object.assign(new Error('Received an invalid response from the server.'), { status: 502, requestId });
+    }
+
+    if (!data || typeof data !== 'object') {
+      throw Object.assign(new Error('AI assistant is temporarily unavailable.'), { status: 502, requestId });
+    }
+
     data.requestId = requestId;
     return data;
   } catch (err) {
@@ -60,21 +73,14 @@ export async function chat(question, history = [], parentSignal = null) {
     if (cleanup) cleanup();
 
     if (err.name === 'AbortError') {
-      const e = new Error('Request timed out. Please try again.');
-      e.status = 0;
-      e.requestId = requestId;
-      throw e;
+      throw Object.assign(new Error('Request timed out. Please try again.'), { status: 0, requestId });
     }
 
     if (err.name === 'TypeError' && (!err.status || err.message === 'Failed to fetch')) {
-      const e = new Error('AI assistant is temporarily unavailable.');
-      e.status = 0;
-      e.unavailable = true;
-      e.requestId = requestId;
-      throw e;
+      throw Object.assign(new Error('AI assistant is temporarily unavailable.'), { status: 0, unavailable: true, requestId });
     }
 
-    err.requestId = requestId;
+    err.requestId = err.requestId || requestId;
     throw err;
   }
 }

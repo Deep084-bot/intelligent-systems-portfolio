@@ -60,7 +60,8 @@ export default function useAI() {
         .filter((m) => m.role === 'user' || (m.role === 'assistant' && m.text))
         .slice(-6);
 
-      const { answer } = await chat(text, history, controller.signal);
+      const result = await chat(text, history, controller.signal);
+      const answer = result?.answer || result?.message || '';
 
       if (cancelledRef.current) return;
 
@@ -82,7 +83,8 @@ export default function useAI() {
         if (cancelledRef.current) return;
 
         const end = Math.min(chunkIndex + TYPING_CHUNK_SIZE, answer.length);
-        revealed = answer.slice(0, end);
+        const slice = answer.slice(0, end);
+        revealed = slice;
 
         updateMessages((prev) => {
           const copy = [...prev];
