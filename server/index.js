@@ -1,11 +1,3 @@
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import { config } from 'dotenv';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const envResult = config({ path: resolve(__dirname, '.env') });
-
 import express from 'express';
 import cors from 'cors';
 import aiRouter from './routes/ai.js';
@@ -48,7 +40,13 @@ app.use((err, _req, res, _next) => {
   }));
 });
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`AI backend listening on port ${PORT}`);
-});
+// Export for Vercel serverless
+export default app;
+
+// Only listen directly when not running on Vercel
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 4000;
+  app.listen(PORT, () => {
+    console.log(`AI backend listening on port ${PORT}`);
+  });
+}
