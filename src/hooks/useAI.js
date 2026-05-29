@@ -60,12 +60,41 @@ export default function useAI() {
         .filter((m) => m.role === 'user' || (m.role === 'assistant' && m.text))
         .slice(-6);
 
+      console.log('[useAI] Sending request with history length:', history.length);
       const result = await chat(text, history, controller.signal);
-      const answer = result?.answer || result?.message || '';
+      console.log('[useAI] API result received:', result);
+
+      // Defensive extraction: ensure answer is always a string
+      let answer = '';
+      if (typeof result?.answer === 'string') {
+        answer = result.answer;
+      } else if (typeof result?.message === 'string') {
+        answer = result.message;
+      } else if (typeof result?.text === 'string') {
+        answer = result.text;
+      } else if (typeof result?.data === 'string') {
+        answer = result.data;
+      } else if (result && typeof result === 'string') {
+        answer = result;
+      }
+
+      console.log('[useAI] Extracted answer:', { type: typeof answer, length: answer?.length || 0, preview: answer?.slice(0, 50) });
 
       if (cancelledRef.current) return;
 
-      if (!answer || !answer.trim()) {
+      if (!answer || typeof answer !== 'string' || !answer.trim()) {
+        console.log('[useAI] Answer is empty or invalid, showing fallback message');
+        updateMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: 'I received your question but generated an empty response. Please try rephrasing.' },
+        ]);
+        return;
+      }
+
+      // Ensure answer is a valid, trimmed string before typing animation
+      const trimmedAnswer = answer.trim();
+      if (typeof trimmedAnswer !== 'string' || trimmedAnswer.length === 0) {
+        console.log('[useAI] Trimmed answer is invalid');
         updateMessages((prev) => [
           ...prev,
           { role: 'assistant', text: 'I received your question but generated an empty response. Please try rephrasing.' },
@@ -82,8 +111,14 @@ export default function useAI() {
       const typeNextChunk = () => {
         if (cancelledRef.current) return;
 
-        const end = Math.min(chunkIndex + TYPING_CHUNK_SIZE, answer.length);
-        const slice = answer.slice(0, end);
+        // Defensive check: ensure trimmedAnswer is still a valid string
+        if (typeof trimmedAnswer !== 'string' || trimmedAnswer.length === 0) {
+          console.warn('[useAI] typeNextChunk: answer is no longer a valid string');
+          return;
+        }
+
+        const end = Math.min(chunkIndex + TYPING_CHUNK_SIZE, trimmedAnswer.length);
+        const slice = trimmedAnswer.slice(0, end);
         revealed = slice;
 
         updateMessages((prev) => {
@@ -96,15 +131,17 @@ export default function useAI() {
 
         chunkIndex = end;
 
-        if (chunkIndex < answer.length) {
+        if (chunkIndex < trimmedAnswer.length) {
           setTimeout(typeNextChunk, TYPING_INTERVAL_MS + Math.random() * 20);
         }
       };
 
+      console.log('[useAI] Starting typing animation for answer length:', trimmedAnswer.length);
       typeNextChunk();
     } catch (err) {
       if (cancelledRef.current) return;
 
+      console.error('[useAI] Error caught:', err);
       const status = err.status || err.statusCode || 0;
 
       if (err.name === 'AbortError' || status === 0) {
