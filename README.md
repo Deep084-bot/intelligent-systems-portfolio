@@ -4,7 +4,7 @@ Production-ready engineering portfolio with an interactive AI assistant, LeetCod
 
 ## Live
 
-`https://deepmehta.dev`
+`https://deepmehta-dev.vercel.app`
 
 ## Features
 
