@@ -4,17 +4,21 @@ import { ExternalLink, Github, BookOpen } from 'lucide-react';
 import { Section, PageContainer, Stack, Grid } from '../layout';
 import { SectionTitle, Card } from '../primitives';
 import { FadeIn, StaggerContainer, StaggerItem } from '../animations';
-import projectsData from '../data/projects.json';
+import useProjects from '../hooks/useProjects';
+import HandbookReader from '../components/molecules/HandbookReader';
+import ProjectDetailView from '../components/organisms/ProjectDetailView';
 
-const PROJECTS = projectsData.projects || [];
-
-function ImageWithFallback({ src, alt, title }) {
+function ImageWithFallback({ src, alt, title, repoName }) {
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  if (failed) return <PlaceholderBlock title={title} />;
 
-  const candidates = [src, src.startsWith('/') ? src.slice(1) : '/' + src, src.replace(/\\/g, '/')];
-  const current = candidates[attempt] || src;
+  const candidates = [];
+  if (src) candidates.push(src);
+  if (repoName) candidates.push(`https://raw.githubusercontent.com/Deep084-bot/${repoName}/main/assets/cover.png`);
+
+  if (failed || candidates.length === 0) return <PlaceholderBlock title={title} />;
+
+  const current = candidates[attempt] || candidates[0];
 
   return (
     <motion.img
@@ -45,24 +49,28 @@ function PlaceholderBlock({ title }) {
   );
 }
 
-const ProjectCard = ({ project, index }) => {
+const ProjectCard = ({ project, onHandbookClick, onDetailClick }) => {
   const tech = (project.tech || project.tags || []);
 
   return (
     <StaggerItem direction="up" className="h-full">
       <Card className="group h-full flex flex-col hover:border-accent-500/50 overflow-hidden transition-all duration-300">
-        {/* Image Placeholder */}
-        <div className="relative h-40 sm:h-48 overflow-hidden rounded-lg mb-4 bg-neutral-700 flex items-center justify-center">
-          {project.image ? (
-            <ImageWithFallback src={project.image} alt={project.title} title={project.title} />
-          ) : (
-            <PlaceholderBlock title={project.title} />
-          )}
+        {/* Image — clickable */}
+        <div
+          className="relative h-40 sm:h-48 overflow-hidden rounded-lg mb-4 bg-neutral-700 flex items-center justify-center cursor-pointer"
+          onClick={() => onDetailClick(project)}
+        >
+          <ImageWithFallback
+            src={project.image}
+            alt={project.title}
+            title={project.title}
+            repoName={project._source === 'github' ? project.slug : null}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-transparent opacity-40" />
         </div>
 
-        {/* Content */}
-        <Stack gap={3} className="flex-1">
+        {/* Content — clickable */}
+        <Stack gap={3} className="flex-1 cursor-pointer" onClick={() => onDetailClick(project)}>
           <h3 className="text-lg sm:text-xl font-bold text-neutral-50 group-hover:text-accent-400 transition-colors">
             {project.title}
           </h3>
@@ -124,18 +132,14 @@ const ProjectCard = ({ project, index }) => {
               Code
             </motion.a>
           )}
-          {project.links?.blog && (
-            <motion.a
-              href={project.links.blog}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.1 }}
-              className="flex items-center gap-2 text-sm text-neutral-400 hover:text-accent-400 transition-colors ml-auto"
-            >
-              <span>Blog</span>
-              <BookOpen size={16} />
-            </motion.a>
-          )}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            onClick={() => onHandbookClick(project)}
+            className="flex items-center gap-2 text-sm text-neutral-400 hover:text-accent-400 transition-colors ml-auto bg-transparent border-none cursor-pointer"
+          >
+            <span>Handbook</span>
+            <BookOpen size={16} />
+          </motion.button>
         </div>
       </Card>
     </StaggerItem>
@@ -143,6 +147,40 @@ const ProjectCard = ({ project, index }) => {
 };
 
 export const ProjectsSection = () => {
+  const { projects } = useProjects();
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailProject, setDetailProject] = useState(null);
+  const [handbookOpen, setHandbookOpen] = useState(false);
+  const [handbookProject, setHandbookProject] = useState(null);
+
+  const handleDetailClick = (project) => {
+    setDetailProject(project);
+    setDetailOpen(true);
+  };
+
+  const handleDetailClose = () => {
+    setDetailOpen(false);
+    setDetailProject(null);
+  };
+
+  const handleHandbookClick = (project) => {
+    if (detailOpen) return;
+    setHandbookProject(project);
+    setHandbookOpen(true);
+  };
+
+  const handleHandbookClose = () => {
+    setHandbookOpen(false);
+    setHandbookProject(null);
+  };
+
+  const handbookFilter = handbookProject?.relatedNotes
+    ? {
+        projectName: handbookProject.title,
+        relatedNotes: handbookProject.relatedNotes,
+      }
+    : null;
+
   return (
     <Section id="projects" className="bg-neutral-900">
       <PageContainer>
@@ -156,13 +194,27 @@ export const ProjectsSection = () => {
 
           <StaggerContainer staggerDelay={0.1}>
             <Grid cols={3} gap={6}>
-              {PROJECTS.map((project, index) => (
-                <ProjectCard key={project.id || index} project={project} index={index} />
+              {projects.map((project, index) => (
+                <ProjectCard key={project.id || index} project={project} onHandbookClick={handleHandbookClick} onDetailClick={handleDetailClick} />
               ))}
             </Grid>
           </StaggerContainer>
         </Stack>
       </PageContainer>
+
+      {handbookOpen && (
+        <HandbookReader
+          filter={handbookFilter}
+          onClose={handleHandbookClose}
+        />
+      )}
+
+      {detailOpen && detailProject && (
+        <ProjectDetailView
+          project={detailProject}
+          onClose={handleDetailClose}
+        />
+      )}
     </Section>
   );
 };

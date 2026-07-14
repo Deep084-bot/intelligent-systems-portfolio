@@ -4,7 +4,10 @@ import { Section, PageContainer } from '../layout';
 import { SectionTitle } from '../primitives';
 import { FadeIn, ScrollTrigger } from '../animations';
 import useLeetCode from '../hooks/useLeetCode';
+import useActivity from '../hooks/useActivity';
 import { profileData } from '../data/profileData';
+import EngineeringHandbookPreview from '../components/sections/EngineeringHandbookPreview';
+import HandbookReader from '../components/molecules/HandbookReader';
 
 function AnimatedCounter({ value, duration = 1000 }) {
   const [count, setCount] = useState(0);
@@ -54,8 +57,11 @@ function StatusBlock({ label, value, accent = 'accent', pulse = false }) {
 
 export const LeetCodeTelemetrySection = () => {
   const [retryCount, setRetryCount] = useState(0);
+  const [readerOpen, setReaderOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState(null);
   const leetcodeProfile = profileData.codingProfiles.find((p) => p.id === 'leetcode');
   const { stats, loading, error } = useLeetCode(leetcodeProfile?.username, retryCount);
+  const { activities } = useActivity();
 
   if (!leetcodeProfile) {
     return null;
@@ -68,7 +74,7 @@ export const LeetCodeTelemetrySection = () => {
   const solved = stats?.solved || {};
   const contest = stats?.contest || {};
   const calendar = stats?.calendar || {};
-  const streak = calendar.streak || 45;
+  const showDashboard = !!stats;
 
   return (
     <Section id="leetcode" className="bg-neutral-900">
@@ -82,8 +88,8 @@ export const LeetCodeTelemetrySection = () => {
           </FadeIn>
 
           <ScrollTrigger>
-            {/* Loading state */}
-            {loading && (
+            {/* Loading — only when no cached data */}
+            {loading && !showDashboard && (
               <div className="text-center py-12">
                 <div className="inline-block">
                   <div className="w-8 h-8 border-2 border-neutral-700 border-t-primary-400 rounded-full animate-spin" />
@@ -94,8 +100,8 @@ export const LeetCodeTelemetrySection = () => {
               </div>
             )}
 
-            {/* Error state */}
-            {error && (
+            {/* Error — only when no cached data at all */}
+            {error && !showDashboard && (
               <div className="max-w-xl mx-auto p-6 bg-neutral-950 border border-neutral-800 rounded-lg font-mono text-sm">
                 <div className="mb-4">
                   <div className="text-accent-400 mb-2">[leetcode.telemetry]</div>
@@ -117,8 +123,8 @@ export const LeetCodeTelemetrySection = () => {
               </div>
             )}
 
-            {/* Telemetry Dashboard */}
-            {!loading && !error && (
+            {/* Dashboard — show whenever stats exist (cached or fresh) */}
+            {showDashboard && (
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
                 {/* LEFT — Main Terminal Panel — 3/5 */}
                 <div className="lg:col-span-3">
@@ -128,7 +134,12 @@ export const LeetCodeTelemetrySection = () => {
                     className="bg-neutral-950 border border-neutral-800 rounded-lg p-6 font-mono text-sm h-full"
                   >
                     <div className="border-b border-neutral-800/50 pb-4 mb-6">
-                      <div className="text-accent-400 mb-2">[leetcode.telemetry]</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-accent-400">[leetcode.telemetry]</span>
+                        {loading && showDashboard && (
+                          <span className="text-[10px] text-neutral-600">(stale cache, refreshing...)</span>
+                        )}
+                      </div>
                       <div className="text-neutral-600 text-xs">
                         username: {leetcodeProfile.username}
                       </div>
@@ -224,67 +235,32 @@ export const LeetCodeTelemetrySection = () => {
                   </motion.div>
                 </div>
 
-                {/* RIGHT — Engineering Status Signals — 2/5 */}
-                <div className="lg:col-span-2 space-y-4">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="text-accent-400 text-xs font-mono uppercase tracking-wider mb-2"
-                  >
-                    Engineering Status
-                  </motion.div>
-
-                  <div className="space-y-3">
-                    <StatusBlock
-                      label="Status"
-                      value="Active"
-                      accent="green"
-                      pulse
-                    />
-
-                    <StatusBlock
-                      label="Primary Domain"
-                      value="Backend Engineering"
-                      accent="accent"
-                    />
-
-                    <StatusBlock
-                      label="Current Track"
-                      value="Distributed Systems"
-                      accent="cyan"
-                    />
-
-                    <StatusBlock
-                      label="Workflow"
-                      value="Project-driven learning"
-                      accent="neutral"
-                    />
-
-                    <StatusBlock
-                      label="Architecture Style"
-                      value="Backend-first systems"
-                      accent="primary"
-                    />
-
-                    <StatusBlock
-                      label="Consistency"
-                      value={`${streak}d coding streak`}
-                      accent="amber"
-                    />
-                  </div>
-
-                  <div className="pt-3 border-t border-neutral-800/30 mt-4">
-                    <div className="text-[10px] text-neutral-600 font-mono">
-                      signals: engineering behavior · consistency · focus
-                    </div>
-                  </div>
+                {/* RIGHT — Engineering Handbook Preview — 2/5 */}
+                <div className="lg:col-span-2">
+                  <EngineeringHandbookPreview
+                    activities={activities.slice(0, 5)}
+                    onNoteClick={(note) => {
+                      setSelectedNote(note);
+                      setReaderOpen(true);
+                    }}
+                    onViewHandbook={() => {
+                      setSelectedNote(null);
+                      setReaderOpen(true);
+                    }}
+                  />
                 </div>
               </div>
             )}
           </ScrollTrigger>
         </div>
       </PageContainer>
+
+      {readerOpen && (
+        <HandbookReader
+          initialNote={selectedNote}
+          onClose={() => setReaderOpen(false)}
+        />
+      )}
     </Section>
   );
 };

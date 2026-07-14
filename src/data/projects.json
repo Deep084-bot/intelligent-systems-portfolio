@@ -31,6 +31,7 @@
         "learnings": "Improved content architecture, markdown rendering, and clean backend integration for AI-assisted interactions."
       },
       "tech": ["React", "Vite", "Tailwind CSS", "Node.js", "Express", "Gemini API"],
+      "relatedNotes": ["terminal", "markdown", "deployment", "rendering", "pipeline", "ai assistant"],
       "futureImprovements": [
         "Polish AI assistant prompts and context builder",
         "Add more engineering notes and code examples",
@@ -67,6 +68,7 @@
         "learnings": "Database normalization practices, API design for role-based systems, and validation pipelines."
       },
       "tech": ["Node.js", "Express.js", "PostgreSQL", "SQL"],
+      "relatedNotes": ["database", "schema", "authentication", "rbac", "transactions", "api"],
       "futureImprovements": [
         "Add automated test coverage for core workflows",
         "Introduce CI for schema migrations",
@@ -103,6 +105,7 @@
         "learnings": "API integration patterns, rate limit handling strategies, and data visualization basics."
       },
       "tech": ["Node.js", "Express.js", "Axios", "Chart.js"],
+      "relatedNotes": ["github api", "rate limiting", "charts", "api"],
       "futureImprovements": [
         "Add caching for API results",
         "Support OAuth for user-specific analytics"
@@ -138,6 +141,7 @@
         "learnings": "Practical API design, geolocation querying, and deployment basics."
       },
       "tech": ["Node.js", "Express.js", "MySQL", "Postman"],
+      "relatedNotes": ["api", "database", "authentication"],
       "futureImprovements": [
         "Add authentication and authorization",
         "Introduce pagination and caching for large queries"
