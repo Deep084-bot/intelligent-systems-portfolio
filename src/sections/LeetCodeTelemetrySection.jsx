@@ -4,6 +4,7 @@ import { Section, PageContainer } from '../layout';
 import { SectionTitle } from '../primitives';
 import { FadeIn, ScrollTrigger } from '../animations';
 import useLeetCode from '../hooks/useLeetCode';
+import EngineeringHandbookPreview from '../components/sections/EngineeringHandbookPreview';
 import { profileData } from '../data/profileData';
 
 function AnimatedCounter({ value, duration = 1000 }) {
@@ -32,27 +33,7 @@ function AnimatedCounter({ value, duration = 1000 }) {
   return <span>{count.toLocaleString()}</span>;
 }
 
-function StatusBlock({ label, value, accent = 'accent', pulse = false }) {
-  const accentMap = {
-    primary: 'text-primary-400',
-    accent: 'text-accent-400',
-    cyan: 'text-cyan-400',
-    green: 'text-green-400',
-    neutral: 'text-neutral-300',
-    amber: 'text-amber-400',
-  };
-  return (
-    <div className="bg-neutral-950/50 border border-neutral-800 rounded-lg p-4 font-mono">
-      <p className="text-[10px] text-neutral-600 uppercase tracking-wider mb-1.5">{label}</p>
-      <div className="flex items-center gap-2">
-        {pulse && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />}
-        <p className={`text-sm font-semibold ${accentMap[accent]}`}>{value}</p>
-      </div>
-    </div>
-  );
-}
-
-export const LeetCodeTelemetrySection = () => {
+export const LeetCodeTelemetrySection = ({ onViewHandbook }) => {
   const [retryCount, setRetryCount] = useState(0);
   const leetcodeProfile = profileData.codingProfiles.find((p) => p.id === 'leetcode');
   const { stats, loading, error } = useLeetCode(leetcodeProfile?.username, retryCount);
@@ -68,8 +49,6 @@ export const LeetCodeTelemetrySection = () => {
   const solved = stats?.solved || {};
   const contest = stats?.contest || {};
   const calendar = stats?.calendar || {};
-  const streak = calendar.streak || 45;
-
   return (
     <Section id="leetcode" className="bg-neutral-900">
       <PageContainer>
@@ -224,61 +203,9 @@ export const LeetCodeTelemetrySection = () => {
                   </motion.div>
                 </div>
 
-                {/* RIGHT — Engineering Status Signals — 2/5 */}
-                <div className="lg:col-span-2 space-y-4">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="text-accent-400 text-xs font-mono uppercase tracking-wider mb-2"
-                  >
-                    Engineering Status
-                  </motion.div>
-
-                  <div className="space-y-3">
-                    <StatusBlock
-                      label="Status"
-                      value="Active"
-                      accent="green"
-                      pulse
-                    />
-
-                    <StatusBlock
-                      label="Primary Domain"
-                      value="Backend Engineering"
-                      accent="accent"
-                    />
-
-                    <StatusBlock
-                      label="Current Track"
-                      value="Distributed Systems"
-                      accent="cyan"
-                    />
-
-                    <StatusBlock
-                      label="Workflow"
-                      value="Project-driven learning"
-                      accent="neutral"
-                    />
-
-                    <StatusBlock
-                      label="Architecture Style"
-                      value="Backend-first systems"
-                      accent="primary"
-                    />
-
-                    <StatusBlock
-                      label="Consistency"
-                      value={`${streak}d coding streak`}
-                      accent="amber"
-                    />
-                  </div>
-
-                  <div className="pt-3 border-t border-neutral-800/30 mt-4">
-                    <div className="text-[10px] text-neutral-600 font-mono">
-                      signals: engineering behavior · consistency · focus
-                    </div>
-                  </div>
+                {/* RIGHT — Engineering Handbook Preview — 2/5 */}
+                <div className="lg:col-span-2">
+                  <EngineeringHandbookPreview onViewHandbook={onViewHandbook} />
                 </div>
               </div>
             )}
