@@ -1,6 +1,6 @@
 {
   "name": "Deep Mehta",
-  "title": "Backend Infrastructure & AI Systems Engineer",
+  "title": "Backend Systems & AI Engineering",
   "location": "Gujarat, India",
   "education": {
     "institution": "IIIT Vadodara",
@@ -11,13 +11,13 @@
     "status": "Pursuing"
   },
   "engineeringIdentity": {
-    "primaryFocus": "Backend Infrastructure & AI Systems Engineering",
+    "primaryFocus": "Backend Systems & AI Engineering",
     "secondaryFocus": "Distributed Systems, Production Engineering",
     "philosophy": "I prefer building real production-quality systems over chasing buzzwords. Most learning comes from hands-on debugging, iteration, and consistent technical practice."
   },
   "interests": [
-    "AI Infrastructure and RAG systems",
-    "Backend engineering and API design",
+    "Backend systems and API design",
+    "AI engineering and RAG systems",
     "Distributed systems architecture",
     "Production engineering patterns",
     "Database systems (SQL, vector, cache)",
@@ -49,7 +49,7 @@
   "flagshipProjects": [
     "Resyntha — Multi-Agent Research Intelligence Platform",
     "Atlas — Production-grade RAG platform",
-    "Engineering Portfolio — Full-stack AI-integrated portfolio",
+    "Engineering Portfolio — Full-stack integrated portfolio",
     "SUMS — Smart University Management System"
   ],
   "contact": {

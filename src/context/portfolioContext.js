@@ -180,14 +180,7 @@ Core Values:
 - Focus: External API consumption, data visualization
 - Key Learning: API best practices, rate limiting, data visualization patterns
 
-### 3. School Management API
-*Geolocation & Backend Services*
-- Tech: Express.js, MySQL, Node.js
-- Architecture: Geolocation queries, efficient indexing
-- Focus: Production API deployment
-- Key Learning: Geospatial queries, query optimization, deployment
-
-### 4. Engineering Portfolio Website (This Site)
+### 3. Engineering Portfolio Website (This Site)
 *Full-Stack Systems Integration*
 - Tech: React, Vite, Express.js, Tailwind CSS, AI APIs
 - Architecture: Frontend-backend integration, AI system design, API caching

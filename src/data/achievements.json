@@ -28,18 +28,9 @@
       "proof": "https://github.com/Deep084-bot/github-analyzer"
     },
     {
-      "id": "school-api",
-      "category": "Project",
-      "title": "School Management API (2026)",
-      "description": "Implemented REST APIs for managing school data with geolocation-based sorting and reporting.",
-      "date": "2026-02-01",
-      "icon": "database",
-      "proof": "https://github.com/Deep084-bot/school-api"
-    },
-    {
       "id": "dsa-practice",
       "category": "Problem-Solving",
-      "title": "700+ DSA Problems Solved",
+      "title": "800+ DSA Problems Solved",
       "description": "Consistent practice across LeetCode, CodeChef, and GeeksforGeeks focused on medium and selected hard problems.",
       "date": "2026-05-01",
       "icon": "puzzle",
@@ -52,6 +43,33 @@
       "description": "Finalist at a university hackathon; contributed backend integration and rapid prototyping.",
       "date": "2025-11-01",
       "icon": "flag",
+      "proof": null
+    },
+    {
+      "id": "odoo-hackathon",
+      "category": "Hackathon",
+      "title": "Odoo Hackathon Participant (2025)",
+      "description": "Participated in Odoo's hackathon, building integrated business solutions.",
+      "date": "2025-08-01",
+      "icon": "flag",
+      "proof": null
+    },
+    {
+      "id": "encore-club",
+      "category": "Leadership",
+      "title": "Joint Secretary, Encore Music Club",
+      "description": "Leadership role managing club operations and organizing events at IIIT Vadodara.",
+      "date": "2025-09-01",
+      "icon": "music",
+      "proof": null
+    },
+    {
+      "id": "kala-mahakumbh",
+      "category": "Arts",
+      "title": "3-Time District Kala Mahakumbh Winner",
+      "description": "Achieved district-level recognition in classical performing arts.",
+      "date": "2024-01-01",
+      "icon": "award",
       "proof": null
     }
   ]

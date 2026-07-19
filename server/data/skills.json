@@ -1,8 +1,8 @@
 [
   {
     "category": "Backend Systems",
-    "skills": ["Node.js", "Express", "FastAPI", "REST APIs", "Authentication", "Pipeline Architecture"],
-    "keywords": ["backend", "api", "fastapi", "node", "express", "pipeline", "auth", "rest"]
+    "skills": ["Node.js", "Express", "FastAPI", "REST APIs", "Authentication", "Middleware", "Pipeline Architecture"],
+    "keywords": ["backend", "api", "fastapi", "node", "express", "pipeline", "auth", "rest", "middleware"]
   },
   {
     "category": "Databases",
@@ -11,22 +11,22 @@
   },
   {
     "category": "AI Systems",
-    "skills": ["RAG", "Vector Search", "Semantic Retrieval", "Prompt Engineering", "OCR", "LLM Integration"],
-    "keywords": ["rag", "vector search", "semantic", "retrieval", "prompt engineering", "ocr", "llm", "embedding"]
+    "skills": ["Retrieval-Augmented Generation", "Semantic Search", "Vector Databases", "Prompt Engineering", "LLM Integration", "OCR Pipelines"],
+    "keywords": ["rag", "retrieval", "semantic", "vector", "prompt", "llm", "ocr", "embeddings"]
   },
   {
     "category": "Frontend",
-    "skills": ["React", "TypeScript", "Tailwind", "Vite"],
-    "keywords": ["react", "typescript", "tailwind", "vite", "frontend", "ui"]
+    "skills": ["React", "TypeScript", "TailwindCSS", "Vite", "Chart.js"],
+    "keywords": ["react", "typescript", "tailwind", "vite", "frontend", "chart", "visualization"]
   },
   {
     "category": "Engineering Foundations",
-    "skills": ["OS", "CN", "DBMS", "DSA", "OOP"],
-    "keywords": ["operating systems", "computer networks", "dbms", "dsa", "algorithms", "oop"]
+    "skills": ["DSA", "Operating Systems", "Computer Networks", "DBMS", "OOP"],
+    "keywords": ["dsa", "algorithms", "operating systems", "networks", "dbms", "oop"]
   },
   {
     "category": "Currently Exploring",
-    "skills": ["Distributed Systems", "Docker", "CI/CD", "System Design"],
-    "keywords": ["distributed", "docker", "ci/cd", "system design", "scalability"]
+    "skills": ["Distributed Systems", "Docker", "CI/CD", "Cloud", "System Design"],
+    "keywords": ["distributed", "docker", "ci/cd", "cloud", "system design", "scalability"]
   }
 ]

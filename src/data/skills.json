@@ -2,7 +2,7 @@
   "skills": [
     {
       "category": "Backend Systems",
-      "skills": ["Node.js", "Express", "FastAPI", "REST APIs", "Authentication", "Pipeline Architecture"]
+      "skills": ["Node.js", "Express", "FastAPI", "REST APIs", "Authentication", "Middleware", "Pipeline Architecture"]
     },
     {
       "category": "Databases",
@@ -10,19 +10,19 @@
     },
     {
       "category": "AI Systems",
-      "skills": ["RAG", "Vector Search", "Semantic Retrieval", "Prompt Engineering", "OCR", "LLM Integration"]
+      "skills": ["Retrieval-Augmented Generation", "Semantic Search", "Vector Databases", "Prompt Engineering", "LLM Integration", "OCR Pipelines"]
     },
     {
       "category": "Frontend",
-      "skills": ["React", "TypeScript", "Tailwind", "Vite"]
+      "skills": ["React", "TypeScript", "TailwindCSS", "Vite", "Chart.js"]
     },
     {
       "category": "Engineering Foundations",
-      "skills": ["OS", "CN", "DBMS", "DSA", "OOP"]
+      "skills": ["DSA", "Operating Systems", "Computer Networks", "DBMS", "OOP"]
     },
     {
       "category": "Currently Exploring",
-      "skills": ["Distributed Systems", "Docker", "CI/CD", "System Design"]
+      "skills": ["Distributed Systems", "Docker", "CI/CD", "Cloud", "System Design"]
     }
   ]
 }

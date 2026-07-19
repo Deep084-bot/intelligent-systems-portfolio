@@ -29,13 +29,13 @@
     ]
   },
   "skills": {
-    "backend": ["FastAPI", "Node.js", "Express.js", "REST APIs", "Pipeline Architecture", "Authentication"],
+    "backend": ["FastAPI", "Node.js", "Express.js", "REST APIs", "Pipeline Architecture", "Authentication", "Middleware"],
     "databases": ["PostgreSQL", "pgvector", "Redis", "MongoDB", "MySQL"],
-    "ai_systems": ["RAG", "Vector Search", "Semantic Retrieval", "Prompt Engineering", "OCR", "LLM Integration"],
-    "frontend": ["React", "TypeScript", "Vite", "Tailwind CSS"],
+    "ai_systems": ["Retrieval-Augmented Generation", "Semantic Search", "Vector Databases", "Prompt Engineering", "LLM Integration", "OCR Pipelines"],
+    "frontend": ["React", "TypeScript", "Vite", "Tailwind CSS", "Chart.js"],
     "languages": ["Java", "C++", "Python", "JavaScript", "TypeScript", "SQL"],
-    "engineering_foundations": ["Data Structures", "Algorithms", "OOP", "DBMS", "Operating Systems", "Computer Networks"],
-    "currently_exploring": ["Distributed Systems", "Docker", "CI/CD", "System Design"]
+    "engineering_foundations": ["DSA", "Operating Systems", "Computer Networks", "DBMS", "OOP"],
+    "currently_exploring": ["Distributed Systems", "Docker", "CI/CD", "Cloud", "System Design"]
   },
   "achievements": [
     {
@@ -58,23 +58,23 @@
   "projects": [
     {
       "name": "Resyntha",
-      "description": "Multi-Agent Research Intelligence Platform automating literature review, knowledge extraction, and research landscape generation using FastAPI, PostgreSQL, Redis, and Groq."
+      "description": "Multi-Agent Research Intelligence Platform automating literature review, multi-provider retrieval, knowledge extraction, and research landscape generation using FastAPI, PostgreSQL, Redis, and Groq."
     },
     {
       "name": "Atlas",
-      "description": "Production-grade RAG platform with OCR pipeline, pgvector semantic search, streaming responses, and citation-aware AI."
+      "description": "Production-grade RAG platform with OCR pipeline, pgvector semantic search, streaming citation-aware generation, and modular backend."
     },
     {
       "name": "Engineering Portfolio",
-      "description": "Full-stack portfolio with terminal-inspired UI and AI assistant using React, Vite, Express, and LLM APIs."
+      "description": "Full-stack portfolio with Engineering Handbook, AI assistant, LeetCode telemetry, and markdown content system using React, Vite, Express, and LLM APIs."
     },
     {
       "name": "SUMS - Smart University Management System",
       "description": "Role-based academic and placement management system built with Express.js, PostgreSQL, and Node.js. Features BCNF-normalized schemas and RBAC."
     },
     {
-      "name": "School Management API",
-      "description": "REST APIs with geolocation-based features for school data management. Built with Express.js and MySQL."
+      "name": "GitHub Project Analyzer",
+      "description": "Analytics dashboard that aggregates GitHub repository metadata and visualizes language usage and project statistics using Express.js and Chart.js."
     }
   ],
   "competitive_programming": {
@@ -88,10 +88,11 @@
     "focus": "Implementation consistency, medium-level algorithmic problems"
   },
   "currently_learning": [
-    "Distributed Systems Concepts",
+    "Distributed Systems",
     "Docker and Containerization",
     "CI/CD Workflows",
-    "System Design Fundamentals",
+    "Cloud",
+    "System Design",
     "AI Engineering Patterns",
     "Computer Networks",
     "Operating Systems"

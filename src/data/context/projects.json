@@ -4,13 +4,14 @@
       "id": "resyntha",
       "name": "Resyntha",
       "focus": "AI Infrastructure & Pipeline Architecture",
-      "description": "Multi-Agent Research Intelligence Platform automating literature review, knowledge extraction, and research landscape generation",
-      "tech": ["FastAPI", "PostgreSQL", "Redis", "React", "TypeScript", "TanStack Query", "SQLAlchemy", "ARQ", "Pipeline Engine", "Semantic Scholar", "OpenAlex", "arXiv", "Groq"],
+      "description": "Multi-Agent Research Intelligence Platform automating literature review, multi-provider retrieval, knowledge extraction, research landscape generation, and gap detection",
+      "tech": ["FastAPI", "PostgreSQL", "Redis", "React", "TypeScript", "TanStack Query", "SQLAlchemy", "ARQ", "Semantic Scholar", "OpenAlex", "arXiv", "Groq"],
       "keyArchitectures": [
         "Stage-based pipeline engine with deterministic validation",
         "Multi-agent orchestration for coordinated research tasks",
         "Asynchronous execution via ARQ and Redis queue",
-        "Versioned artifact storage with rollback support"
+        "Versioned artifact storage with rollback support",
+        "Multi-provider retrieval with normalized result formats"
       ],
       "challenges": [
         "Building a stage-based pipeline engine with validation between stages",
@@ -28,11 +29,11 @@
       "id": "atlas",
       "name": "Atlas",
       "focus": "Retrieval-Augmented Generation Systems",
-      "description": "Production-grade RAG platform with OCR pipeline, pgvector semantic search, streaming responses, and citation-aware AI",
-      "tech": ["OCR Pipeline", "pgvector", "Better Auth", "Semantic Search", "Streaming Responses", "Citation-Aware AI", "Modular Backend"],
+      "description": "Production-grade RAG platform with OCR pipeline, pgvector semantic search, streaming citation-aware generation, and modular backend",
+      "tech": ["OCR Pipeline", "pgvector", "Better Auth", "Semantic Search", "Streaming Responses", "Citation-Aware AI", "Vector Embeddings", "Modular Backend", "React", "TypeScript"],
       "keyArchitectures": [
         "Modular backend with independent ingestion, retrieval, generation, and auth services",
-        "OCR pipeline for document normalization and extraction",
+        "OCR pipeline for document normalization and vector embedding",
         "Hybrid search (dense + sparse) over pgvector",
         "Streaming citation-grounded response generation"
       ],
@@ -52,11 +53,12 @@
       "id": "portfolio",
       "name": "Engineering Portfolio Website",
       "focus": "Full-Stack Systems Integration",
-      "description": "This portfolio: React frontend + Express backend with AI assistant, LeetCode telemetry, and AI integration",
-      "tech": ["React", "Vite", "Express.js", "Tailwind CSS", "Groq AI API"],
+      "description": "Full-stack portfolio with Engineering Handbook, AI assistant, LeetCode telemetry, and dynamic markdown system",
+      "tech": ["React", "Vite", "Express.js", "Tailwind CSS", "Gemini API", "Groq API", "GitHub API"],
       "keyArchitectures": [
         "Frontend-backend API integration",
-        "AI system prompt engineering",
+        "AI system prompt engineering with portfolio context",
+        "GitHub-synced markdown content delivery",
         "Real-time data fetching (LeetCode telemetry)",
         "Responsive design system"
       ],
@@ -64,13 +66,15 @@
         "Balancing rich UI with minimal overhead",
         "Integrating multiple external APIs",
         "Managing async state and loading states",
-        "Creating realistic AI assistant context"
+        "Creating realistic AI assistant context",
+        "Implementing GitHub-integrated content pipeline"
       ],
       "learnings": [
         "Full-stack systems thinking",
         "AI system prompt design",
         "API caching and optimization",
-        "Component-based architecture at scale"
+        "Component-based architecture at scale",
+        "Content pipeline design for markdown-driven sites"
       ]
     },
     {
@@ -96,25 +100,24 @@
       ]
     },
     {
-      "id": "school-api",
-      "name": "School Management API",
-      "focus": "Geolocation & Backend Services",
-      "description": "Express.js backend API for managing school data with geolocation-based features",
-      "tech": ["Express.js", "MySQL", "Node.js"],
+      "id": "github-analyzer",
+      "name": "GitHub Project Analyzer",
+      "focus": "API Integration & Data Visualization",
+      "description": "Analytics dashboard that aggregates GitHub repository metadata and visualizes language usage, popularity, and statistics using Express.js and Chart.js",
+      "tech": ["Node.js", "Express.js", "Axios", "EJS", "Chart.js", "GitHub REST API"],
       "keyArchitectures": [
-        "Geolocation-based sorting algorithms",
-        "Efficient database indexing",
-        "Scalable API design"
+        "External REST API integration with rate-limit awareness",
+        "EJS-templated server-rendered views",
+        "Chart.js data visualization components"
       ],
       "challenges": [
-        "Implementing efficient geolocation queries",
-        "Optimizing database for spatial data",
-        "Ensuring API reliability"
+        "Handling GitHub API rate limiting with caching",
+        "Designing clean visualizations for small datasets"
       ],
       "learnings": [
-        "Geospatial database queries",
-        "Query optimization and indexing",
-        "Production API deployment"
+        "REST API consumption best practices",
+        "Rate-limit strategies and caching",
+        "Data visualization patterns"
       ]
     }
   ]

@@ -7,6 +7,7 @@
       { "name": "FastAPI", "context": "Async Python backend, pipeline architecture, AI services" },
       { "name": "REST API Design", "context": "HTTP semantics, resource modeling, status codes" },
       { "name": "Authentication", "context": "Session management, API keys, OAuth patterns" },
+      { "name": "Middleware", "context": "Request processing pipeline, error handling, validation" },
       { "name": "Pipeline Architecture", "context": "Stage-based processing, async execution, validation" }
     ]
   },
@@ -23,12 +24,12 @@
   "ai_systems": {
     "category": "AI Systems",
     "skills": [
-      { "name": "RAG", "context": "Retrieval-Augmented Generation architecture and implementation" },
-      { "name": "Vector Search", "context": "Embedding-based similarity search, dense + sparse retrieval" },
-      { "name": "Semantic Retrieval", "context": "Document chunking, embedding strategies, re-ranking" },
+      { "name": "Retrieval-Augmented Generation", "context": "RAG architecture, document retrieval, generation pipelines" },
+      { "name": "Semantic Search", "context": "Dense + sparse retrieval, relevance scoring, re-ranking" },
+      { "name": "Vector Databases", "context": "pgvector, embedding storage, similarity search" },
       { "name": "Prompt Engineering", "context": "System prompts, context construction, output formatting" },
-      { "name": "OCR", "context": "Document processing pipelines, text extraction and normalization" },
-      { "name": "LLM Integration", "context": "API integration, streaming responses, citation grounding" }
+      { "name": "LLM Integration", "context": "API integration, streaming responses, citation grounding" },
+      { "name": "OCR Pipelines", "context": "Document processing, text extraction, normalization" }
     ]
   },
   "frontend": {
@@ -37,7 +38,8 @@
       { "name": "React", "context": "Components, hooks, state management" },
       { "name": "TypeScript", "context": "Type safety, interfaces, generics" },
       { "name": "Vite", "context": "Build tooling, dev server" },
-      { "name": "Tailwind CSS", "context": "Utility-first styling, responsive design" }
+      { "name": "TailwindCSS", "context": "Utility-first styling, responsive design" },
+      { "name": "Chart.js", "context": "Data visualization, chart rendering, dashboard design" }
     ]
   },
   "languages": {
@@ -54,10 +56,10 @@
   "foundations": {
     "category": "Engineering Foundations",
     "skills": [
+      "Data Structures & Algorithms",
       "Operating Systems",
       "Computer Networks",
       "Database Management Systems",
-      "Data Structures & Algorithms",
       "Object-Oriented Programming"
     ]
   },
@@ -67,6 +69,7 @@
       { "name": "Distributed Systems", "context": "Consensus, coordination, fault tolerance" },
       { "name": "Docker", "context": "Containerization, images, compose" },
       { "name": "CI/CD", "context": "Automated testing, deployment pipelines" },
+      { "name": "Cloud", "context": "Cloud infrastructure, deployment, scaling" },
       { "name": "System Design", "context": "Scalability, trade-offs, architecture patterns" }
     ]
   }

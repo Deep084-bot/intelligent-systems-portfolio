@@ -2,38 +2,39 @@
   {
     "id": "resyntha",
     "title": "Resyntha",
-    "shortDescription": "Multi-Agent Research Intelligence Platform for automated literature review, structured knowledge extraction, and research landscape generation.",
+    "shortDescription": "Multi-Agent Research Intelligence Platform for automated literature review, multi-provider retrieval, structured knowledge extraction, research landscape generation, and research gap detection.",
     "tags": ["Backend", "AI", "Research", "Pipeline", "FastAPI", "PostgreSQL", "Redis", "Groq"],
     "status": "In Development",
     "featured": true,
     "overview": {
       "problem": "Researchers face information overload — manually reviewing hundreds of papers, extracting key findings, and identifying research gaps is slow and inconsistent.",
-      "solution": "Resyntha orchestrates multiple AI agents across a stage-based pipeline to automate literature reviews: it searches academic sources, extracts structured knowledge, generates research landscapes, detects gaps, and provides an AI copilot for interactive exploration."
+      "solution": "Resyntha orchestrates multiple AI agents across a stage-based asynchronous pipeline to automate literature reviews: it searches academic sources via multi-provider retrieval, extracts structured knowledge, generates research landscapes, detects gaps, and provides an AI copilot for interactive exploration."
     },
-    "architecture": "FastAPI backend with a stage-based pipeline engine driving asynchronous execution via ARQ and Redis. SQLAlchemy manages PostgreSQL persistence for versioned artifacts. React + TypeScript frontend with TanStack Query orchestrates real-time pipeline state. Modular agent architecture supports pluggable source adapters for Semantic Scholar, OpenAlex, and arXiv. Groq accelerates LLM inference for extraction and analysis stages.",
+    "architecture": "Production-oriented FastAPI backend with a stage-based pipeline engine driving asynchronous execution via ARQ and Redis. SQLAlchemy manages PostgreSQL persistence for versioned artifacts. React + TypeScript frontend with TanStack Query orchestrates real-time pipeline state. Multi-provider retrieval supports Semantic Scholar, OpenAlex, and arXiv. Groq accelerates LLM inference for extraction and analysis stages.",
     "challenges": [
-      "Building a stage-based pipeline engine with deterministic validation between stages",
+      "Designing a stage-based pipeline engine with deterministic validation between stages",
       "Managing asynchronous task execution with Redis queue and result backpressure",
+      "Building versioned artifact storage with rollback and diff capabilities",
       "Orchestrating multi-agent coordination without deadlock or duplicated work",
       "Implementing caching strategies across API sources to respect rate limits"
     ],
     "learnings": "Deepened understanding of pipeline architecture design, asynchronous task orchestration, multi-agent coordination patterns, and building observability into distributed data workflows.",
-    "tech": ["FastAPI", "PostgreSQL", "Redis", "React", "TypeScript", "TanStack Query", "SQLAlchemy", "ARQ", "Pipeline Engine", "Semantic Scholar", "OpenAlex", "arXiv", "Groq"],
+    "tech": ["FastAPI", "PostgreSQL", "Redis", "React", "TypeScript", "TanStack Query", "SQLAlchemy", "ARQ", "Semantic Scholar", "OpenAlex", "arXiv", "Groq"],
     "category": ["backend", "ai", "research", "projects"],
-    "keywords": ["research", "literature review", "multi-agent", "pipeline", "fastapi", "semantic scholar", "arxiv", "rag", "knowledge extraction", "groq"]
+    "keywords": ["research", "literature review", "multi-agent", "pipeline", "fastapi", "semantic scholar", "arxiv", "rag", "knowledge extraction", "groq", "multi-provider"]
   },
   {
     "id": "atlas",
     "title": "Atlas",
-    "shortDescription": "Production-grade Retrieval-Augmented Generation platform with OCR pipeline, semantic search, streaming responses, and citation-aware AI.",
+    "shortDescription": "Production-grade Retrieval-Augmented Generation platform with OCR pipeline, pgvector semantic search, streaming citation-aware generation, and modular backend.",
     "tags": ["Backend", "AI", "RAG", "Semantic Search", "OCR", "pgvector"],
     "status": "In Development",
     "featured": true,
     "overview": {
       "problem": "Traditional search and Q&A systems lack document-grounded, citation-aware responses. Users need answers that are verifiable against source material, not black-box LLM outputs.",
-      "solution": "Atlas ingests documents through an OCR pipeline, embeds them into pgvector for semantic retrieval, and serves citation-grounded answers with streaming responses. A modular backend separates ingestion, retrieval, generation, and authentication layers."
+      "solution": "Atlas ingests documents through an OCR pipeline, generates vector embeddings, stores them in pgvector for semantic search, and serves citation-grounded answers with streaming responses. A modular backend separates ingestion, retrieval, generation, and authentication layers."
     },
-    "architecture": "Modular FastAPI backend with distinct ingestion, retrieval, generation, and auth services. OCR pipeline normalizes scanned documents before embedding. pgvector enables efficient hybrid search combining dense and sparse retrieval. Better Auth handles session and API key management. Streaming responses deliver citation-aware AI outputs in real time.",
+    "architecture": "Modular FastAPI backend with distinct ingestion, retrieval, generation, and auth services. OCR pipeline normalizes scanned documents before vector embedding. pgvector enables efficient hybrid search combining dense and sparse retrieval. Better Auth handles session and API key management. Streaming responses deliver citation-aware AI outputs in real time. React frontend provides the user interface.",
     "challenges": [
       "Designing a modular architecture where ingestion, retrieval, and generation can scale independently",
       "Building an OCR pipeline that normalizes diverse document formats into clean text",
@@ -41,27 +42,33 @@
       "Streaming citation-grounded responses without breaking the document context window"
     ],
     "learnings": "Explored RAG architecture patterns, embedding strategies for domain-specific retrieval, streaming response design, and modular backend decomposition for AI systems.",
-    "tech": ["OCR Pipeline", "pgvector", "Better Auth", "Semantic Search", "Streaming Responses", "Citation-Aware AI", "Modular Backend"],
+    "tech": ["OCR Pipeline", "pgvector", "Better Auth", "Semantic Search", "Streaming Responses", "Citation-Aware AI", "Vector Embeddings", "Modular Backend", "React", "TypeScript"],
     "category": ["backend", "ai", "rag", "projects"],
-    "keywords": ["rag", "retrieval", "ocr", "pgvector", "semantic search", "citation", "streaming", "fastapi", "modular"]
+    "keywords": ["rag", "retrieval", "ocr", "pgvector", "semantic search", "citation", "streaming", "fastapi", "modular", "embeddings"]
   },
   {
     "id": "portfolio-website",
     "title": "Engineering Portfolio",
-    "shortDescription": "An engineering-focused portfolio showcasing projects, engineering notes, and an AI assistant using React, Vite, and an Express backend.",
-    "tags": ["Frontend", "Backend", "AI", "React", "Vite", "Express"],
+    "shortDescription": "Full-stack engineering portfolio featuring an Engineering Handbook with GitHub-synced notes, an AI assistant with portfolio context, LeetCode telemetry, and a dynamic Markdown content system.",
+    "tags": ["Frontend", "Backend", "AI", "React", "Vite", "Express", "GitHub"],
     "status": "Complete",
     "featured": true,
     "overview": {
       "problem": "Traditional portfolios are static and don't reflect engineering depth or system thinking.",
-      "solution": "Built a dynamic, JSON/Markdown-driven portfolio with a terminal-inspired UI and an AI assistant that understands project and note context."
+      "solution": "Built a dynamic, JSON/Markdown-driven portfolio with a terminal-inspired UI, an AI assistant that understands project and note context, a GitHub-synced Engineering Handbook, LeetCode telemetry dashboard, and responsive design."
     },
-    "architecture": "React + Vite frontend, Express backend providing AI and content APIs. Content is driven by JSON and Markdown files for easy updates.",
-    "challenges": ["Designing a reusable content pipeline for JSON and Markdown", "Rendering engineering notes safely with syntax highlighting", "Integrating a lightweight AI assistant without overengineering"],
-    "learnings": "Improved content architecture, markdown rendering, and clean backend integration for AI-assisted interactions.",
-    "tech": ["React", "Vite", "Tailwind CSS", "Node.js", "Express", "Gemini API", "Groq API"],
+    "architecture": "React + Vite frontend with responsive UI, Express backend providing AI and content APIs. Content is driven by JSON and Markdown files. Features include an Engineering Handbook with GitHub integration for markdown notes, an AI Assistant with portfolio-aware context, a LeetCode Telemetry dashboard, and a dynamic Markdown rendering system.",
+    "challenges": [
+      "Designing a reusable content pipeline for JSON and Markdown",
+      "Rendering engineering notes safely with syntax highlighting",
+      "Integrating a lightweight AI assistant without overengineering",
+      "Building real-time LeetCode telemetry with caching",
+      "Implementing GitHub-synced markdown content delivery"
+    ],
+    "learnings": "Improved content architecture, markdown rendering, clean backend integration for AI-assisted interactions, and real-time data fetching patterns.",
+    "tech": ["React", "Vite", "Tailwind CSS", "Node.js", "Express", "Gemini API", "Groq API", "GitHub API", "Markdown"],
     "category": ["frontend", "backend", "ai", "projects"],
-    "keywords": ["portfolio", "ai assistant", "react", "vite", "express", "markdown", "gemini", "groq", "chatbot"]
+    "keywords": ["portfolio", "ai assistant", "react", "vite", "express", "markdown", "gemini", "groq", "handbook", "leetcode", "github"]
   },
   {
     "id": "sums",
@@ -82,21 +89,21 @@
     "keywords": ["university", "management", "postgresql", "role-based", "rbac", "api", "express", "database", "normalization"]
   },
   {
-    "id": "school-api",
-    "title": "School Management API",
-    "shortDescription": "REST APIs for managing school data with geolocation-based sorting and basic reporting.",
-    "tags": ["Backend", "MySQL", "APIs"],
+    "id": "github-analyzer",
+    "title": "GitHub Project Analyzer",
+    "shortDescription": "GitHub analytics dashboard that aggregates repository metadata using the GitHub REST API and visualizes language usage, repository popularity, and project statistics.",
+    "tags": ["Backend", "APIs", "Visualization", "GitHub"],
     "status": "Complete",
     "featured": false,
     "overview": {
-      "problem": "Schools require structured APIs for student, staff, and location-based queries.",
-      "solution": "Implemented CRUD APIs with geolocation features and documented endpoints for maintainable backend workflows."
+      "problem": "Developers often need a quick overview of GitHub repositories without manually inspecting every repository.",
+      "solution": "Built an analytics dashboard using Express.js that consumes GitHub REST APIs, aggregates repository data, and visualizes developer statistics using Chart.js."
     },
-    "architecture": "Express.js backend with MySQL, simple reporting endpoints and Postman-documented APIs.",
-    "challenges": ["Designing flexible query endpoints", "Documenting APIs for maintainability"],
-    "learnings": "Practical API design, geolocation querying, and deployment basics.",
-    "tech": ["Node.js", "Express.js", "MySQL", "Postman"],
-    "category": ["backend", "databases", "projects"],
-    "keywords": ["school", "api", "crud", "mysql", "geolocation", "rest", "postman"]
+    "architecture": "Express backend consuming GitHub REST APIs, EJS-templated views, Chart.js for data visualization.",
+    "challenges": ["Handling GitHub API rate limits with pagination and caching", "Designing clean visualizations for small datasets"],
+    "learnings": "API integration patterns, rate limit handling strategies, and data visualization basics.",
+    "tech": ["Node.js", "Express.js", "Axios", "EJS", "Chart.js", "GitHub REST API"],
+    "category": ["backend", "devops", "projects"],
+    "keywords": ["github", "analytics", "api", "visualization", "dashboard", "metrics", "chart", "ejs"]
   }
 ]

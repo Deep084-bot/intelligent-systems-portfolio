@@ -1,26 +1,25 @@
 {
   "name": "Deep Mehta",
-  "title": "Systems, Backend & AI Engineering Student",
+  "title": "Backend Systems & AI Engineering",
   "shortHeadline": "CS student focused on backend infrastructure, AI systems, distributed software, production-oriented engineering, and scalable backend architecture.",
   "location": "Gujarat, India",
-  "bio": "Computer Science student focused on backend infrastructure, AI systems, distributed software, and production-oriented engineering. Interested in how scalable systems are architected — from API design and database modeling to distributed coordination and system behavior under load. Builds practical projects across the backend-AI spectrum, from research intelligence pipelines to retrieval-augmented generation platforms. Works through problems methodically across DSA platforms. Curious about operating systems, computer networks, distributed consensus, and what makes production systems reliable.",
+  "bio": "Computer Science student focused on backend engineering, AI systems, distributed systems, and production-oriented software. Interested in how scalable systems are architected — from API design, middleware, and database modeling to distributed coordination, vector search, and system behavior under load. Builds practical projects across the backend-AI spectrum, from research intelligence pipelines and RAG platforms to university management systems. Works through problems methodically across DSA platforms. Curious about operating systems, computer networks, database internals, and what makes production systems reliable.",
   "identity": {
     "primaryRoles": [
-      "Backend Infrastructure Engineer",
-      "AI Systems Builder",
+      "Backend Systems Engineer",
+      "AI Engineering Practitioner",
       "Distributed Software Developer",
       "Production-Oriented Engineer"
     ],
-    "corePositioning": "Computer science student focused on backend infrastructure, AI systems, distributed software, and production-oriented engineering with scalable backend architecture as the through line.",
+    "corePositioning": "Computer science student focused on backend systems, AI engineering, distributed software, and production-oriented engineering with scalable backend architecture as the through line.",
     "portfolioMessage": "A student engineer focused on building production-quality backend systems, exploring AI infrastructure patterns, and developing scalable software through consistent engineering practice."
   },
   "technicalInterests": [
-    "AI Infrastructure",
-    "Backend Engineering",
+    "Backend Systems",
+    "AI Engineering",
     "Distributed Systems",
     "Production Software",
-    "RAG Systems",
-    "LLM Systems",
+    "RAG",
     "Databases",
     "System Design",
     "APIs",
@@ -33,7 +32,7 @@
       "Machine Learning"
     ],
     "engineering": [
-      "Backend Infrastructure Design",
+      "Backend System Design",
       "RAG and AI System Architecture",
       "Distributed Systems Fundamentals",
       "Production Engineering Patterns"
@@ -79,8 +78,9 @@
     ],
     "databases": [
       "PostgreSQL",
-      "MongoDB",
-      "Redis"
+      "pgvector",
+      "Redis",
+      "MongoDB"
     ],
     "ai_ml": [
       "RAG",
@@ -96,10 +96,10 @@
     ]
   },
   "currentlyLearning": [
-    "Distributed Systems Concepts",
+    "Distributed Systems",
     "Docker and Containerization",
     "CI/CD Workflows",
-    "System Design Fundamentals",
+    "System Design",
     "AI Engineering Patterns",
     "Computer Networks",
     "Operating Systems"
@@ -116,11 +116,11 @@
     },
     {
       "name": "Atlas",
-      "reason": "Production-grade RAG platform showcasing OCR, semantic retrieval, streaming responses, and modular AI backend architecture."
+      "reason": "Production-grade RAG platform showcasing OCR, vector embeddings, semantic retrieval, streaming responses, and modular AI backend architecture."
     },
     {
       "name": "Engineering Portfolio",
-      "reason": "Represents engineering identity, AI integration, backend-focused thinking, and product-level architecture."
+      "reason": "Represents engineering identity, AI integration, backend-focused thinking, and product-level architecture with multiple integrated systems."
     },
     {
       "name": "SUMS - Smart University Management System",
