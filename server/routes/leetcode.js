@@ -1,15 +1,20 @@
 import express from 'express';
 import { getLeetCodeStats } from '../services/leetcodeService.js';
+import cache from '../cache.js';
 
 const router = express.Router();
 
-// Cache with 30-minute TTL
-const statsCache = new Map();
-const CACHE_TTL = 30 * 60 * 1000;
+const CACHE_TTL = 12 * 60 * 60;
 
-/**
- * Health check endpoint for testing
- */
+function log(event, username, extra = {}) {
+  console.log(JSON.stringify({
+    event: `leetcode.${event}`,
+    username,
+    timestamp: new Date().toISOString(),
+    ...extra,
+  }));
+}
+
 router.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -18,67 +23,68 @@ router.get('/health', (req, res) => {
   });
 });
 
-/**
- * GET /api/leetcode/:username
- * Fetch LeetCode stats with caching and fallback support
- */
 router.get('/:username', async (req, res) => {
-  try {
-    const { username } = req.params;
+  const { username } = req.params;
 
-    if (!username || typeof username !== 'string' || username.trim().length === 0) {
-      return res.status(400).json({
-        error: 'Invalid username parameter',
-        username: username || null,
-      });
-    }
-
-    const cleanUsername = username.trim();
-    const cacheKey = `leetcode:${cleanUsername}`;
-    const cached = statsCache.get(cacheKey);
-    const now = Date.now();
-
-    // Return fresh cache if available
-    if (cached && now - cached.timestamp < CACHE_TTL) {
-      console.log(`[LeetCode] Cache hit for ${cleanUsername}`);
-      return res.json({
-        ...cached.data,
-        cached: true,
-        cacheAge: now - cached.timestamp,
-      });
-    }
-
-    console.log(`[LeetCode] Fetching stats for ${cleanUsername}...`);
-    const data = await getLeetCodeStats(cleanUsername);
-
-    // Update cache
-    statsCache.set(cacheKey, {
-      timestamp: now,
-      data,
+  if (!username || typeof username !== 'string' || username.trim().length === 0) {
+    return res.status(400).json({
+      error: 'Invalid username parameter',
+      username: username || null,
     });
+  }
+
+  const cleanUsername = username.trim();
+  const cacheKey = `leetcode:${cleanUsername}`;
+  const now = Date.now();
+
+  try {
+    const cached = await cache.get(cacheKey);
+    const cacheAge = cached ? (now - new Date(cached.fetchedAt).getTime()) : null;
+    const isFresh = cached && cacheAge < CACHE_TTL * 1000;
+
+    if (isFresh) {
+      log('cache_hit', cleanUsername, { cacheAgeMs: cacheAge });
+      return res.json({
+        ...cached,
+        cached: true,
+        stale: false,
+        cacheAge,
+      });
+    }
+
+    if (cached) {
+      log('cache_refresh', cleanUsername, { cacheAgeMs: cacheAge });
+    } else {
+      log('cache_miss', cleanUsername);
+    }
+
+    log('upstream_request', cleanUsername);
+    const data = await getLeetCodeStats(cleanUsername);
+    log('upstream_success', cleanUsername);
+
+    await cache.set(cacheKey, data, CACHE_TTL);
 
     res.json(data);
   } catch (error) {
-    console.error(`[LeetCode] Error:`, error.message);
+    log('upstream_failure', cleanUsername, { error: error.message });
 
-    const { username } = req.params;
-    const cleanUsername = username?.trim() || 'unknown';
-    const cacheKey = `leetcode:${cleanUsername}`;
-    const cached = statsCache.get(cacheKey);
-
-    // Fallback to stale cache if available
-    if (cached) {
-      console.log(`[LeetCode] Returning stale cache for ${cleanUsername}`);
-      return res.json({
-        ...cached.data,
-        cached: true,
-        stale: true,
-        cacheAge: Date.now() - cached.timestamp,
-        error: `Using stale cache: ${error.message}`,
-      });
+    try {
+      const cached = await cache.get(cacheKey);
+      if (cached) {
+        const cacheAge = Date.now() - new Date(cached.fetchedAt).getTime();
+        log('returning_stale', cleanUsername, { cacheAgeMs: cacheAge });
+        return res.json({
+          ...cached,
+          cached: true,
+          stale: true,
+          cacheAge,
+          error: `Using stale cache: ${error.message}`,
+        });
+      }
+    } catch (cacheErr) {
+      log('cache_read_error', cleanUsername, { error: cacheErr.message });
     }
 
-    // No cache available, return error
     const statusCode = error.status || 500;
     res.status(statusCode).json({
       error: error.message || 'Failed to fetch LeetCode stats',

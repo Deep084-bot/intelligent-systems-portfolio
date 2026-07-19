@@ -1,11 +1,6 @@
-/**
- * LeetCode Data Service
- * Uses stable alfa-leetcode-api.onrender.com service
- * Proven reliable, handles all data normalization and error cases
- */
+import { LeetCode } from 'leetcode-query';
 
-const BASE_URL = 'https://alfa-leetcode-api.onrender.com';
-const TIMEOUT_MS = 10000;
+const leetcode = new LeetCode();
 
 class LeetCodeError extends Error {
   constructor(message, status = 500) {
@@ -15,121 +10,82 @@ class LeetCodeError extends Error {
   }
 }
 
-/**
- * Fetch with timeout
- */
-async function fetchWithTimeout(url, options = {}) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        ...options.headers,
-      },
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new LeetCodeError(
-        `HTTP ${response.status}: ${response.statusText}`,
-        response.status
-      );
-    }
-
-    return await response.json();
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new LeetCodeError('Request timeout (10s)', 504);
-    }
-    if (error instanceof LeetCodeError) {
-      throw error;
-    }
-    throw new LeetCodeError(`Fetch failed: ${error.message}`, 500);
-  }
-}
-
-/**
- * Parse solved problems breakdown
- * Handles multiple response formats from the API
- */
 function parseSolvedStats(data) {
-  if (!data) return { easy: 0, medium: 0, hard: 0, total: 0 };
-
-  // Format 1: Direct difficulty counts
-  if (typeof data.easy === 'number' && typeof data.medium === 'number' && typeof data.hard === 'number') {
-    return {
-      easy: Math.max(0, Math.floor(data.easy)),
-      medium: Math.max(0, Math.floor(data.medium)),
-      hard: Math.max(0, Math.floor(data.hard)),
-      total: Math.max(0, Math.floor((data.easy || 0) + (data.medium || 0) + (data.hard || 0))),
-    };
+  if (!data?.matchedUser?.submitStats?.acSubmissionNum) {
+    return { easy: 0, medium: 0, hard: 0, total: 0 };
   }
 
-  // Format 2: Nested acSubmissionNum array
-  if (data.acSubmissionNum && Array.isArray(data.acSubmissionNum)) {
-    const counts = {};
-    data.acSubmissionNum.forEach((item) => {
-      if (item.difficulty && typeof item.count === 'number') {
-        const diff = item.difficulty.toLowerCase();
-        counts[diff] = Math.max(0, Math.floor(item.count));
-      }
-    });
-    return {
-      easy: counts.easy || 0,
-      medium: counts.medium || 0,
-      hard: counts.hard || 0,
-      total: (counts.easy || 0) + (counts.medium || 0) + (counts.hard || 0),
-    };
+  const counts = { easy: 0, medium: 0, hard: 0 };
+  for (const entry of data.matchedUser.submitStats.acSubmissionNum) {
+    const diff = entry.difficulty?.toLowerCase();
+    if (diff && diff in counts) {
+      counts[diff] = Math.max(0, Math.floor(entry.count || 0));
+    }
   }
-
-  return { easy: 0, medium: 0, hard: 0, total: 0 };
-}
-
-/**
- * Parse contest stats
- */
-function parseContestStats(data) {
-  if (!data) return { rating: 0, globalRank: 0, contests: 0 };
 
   return {
-    rating: Math.max(0, Math.floor(data.contestRating || data.rating || 0)),
-    globalRank: Math.max(0, Math.floor(data.globalRanking || data.globalRank || 0)),
-    contests: Math.max(0, Math.floor(data.attendedContestsCount || data.contests || 0)),
+    easy: counts.easy,
+    medium: counts.medium,
+    hard: counts.hard,
+    total: counts.easy + counts.medium + counts.hard,
   };
 }
 
-/**
- * Parse calendar/streak data
- */
-function parseCalendarStats(data) {
-  if (!data) return { streak: 0 };
-
-  let streak = 0;
-  if (typeof data.streak === 'number') {
-    streak = Math.max(0, Math.floor(data.streak));
-  } else if (data.submissionCalendar && typeof data.submissionCalendar === 'string') {
-    try {
-      const calendar = JSON.parse(data.submissionCalendar);
-      if (typeof calendar.streak === 'number') {
-        streak = Math.max(0, Math.floor(calendar.streak));
-      }
-    } catch (e) {
-      // Ignore parse errors
-    }
+function parseContestStats(data) {
+  if (!data?.userContestRanking) {
+    return { rating: 0, globalRank: 0, contests: 0 };
   }
 
-  return { streak };
+  const ranking = data.userContestRanking;
+  return {
+    rating: Math.max(0, Math.floor(ranking.rating || 0)),
+    globalRank: Math.max(0, Math.floor(ranking.globalRanking || 0)),
+    contests: Math.max(0, Math.floor(ranking.attendedContestsCount || 0)),
+  };
 }
 
-/**
- * Fetch all LeetCode stats for a username
- */
+function parseStreak(data) {
+  const calendarStr = data?.matchedUser?.submissionCalendar;
+  if (!calendarStr) return { streak: 0 };
+
+  try {
+    const calendar = JSON.parse(
+      typeof calendarStr === 'string' ? calendarStr : JSON.stringify(calendarStr)
+    );
+
+    const now = new Date();
+    const todayTs = Math.floor(
+      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 1000
+    );
+    const day = 86400;
+
+    const hasSubmission = (ts) => calendar[String(ts)] || calendar[ts];
+
+    let startTs = todayTs;
+    if (!hasSubmission(todayTs)) {
+      startTs = todayTs - day;
+    }
+
+    if (!hasSubmission(startTs)) {
+      return { streak: 0 };
+    }
+
+    let streak = 0;
+    for (let i = 0; i < 365; i++) {
+      const ts = startTs - i * day;
+      if (hasSubmission(ts)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return { streak };
+  } catch {
+    return { streak: 0 };
+  }
+}
+
 export async function getLeetCodeStats(username) {
   if (!username || typeof username !== 'string' || username.trim().length === 0) {
     throw new LeetCodeError('Invalid username provided', 400);
@@ -137,34 +93,46 @@ export async function getLeetCodeStats(username) {
 
   const cleanUsername = username.trim();
 
-  try {
-    // Fetch all three endpoints in parallel for speed
-    const [solvedResponse, contestResponse, calendarResponse] = await Promise.all([
-      fetchWithTimeout(`${BASE_URL}/${cleanUsername}/solved`),
-      fetchWithTimeout(`${BASE_URL}/${cleanUsername}/contest`),
-      fetchWithTimeout(`${BASE_URL}/${cleanUsername}/calendar`),
-    ]);
+  const results = await Promise.allSettled([
+    leetcode.user(cleanUsername),
+    leetcode.user_contest_info(cleanUsername),
+  ]);
 
-    const solved = parseSolvedStats(solvedResponse);
-    const contest = parseContestStats(contestResponse);
-    const calendar = parseCalendarStats(calendarResponse);
+  const errors = [];
 
-    return {
-      username: cleanUsername,
-      solved,
-      contest,
-      calendar,
-      fetchedAt: new Date().toISOString(),
-    };
-  } catch (error) {
-    if (error instanceof LeetCodeError) {
-      throw error;
-    }
-    throw new LeetCodeError(
-      `Failed to fetch LeetCode stats: ${error.message}`,
-      500
-    );
+  const userResult = results[0];
+  const contestResult = results[1];
+
+  let solved = { easy: 0, medium: 0, hard: 0, total: 0 };
+  let calendar = { streak: 0 };
+  let contest = { rating: 0, globalRank: 0, contests: 0 };
+
+  if (userResult.status === 'fulfilled') {
+    solved = parseSolvedStats(userResult.value);
+    calendar = parseStreak(userResult.value);
+  } else {
+    errors.push(`user: ${userResult.reason?.message || userResult.reason}`);
+    console.log('[LeetCode Service] user() failed:', userResult.reason?.message || userResult.reason);
   }
-}
 
-console.log('[LeetCode Service Loaded]');
+  if (contestResult.status === 'fulfilled') {
+    contest = parseContestStats(contestResult.value);
+  } else {
+    errors.push(`contest: ${contestResult.reason?.message || contestResult.reason}`);
+    console.log('[LeetCode Service] user_contest_info() failed:', contestResult.reason?.message || contestResult.reason);
+  }
+
+  const result = {
+    username: cleanUsername,
+    solved,
+    contest,
+    calendar,
+    fetchedAt: new Date().toISOString(),
+  };
+
+  if (errors.length > 0) {
+    result._upstreamErrors = errors;
+  }
+
+  return result;
+}
