@@ -1,11 +1,5 @@
-/**
- * Hook: useProjects
- * Dynamically loads and caches projects from JSON
- */
-
-import { useState, useEffect } from 'react';
-import projectsData from '../../data/projects.json';
-import { ContentValidator } from '../../utils/content/contentValidator';
+import { useState, useEffect, useCallback } from 'react';
+import { getProjects } from '../../services/projects';
 
 export function useProjects() {
   const [projects, setProjects] = useState([]);
@@ -14,41 +8,51 @@ export function useProjects() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadProjects = async () => {
       try {
         setLoading(true);
+        setError(null);
 
-        // Validate each project
-        const validProjects = projectsData.projects.filter(project => {
-          const validation = ContentValidator.validateProject(project);
-          if (!validation.valid) {
-            ContentValidator.logErrors(`Project: ${project.id}`, validation);
-          }
-          return validation.valid;
-        });
+        const data = await getProjects();
 
-        // Sort by priority
-        const sorted = validProjects.sort((a, b) => {
-          return (a.priority || 999) - (b.priority || 999);
-        });
+        if (cancelled) return;
+
+        const sorted = [...data].sort((a, b) =>
+          (a.priority || 999) - (b.priority || 999)
+        );
 
         setProjects(sorted);
-
-        // Extract featured projects
-        const featuredProjects = sorted.filter(p => p.featured);
-        setFeatured(featuredProjects);
-
-        setError(null);
+        setFeatured(sorted.filter(p => p.featured));
       } catch (err) {
-        console.error('Failed to load projects:', err);
-        setError(err.message);
+        if (!cancelled) {
+          console.error('Failed to load projects:', err);
+          setError(err.message);
+          setProjects([]);
+          setFeatured([]);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadProjects();
+
+    return () => { cancelled = true; };
   }, []);
+
+  const byTag = useCallback((tag) =>
+    projects.filter(p => p.tags?.includes(tag)),
+    [projects],
+  );
+
+  const byId = useCallback((id) =>
+    projects.find(p => p.id === id) || null,
+    [projects],
+  );
 
   return {
     projects,
@@ -56,8 +60,8 @@ export function useProjects() {
     loading,
     error,
     isEmpty: projects.length === 0,
-    byTag: (tag) => projects.filter(p => p.tags.includes(tag)),
-    byId: (id) => projects.find(p => p.id === id),
+    byTag,
+    byId,
   };
 }
 

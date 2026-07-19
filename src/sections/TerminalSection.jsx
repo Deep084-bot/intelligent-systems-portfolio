@@ -7,13 +7,12 @@ import { FadeIn } from '../animations';
 import { parseCommand, delay, getRandomElement } from '../utils';
 import { Copy, RotateCcw } from 'lucide-react';
 import profileData from '../data/profile.json';
-import projectsData from '../data/projects.json';
 import skillsData from '../data/skills.json';
 import achievementsData from '../data/achievements.json';
+import { useProjects } from '../hooks/content/useProjects';
 
 
 const PROFILE = profileData;
-const PROJECTS = projectsData.projects || [];
 const SKILLS = skillsData.skills || [];
 const ACHIEVEMENTS = achievementsData.achievements || [];
 
@@ -222,6 +221,7 @@ export const TerminalSection = () => {
   const [history, setHistory] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { projects } = useProjects();
   const [filesystem] = useState(FILESYSTEM);
   const [cwd, setCwd] = useState('/');
   const terminalRef = useRef(null);
@@ -370,7 +370,7 @@ Personality: ${PROFILE.personalitySignals?.join(', ')}`;
       }
 
       case 'projects': {
-        return PROJECTS.slice(0, 5).map((p, i) => {
+        return projects.slice(0, 5).map((p, i) => {
           const tech = (p.tech && p.tech.join(', ')) || (p.tags && p.tags.join(', ')) || 'N/A';
           return `[${i + 1}] ${p.title}
     Status: ${p.status || 'N/A'} | Tech: ${tech}
@@ -567,7 +567,7 @@ ${getRandomElement(vibes)}
         ████████████        DE:       Tailwind UI
                             Terminal: Interactive Mode
 
-  Projects: ${PROJECTS.length} featured
+  Projects: ${projects.length} featured
   Location: ${PROFILE.location}
   Interests: ${PROFILE.technicalInterests?.slice(0, 3).join(', ')}`;
       }
@@ -804,7 +804,7 @@ Available commands:
         const target = args[0] || '';
         const prefix = cwd === '/' ? '' : cwd;
         if (target === 'projects' || cwd.includes('projects')) {
-          return PROJECTS.map(p => `${p.title}/`).join('\n');
+          return projects.map(p => `${p.title}/`).join('\n');
         }
         if (target === 'notes' || cwd.includes('notes')) {
           return 'engineering-notes/  dsa-notes/  system-design/';
@@ -925,7 +925,7 @@ Available commands:
       default:
         return null;
     }
-  }, [cwd, history]);
+  }, [cwd, history, projects]);
 
   const resolveAlias = useCallback((cmd) => commandAliases[cmd] || cmd, [commandAliases]);
 

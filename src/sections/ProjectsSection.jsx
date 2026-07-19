@@ -4,9 +4,7 @@ import { ExternalLink, Github, BookOpen } from 'lucide-react';
 import { Section, PageContainer, Stack, Grid } from '../layout';
 import { SectionTitle, Card } from '../primitives';
 import { FadeIn, StaggerContainer, StaggerItem } from '../animations';
-import projectsData from '../data/projects.json';
-
-const PROJECTS = projectsData.projects || [];
+import { useProjects } from '../hooks/content/useProjects';
 
 function ImageWithFallback({ src, alt, title }) {
   const [failed, setFailed] = useState(false);
@@ -143,6 +141,8 @@ const ProjectCard = ({ project, index }) => {
 };
 
 export const ProjectsSection = () => {
+  const { projects, loading, error } = useProjects();
+
   return (
     <Section id="projects" className="bg-neutral-900">
       <PageContainer>
@@ -154,13 +154,27 @@ export const ProjectsSection = () => {
             />
           </FadeIn>
 
-          <StaggerContainer staggerDelay={0.1}>
-            <Grid cols={3} gap={6}>
-              {PROJECTS.map((project, index) => (
-                <ProjectCard key={project.id || index} project={project} index={index} />
-              ))}
-            </Grid>
-          </StaggerContainer>
+          {loading && (
+            <p className="text-neutral-400 text-center font-mono text-sm py-12">
+              Loading projects...
+            </p>
+          )}
+
+          {error && (
+            <p className="text-red-400 text-center font-mono text-sm py-12">
+              Failed to load projects: {error}
+            </p>
+          )}
+
+          {!loading && !error && (
+            <StaggerContainer staggerDelay={0.1}>
+              <Grid cols={3} gap={6}>
+                {projects.map((project, index) => (
+                  <ProjectCard key={project.id || index} project={project} index={index} />
+                ))}
+              </Grid>
+            </StaggerContainer>
+          )}
         </Stack>
       </PageContainer>
     </Section>

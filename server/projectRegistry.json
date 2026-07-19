@@ -1,0 +1,24 @@
+{
+  "projects": [
+    {
+      "slug": "resyntha",
+      "repo": "Deep084-bot/resyntha-platform"
+    },
+    {
+      "slug": "atlas",
+      "repo": "Deep084-bot/atlas-rag-platform"
+    },
+    {
+      "slug": "portfolio-website",
+      "local": true
+    },
+    {
+      "slug": "sums",
+      "local": true
+    },
+    {
+      "slug": "github-analyzer",
+      "local": true
+    }
+  ]
+}

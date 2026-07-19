@@ -8,9 +8,9 @@ import {
 import { Section, Flex } from '../layout';
 import { Button } from '../primitives';
 import profileData from '../data/profile.json';
-import projectsData from '../data/projects.json';
 import skillsData from '../data/skills.json';
 import { profileData as profileDataModule } from '../data/profileData';
+import { useProjects } from '../hooks/content/useProjects';
 
 const HERO_ROLES = [
   'Backend Engineering Student',
@@ -38,7 +38,7 @@ export const HeroSection = () => {
   };
 
   const p = profileData;
-  const projects = projectsData.projects || [];
+  const { projects } = useProjects();
   const skills = skillsData.skills || [];
   const { codingProfiles } = profileDataModule;
 
