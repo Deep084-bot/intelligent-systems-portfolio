@@ -55,28 +55,6 @@
       "detail": "Achieved district-level recognition in classical performing arts."
     }
   ],
-  "projects": [
-    {
-      "name": "Resyntha",
-      "description": "Multi-Agent Research Intelligence Platform automating literature review, multi-provider retrieval, knowledge extraction, and research landscape generation using FastAPI, PostgreSQL, Redis, and Groq."
-    },
-    {
-      "name": "Atlas",
-      "description": "Production-grade RAG platform with OCR pipeline, pgvector semantic search, streaming citation-aware generation, and modular backend."
-    },
-    {
-      "name": "Engineering Portfolio",
-      "description": "Full-stack portfolio with Engineering Handbook, AI assistant, LeetCode telemetry, and markdown content system using React, Vite, Express, and LLM APIs."
-    },
-    {
-      "name": "SUMS - Smart University Management System",
-      "description": "Role-based academic and placement management system built with Express.js, PostgreSQL, and Node.js. Features BCNF-normalized schemas and RBAC."
-    },
-    {
-      "name": "GitHub Project Analyzer",
-      "description": "Analytics dashboard that aggregates GitHub repository metadata and visualizes language usage and project statistics using Express.js and Chart.js."
-    }
-  ],
   "competitive_programming": {
     "totalSolved": 813,
     "byDifficulty": { "easy": 277, "medium": 444, "hard": 92 },

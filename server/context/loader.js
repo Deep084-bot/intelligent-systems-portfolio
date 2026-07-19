@@ -2,12 +2,15 @@
  * context/loader.js - loads structured data files for the retrieval pipeline.
  *
  * Loads from server/data/*.json (the retrieval-oriented data layer).
+ * Projects are fetched through the Metadata Service which merges
+ * GitHub portfolio.json (for dynamic projects) with local fallback data.
  * All loaded data is validated and returned as a flat registry.
  */
 
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getAllProjects, invalidateCache as invalidateMetadataCache } from '../services/projectMetadataService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const dataDir = path.resolve(path.dirname(__filename), '..', 'data');
@@ -106,7 +109,7 @@ export async function loadAll() {
 
   const [profileRaw, projectsRaw, skillsRaw, dsaRaw, blogsRaw] = await Promise.all([
     loadJSON('profile.json'),
-    loadJSON('projects.json'),
+    getAllProjects(),
     loadJSON('skills.json'),
     loadJSON('dsa.json'),
     loadJSON('blogs.json'),
@@ -126,4 +129,5 @@ export async function loadAll() {
 
 export function invalidateCache() {
   cached = null;
+  invalidateMetadataCache();
 }
