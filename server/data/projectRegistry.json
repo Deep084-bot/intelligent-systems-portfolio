@@ -1,0 +1,17 @@
+{
+  "dynamicProjects": [
+    {
+      "id": "resyntha",
+      "repo": "Deep084-bot/resyntha",
+      "branch": "main",
+      "portfolioPath": "portfolio.json"
+    },
+    {
+      "id": "atlas",
+      "repo": "Deep084-bot/atlas",
+      "branch": "main",
+      "portfolioPath": "portfolio.json"
+    }
+  ],
+  "localProjectIds": ["portfolio-website", "sums", "github-analyzer"]
+}
