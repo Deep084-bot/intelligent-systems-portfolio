@@ -260,7 +260,7 @@ export async function getProjectReadme(slug) {
   }
 }
 
-export function invalidateProjectCache() {
-  registryCache = null;
-  legacyCache = null;
+export function invalidateCache() {
+    registryCache = null;
+    legacyCache = null;
 }
