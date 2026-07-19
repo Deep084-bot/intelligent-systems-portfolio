@@ -4,14 +4,14 @@
     "institution": "Indian Institute of Information Technology, Vadodara",
     "degree": "BTech Computer Science & Engineering",
     "cgpa": 8.88,
-    "years": "2022–2026",
+    "years": "2024–2028",
     "location": "Gujarat, India"
   },
   "education": {
     "degree": "Bachelor of Technology (BTech) in Computer Science & Engineering",
     "school": "Indian Institute of Information Technology, Vadodara",
     "cgpa": 8.88,
-    "duration": "2022–2026",
+    "duration": "2024–2028",
     "coursework": [
       "Data Structures & Algorithms",
       "Operating Systems",
@@ -23,18 +23,19 @@
       "Distributed Systems"
     ],
     "highlights": [
-      "Strong focus on backend engineering and distributed systems",
+      "Strong focus on backend infrastructure and AI systems",
       "Active in competitive programming and DSA practice",
-      "Exploring AI/ML integration in systems"
+      "Building production-grade AI and backend platforms"
     ]
   },
   "skills": {
-    "backend": ["Node.js", "Express.js", "REST APIs", "CRUD Architecture", "Middleware Systems", "Authentication Basics"],
-    "databases": ["PostgreSQL", "MongoDB", "MySQL", "Schema Design", "SQL Querying", "Relational Modeling"],
-    "frontend": ["React", "Vite", "Tailwind CSS", "Responsive UI", "Component Architecture"],
-    "languages": ["Java", "C++", "Python", "JavaScript", "SQL"],
+    "backend": ["FastAPI", "Node.js", "Express.js", "REST APIs", "Pipeline Architecture", "Authentication"],
+    "databases": ["PostgreSQL", "pgvector", "Redis", "MongoDB", "MySQL"],
+    "ai_systems": ["RAG", "Vector Search", "Semantic Retrieval", "Prompt Engineering", "OCR", "LLM Integration"],
+    "frontend": ["React", "TypeScript", "Vite", "Tailwind CSS"],
+    "languages": ["Java", "C++", "Python", "JavaScript", "TypeScript", "SQL"],
     "engineering_foundations": ["Data Structures", "Algorithms", "OOP", "DBMS", "Operating Systems", "Computer Networks"],
-    "currently_exploring": ["System Design", "Docker", "DevOps", "Distributed Systems", "AI Engineering", "Redis"]
+    "currently_exploring": ["Distributed Systems", "Docker", "CI/CD", "System Design"]
   },
   "achievements": [
     {
@@ -42,8 +43,12 @@
       "detail": "Advanced to finals in a competitive hackathon focused on backend and systems solutions."
     },
     {
+      "title": "Odoo Hackathon Participant",
+      "detail": "Participated in Odoo's hackathon, building integrated business solutions."
+    },
+    {
       "title": "Joint Secretary, Encore Music Club",
-      "detail": "Leadership role managing club operations and organizing events."
+      "detail": "Leadership role managing club operations and organizing events at IIIT Vadodara."
     },
     {
       "title": "3-Time District Kala Mahakumbh Winner",
@@ -52,56 +57,60 @@
   ],
   "projects": [
     {
-      "name": "Smart University Management System",
-      "description": "Role-based academic and placement management system built with Express.js, PostgreSQL, and Node.js. Features BCNF-normalized schemas and RBAC."
+      "name": "Resyntha",
+      "description": "Multi-Agent Research Intelligence Platform automating literature review, knowledge extraction, and research landscape generation using FastAPI, PostgreSQL, Redis, and Groq."
     },
     {
-      "name": "GitHub Project Analyzer",
-      "description": "Analytics dashboard that aggregates repository metrics using GitHub's REST API. Built with React, Chart.js, and Node.js."
-    },
-    {
-      "name": "School Management API",
-      "description": "REST APIs with geolocation-based features for school data management. Built with Express.js and MySQL."
+      "name": "Atlas",
+      "description": "Production-grade RAG platform with OCR pipeline, pgvector semantic search, streaming responses, and citation-aware AI."
     },
     {
       "name": "Engineering Portfolio",
       "description": "Full-stack portfolio with terminal-inspired UI and AI assistant using React, Vite, Express, and LLM APIs."
+    },
+    {
+      "name": "SUMS - Smart University Management System",
+      "description": "Role-based academic and placement management system built with Express.js, PostgreSQL, and Node.js. Features BCNF-normalized schemas and RBAC."
+    },
+    {
+      "name": "School Management API",
+      "description": "REST APIs with geolocation-based features for school data management. Built with Express.js and MySQL."
     }
   ],
   "competitive_programming": {
-    "totalSolved": 741,
-    "byDifficulty": { "easy": 200, "medium": 430, "hard": 111 },
-    "leetcode": { "username": "Deep04_Mehta", "rating": 1679 },
+    "totalSolved": 813,
+    "byDifficulty": { "easy": 277, "medium": 444, "hard": 92 },
+    "leetcode": { "username": "Deep04_Mehta", "rating": 1678 },
     "codechef": { "username": "deep04_mehta", "rating": 1600 },
     "codeforces": { "username": "dpmehta1211" },
     "geeksforgeeks": { "username": "deep084" },
-    "streak": { "current": 45, "best": 120 },
+    "streak": { "current": 3, "best": 136 },
     "focus": "Implementation consistency, medium-level algorithmic problems"
   },
   "currently_learning": [
-    "System Design Fundamentals",
     "Distributed Systems Concepts",
-    "Docker & Containerization",
-    "DevOps Workflows",
+    "Docker and Containerization",
+    "CI/CD Workflows",
+    "System Design Fundamentals",
     "AI Engineering Patterns",
     "Computer Networks",
     "Operating Systems"
   ],
   "philosophy": {
-    "approach": "Prefers building real systems over chasing buzzwords. Learning comes from hands-on debugging, iteration, and consistent practice.",
+    "approach": "Prefers building real production-quality systems over chasing buzzwords. Learning comes from hands-on debugging, iteration, and consistent practice.",
     "principles": [
       "Clarity and reliability over complexity",
       "Fundamentals-first approach",
       "Systems thinking",
-      "Technical depth over breadth"
+      "Production-oriented engineering"
     ],
     "focus_areas": [
-      "Backend engineering and API design",
-      "Distributed systems architecture",
-      "Database systems (SQL & NoSQL)",
-      "System design and scalability",
+      "Backend infrastructure and API design",
+      "AI systems architecture (RAG, retrieval, pipelines)",
+      "Distributed systems and coordination",
+      "Database systems (SQL, vector, cache)",
       "Competitive programming and DSA",
-      "AI systems integration"
+      "Production engineering patterns"
     ]
   },
   "contact": {

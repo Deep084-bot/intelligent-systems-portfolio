@@ -1,24 +1,41 @@
 {
   "backend": {
-    "category": "Backend & APIs",
+    "category": "Backend Systems",
     "skills": [
       { "name": "Node.js", "context": "REST APIs, async runtime, backend services" },
       { "name": "Express.js", "context": "Route handling, middleware, CRUD APIs" },
-      { "name": "REST API Design", "context": "HTTP semantics, resource modeling, status codes" }
+      { "name": "FastAPI", "context": "Async Python backend, pipeline architecture, AI services" },
+      { "name": "REST API Design", "context": "HTTP semantics, resource modeling, status codes" },
+      { "name": "Authentication", "context": "Session management, API keys, OAuth patterns" },
+      { "name": "Pipeline Architecture", "context": "Stage-based processing, async execution, validation" }
     ]
   },
   "databases": {
     "category": "Databases",
     "skills": [
-      { "name": "PostgreSQL", "context": "Schema design, SQL queries, relational modeling" },
+      { "name": "PostgreSQL", "context": "Schema design, SQL queries, relational modeling, pgvector" },
+      { "name": "pgvector", "context": "Vector embeddings, hybrid search, similarity queries" },
+      { "name": "Redis", "context": "Caching, queue management, async task orchestration" },
       { "name": "MongoDB", "context": "Document storage, basic aggregation" },
       { "name": "MySQL", "context": "Querying, basic schema design" }
+    ]
+  },
+  "ai_systems": {
+    "category": "AI Systems",
+    "skills": [
+      { "name": "RAG", "context": "Retrieval-Augmented Generation architecture and implementation" },
+      { "name": "Vector Search", "context": "Embedding-based similarity search, dense + sparse retrieval" },
+      { "name": "Semantic Retrieval", "context": "Document chunking, embedding strategies, re-ranking" },
+      { "name": "Prompt Engineering", "context": "System prompts, context construction, output formatting" },
+      { "name": "OCR", "context": "Document processing pipelines, text extraction and normalization" },
+      { "name": "LLM Integration", "context": "API integration, streaming responses, citation grounding" }
     ]
   },
   "frontend": {
     "category": "Frontend",
     "skills": [
       { "name": "React", "context": "Components, hooks, state management" },
+      { "name": "TypeScript", "context": "Type safety, interfaces, generics" },
       { "name": "Vite", "context": "Build tooling, dev server" },
       { "name": "Tailwind CSS", "context": "Utility-first styling, responsive design" }
     ]
@@ -28,29 +45,29 @@
     "skills": [
       { "name": "Java", "context": "OOP, backend services" },
       { "name": "C++", "context": "DSA, competitive programming" },
-      { "name": "Python", "context": "Scripts, AI/ML exploration" },
+      { "name": "Python", "context": "Backend services, AI/ML, data processing" },
       { "name": "JavaScript", "context": "Full-stack development" },
-      { "name": "SQL", "context": "Querying, relational design" }
+      { "name": "TypeScript", "context": "Type-safe frontend and backend development" },
+      { "name": "SQL", "context": "Querying, relational design, vector search" }
     ]
   },
   "foundations": {
     "category": "Engineering Foundations",
     "skills": [
-      "Data Structures & Algorithms",
-      "Object-Oriented Programming",
-      "Database Management Systems",
       "Operating Systems",
-      "Computer Networks"
+      "Computer Networks",
+      "Database Management Systems",
+      "Data Structures & Algorithms",
+      "Object-Oriented Programming"
     ]
   },
   "exploring": {
     "category": "Currently Exploring",
     "skills": [
-      { "name": "System Design", "context": "Scalability, trade-offs, architecture patterns" },
-      { "name": "Docker", "context": "Containerization basics" },
-      { "name": "DevOps", "context": "CI/CD, deployment workflows" },
-      { "name": "Distributed Systems", "context": "Concepts, consistency models" },
-      { "name": "AI Engineering", "context": "LLM APIs, integration patterns" }
+      { "name": "Distributed Systems", "context": "Consensus, coordination, fault tolerance" },
+      { "name": "Docker", "context": "Containerization, images, compose" },
+      { "name": "CI/CD", "context": "Automated testing, deployment pipelines" },
+      { "name": "System Design", "context": "Scalability, trade-offs, architecture patterns" }
     ]
   }
 }

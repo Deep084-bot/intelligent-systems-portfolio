@@ -1,38 +1,38 @@
 {
   "name": "Deep Mehta",
   "title": "Systems, Backend & AI Engineering Student",
-  "shortHeadline": "CS student focused on backend systems, distributed computing, AI engineering, and problem solving through consistent practice and hands-on projects.",
+  "shortHeadline": "CS student focused on backend infrastructure, AI systems, distributed software, production-oriented engineering, and scalable backend architecture.",
   "location": "Gujarat, India",
   "institution": "IIIT Vadodara",
   "institutionFull": "Indian Institute of Information Technology, Vadodara",
   "degree": "BTech Computer Science & Engineering",
   "cgpa": 8.88,
   "degreePeriod": "2024-2028",
-  "bio": "Computer Science student focused on backend engineering, distributed systems, and AI applications. Interested in understanding how scalable software systems are architected \u2014 from API design and database modeling to system behavior under load. Works through problems methodically across DSA platforms, builds practical backend projects, and explores AI engineering workflows. Curious about operating systems, computer networks, and what makes production systems reliable.",
+  "bio": "Computer Science student focused on backend infrastructure, AI systems, distributed software, and production-oriented engineering. Interested in how scalable systems are architected — from API design and database modeling to distributed coordination and system behavior under load. Builds practical projects across the backend-AI spectrum, from research intelligence pipelines to retrieval-augmented generation platforms. Works through problems methodically across DSA platforms. Curious about operating systems, computer networks, distributed consensus, and what makes production systems reliable.",
   "identity": {
-    "primaryRoles": ["Backend Engineering Student", "AI Engineering Learner", "Systems-Focused Developer", "Problem Solver"],
-    "corePositioning": "Engineering-focused student exploring backend systems, AI applications, scalable architectures, and intelligent software development.",
-    "portfolioMessage": "A student engineer focused on understanding systems deeply, building practical software seriously, and continuously improving through problem solving and hands-on engineering."
+    "primaryRoles": ["Backend Infrastructure Engineer", "AI Systems Builder", "Distributed Software Developer", "Production-Oriented Engineer"],
+    "corePositioning": "Computer science student focused on backend infrastructure, AI systems, distributed software, and production-oriented engineering with scalable backend architecture as the through line.",
+    "portfolioMessage": "A student engineer focused on building production-quality backend systems, exploring AI infrastructure patterns, and developing scalable software through consistent engineering practice."
   },
-  "technicalInterests": ["Backend Systems", "AI Engineering", "Distributed Systems", "Cybersecurity", "Problem Solving", "System Design", "APIs", "Databases", "DevOps", "Cloud Computing"],
+  "technicalInterests": ["AI Infrastructure", "Backend Engineering", "Distributed Systems", "Production Software", "RAG Systems", "LLM Systems", "Databases", "System Design", "APIs", "Problem Solving"],
   "currentFocus": {
     "academics": ["Computer Networks", "Operating Systems", "Machine Learning"],
-    "engineering": ["Backend Development", "AI Engineering Fundamentals", "System Design Fundamentals", "Scalable Backend Thinking"],
-    "projectFocus": ["Building practical engineering projects", "Improving architecture thinking", "Creating AI-integrated applications"]
+    "engineering": ["Backend Infrastructure Design", "RAG and AI System Architecture", "Distributed Systems Fundamentals", "Production Engineering Patterns"],
+    "projectFocus": ["Building Resyntha and Atlas as flagship projects", "Deepening understanding of AI infrastructure", "Developing production-ready backend patterns"]
   },
-  "strengths": ["Problem Solving", "Backend Logic Development", "Algorithmic Thinking", "Learning System Internals", "Engineering Curiosity", "Technical Consistency"],
+  "strengths": ["Backend Systems Design", "AI Infrastructure Thinking", "Problem Solving", "Architecture Reasoning", "Engineering Consistency", "Full-Project Ownership"],
   "comfortableTechnologies": {
-    "languages": ["Java", "JavaScript", "Python", "SQL"],
-    "backend": ["Node.js", "Express.js", "PostgreSQL"],
-    "frontend": ["React", "Tailwind CSS"],
-    "databases": ["PostgreSQL", "MongoDB"],
+    "languages": ["Java", "JavaScript", "Python", "SQL", "TypeScript"],
+    "backend": ["Node.js", "Express.js", "FastAPI", "PostgreSQL"],
+    "frontend": ["React", "TypeScript", "Tailwind CSS"],
+    "databases": ["PostgreSQL", "MongoDB", "Redis"],
     "devops": ["Docker", "GitHub Actions"],
-    "ai_ml": ["Python", "Pandas", "Gemini API", "Groq API"]
+    "ai_ml": ["RAG", "Vector Search", "LLM Integration", "Groq API", "Gemini API"]
   },
-  "currentlyLearning": ["AI Engineering Fundamentals", "Machine Learning", "Computer Networks", "Operating Systems", "DevOps Fundamentals", "Distributed Systems Concepts", "System Design Fundamentals"],
-  "careerDirection": ["AI Engineer", "Backend Engineer", "Systems Engineer"],
+  "currentlyLearning": ["Distributed Systems Concepts", "Docker and Containerization", "CI/CD Workflows", "System Design Fundamentals", "AI Engineering Patterns", "Computer Networks", "Operating Systems"],
+  "careerDirection": ["Infrastructure Engineer", "Backend Engineer", "AI Systems Engineer"],
   "engineeringMindset": {
-    "approach": "Focused on building practical systems while continuously improving engineering depth and technical understanding.",
+    "approach": "Focused on building production-quality systems while continuously improving engineering depth and technical understanding.",
     "learningStyle": "Learns through projects, implementation, experimentation, and deep exploration of system behavior.",
     "philosophy": "Strong engineering comes from understanding systems deeply, solving problems consistently, and building real applications thoughtfully."
   },

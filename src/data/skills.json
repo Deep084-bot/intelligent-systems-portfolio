@@ -1,24 +1,28 @@
 {
   "skills": [
     {
-      "category": "Backend & APIs",
-      "skills": ["Node.js", "Express.js", "REST APIs", "CRUD Architecture", "Middleware Systems", "Authentication Basics"]
+      "category": "Backend Systems",
+      "skills": ["Node.js", "Express", "FastAPI", "REST APIs", "Authentication", "Pipeline Architecture"]
     },
     {
       "category": "Databases",
-      "skills": ["PostgreSQL", "MongoDB", "MySQL", "Schema Design Fundamentals", "SQL Querying", "Relational Modeling"]
+      "skills": ["PostgreSQL", "pgvector", "Redis", "MongoDB", "MySQL"]
+    },
+    {
+      "category": "AI Systems",
+      "skills": ["RAG", "Vector Search", "Semantic Retrieval", "Prompt Engineering", "OCR", "LLM Integration"]
     },
     {
       "category": "Frontend",
-      "skills": ["React", "Tailwind CSS", "Vite", "Responsive UI", "Component Architecture"]
+      "skills": ["React", "TypeScript", "Tailwind", "Vite"]
     },
     {
       "category": "Engineering Foundations",
-      "skills": ["Data Structures", "Algorithms", "OOP", "DBMS", "Operating Systems", "Computer Networks"]
+      "skills": ["OS", "CN", "DBMS", "DSA", "OOP"]
     },
     {
       "category": "Currently Exploring",
-      "skills": ["System Design", "Docker", "DevOps Fundamentals", "Distributed Systems Concepts", "AI Engineering Workflows", "Redis"]
+      "skills": ["Distributed Systems", "Docker", "CI/CD", "System Design"]
     }
   ]
 }

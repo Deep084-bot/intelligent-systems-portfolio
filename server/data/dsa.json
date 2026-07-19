@@ -1,13 +1,13 @@
 {
-  "totalSolved": 741,
-  "byDifficulty": { "easy": 200, "medium": 430, "hard": 111 },
+  "totalSolved": 813,
+  "byDifficulty": { "easy": 277, "medium": 444, "hard": 92 },
   "platforms": [
-    { "name": "LeetCode", "username": "Deep04_Mehta", "solved": 741, "rating": 1679 },
+    { "name": "LeetCode", "username": "Deep04_Mehta", "solved": 813, "rating": 1678 },
     { "name": "CodeChef", "username": "deep04_mehta", "rating": 1600 },
     { "name": "Codeforces", "username": "dpmehta1211" },
     { "name": "GeeksforGeeks", "username": "deep084" }
   ],
   "contestParticipation": "Regular",
   "focus": "Implementation consistency, medium-level algorithmic problems",
-  "streak": { "current": 45, "best": 120 }
+  "streak": { "current": 3, "best": 136 }
 }

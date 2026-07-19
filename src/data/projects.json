@@ -1,15 +1,98 @@
 {
   "projects": [
     {
+      "id": "resyntha",
+      "slug": "resyntha",
+      "title": "Resyntha",
+      "shortDescription": "Multi-Agent Research Intelligence Platform for automated literature review, structured knowledge extraction, and research landscape generation.",
+      "image": "/images/projects/resyntha.png",
+      "tags": ["Backend", "AI", "Research", "Pipeline", "FastAPI"],
+      "status": "In Development",
+      "featured": true,
+      "priority": 1,
+      "startDate": "2025-11-01",
+      "endDate": null,
+      "links": {
+        "github": "https://github.com/Deep084-bot/resyntha",
+        "demo": null,
+        "blog": null
+      },
+      "overview": {
+        "problem": "Researchers face information overload — manually reviewing hundreds of papers, extracting key findings, and identifying research gaps is slow and inconsistent.",
+        "solution": "Resyntha orchestrates multiple AI agents across a stage-based pipeline to automate literature reviews: it searches academic sources, extracts structured knowledge, generates research landscapes, detects gaps, and provides an AI copilot for interactive exploration."
+      },
+      "details": {
+        "architecture": "FastAPI backend with a stage-based pipeline engine driving asynchronous execution via ARQ and Redis. SQLAlchemy manages PostgreSQL persistence for versioned artifacts. React + TypeScript frontend with TanStack Query orchestrates real-time pipeline state. Modular agent architecture supports pluggable source adapters for Semantic Scholar, OpenAlex, and arXiv. Groq accelerates LLM inference for extraction and analysis stages.",
+        "technicalChallenges": [
+          "Designing a stage-based pipeline engine with deterministic validation between stages",
+          "Managing asynchronous task execution with Redis queue and result backpressure",
+          "Building versioned artifact storage with rollback and diff capabilities",
+          "Orchestrating multi-agent coordination without deadlock or duplicated work",
+          "Implementing caching strategies across API sources to respect rate limits"
+        ],
+        "learnings": "Deepened understanding of pipeline architecture design, asynchronous task orchestration, multi-agent coordination patterns, and building observability into distributed data workflows."
+      },
+      "tech": ["FastAPI", "PostgreSQL", "Redis", "React", "TypeScript", "TanStack Query", "SQLAlchemy", "ARQ", "Pipeline Engine", "Semantic Scholar", "OpenAlex", "arXiv", "Groq"],
+      "futureImprovements": [
+        "Interactive research landscape visualization with graph exploration",
+        "Custom agent creation interface for domain-specific extraction",
+        "Collaborative review sessions with shared workspaces",
+        "Automated literature alerting and monitoring for new publications",
+        "Integration with reference managers (Zotero, Mendeley)",
+        "Expanded source adapters for PubMed, IEEE, and Scopus"
+      ]
+    },
+    {
+      "id": "atlas",
+      "slug": "atlas",
+      "title": "Atlas",
+      "shortDescription": "Production-grade Retrieval-Augmented Generation platform with OCR pipeline, semantic search, streaming responses, and citation-aware AI.",
+      "image": "/images/projects/atlas.png",
+      "tags": ["Backend", "AI", "RAG", "Semantic Search", "OCR"],
+      "status": "In Development",
+      "featured": true,
+      "priority": 2,
+      "startDate": "2026-02-01",
+      "endDate": null,
+      "links": {
+        "github": "https://github.com/Deep084-bot/atlas",
+        "demo": null,
+        "blog": null
+      },
+      "overview": {
+        "problem": "Traditional search and Q&A systems lack document-grounded, citation-aware responses. Users need answers that are verifiable against source material, not black-box LLM outputs.",
+        "solution": "Atlas ingests documents through an OCR pipeline, embeds them into pgvector for semantic retrieval, and serves citation-grounded answers with streaming responses. A modular backend separates ingestion, retrieval, generation, and authentication layers."
+      },
+      "details": {
+        "architecture": "Modular FastAPI backend with distinct ingestion, retrieval, generation, and auth services. OCR pipeline normalizes scanned documents before embedding. pgvector enables efficient hybrid search combining dense and sparse retrieval. Better Auth handles session and API key management. Streaming responses deliver citation-aware AI outputs in real time.",
+        "technicalChallenges": [
+          "Designing a modular architecture where ingestion, retrieval, and generation can scale independently",
+          "Building an OCR pipeline that normalizes diverse document formats into clean text",
+          "Implementing hybrid search (dense + sparse) over pgvector for optimal relevance",
+          "Streaming citation-grounded responses without breaking the document context window",
+          "Managing authentication across modular services without coupling"
+        ],
+        "learnings": "Explored RAG architecture patterns, embedding strategies for domain-specific retrieval, streaming response design, and modular backend decomposition for AI systems."
+      },
+      "tech": ["OCR Pipeline", "pgvector", "Better Auth", "Semantic Search", "Streaming Responses", "Citation-Aware AI", "Modular Backend"],
+      "futureImprovements": [
+        "Multi-modal retrieval supporting images and tables",
+        "Document analytics dashboard with usage insights",
+        "Custom embedding fine-tuning for domain corpora",
+        "Collaborative document collections with shared access control",
+        "Real-time document update and re-indexing pipeline"
+      ]
+    },
+    {
       "id": "portfolio-website",
       "slug": "portfolio-website",
-      "title": "Portfolio Website",
+      "title": "Engineering Portfolio",
       "shortDescription": "An engineering-focused portfolio showcasing projects, engineering notes, and an AI assistant using React, Vite, and an Express backend.",
       "image": "/images/projects/portfolio-website.png",
       "tags": ["Frontend", "Backend", "AI"],
       "status": "Complete",
       "featured": true,
-      "priority": 1,
+      "priority": 3,
       "startDate": "2026-01-01",
       "endDate": "2026-05-01",
       "links": {
@@ -46,7 +129,7 @@
       "tags": ["Backend", "PostgreSQL", "Node.js"],
       "status": "Complete",
       "featured": true,
-      "priority": 2,
+      "priority": 4,
       "startDate": "2025-06-01",
       "endDate": "2025-10-01",
       "links": {
@@ -74,41 +157,6 @@
       ]
     },
     {
-      "id": "github-analyzer",
-      "slug": "github-project-analyzer",
-      "title": "GitHub Project Analyzer",
-      "shortDescription": "A small analytics dashboard that surfaces repository metrics and language distributions using GitHub APIs.",
-      "image": "/images/projects/github-analyzer.png",
-      "tags": ["Backend", "APIs", "Visualization"],
-      "status": "Complete",
-      "featured": false,
-      "priority": 3,
-      "startDate": "2025-03-01",
-      "endDate": "2025-04-15",
-      "links": {
-        "github": "https://github.com/Deep084-bot/github-analyzer",
-        "demo": null,
-        "blog": "/blog/github-analyzer"
-      },
-      "overview": {
-        "problem": "Developers and small teams need quick insights into repository metrics.",
-        "solution": "Built a simple API-backed dashboard that aggregates GitHub repo stats and visualizes language usage and stars/forks trends."
-      },
-      "details": {
-        "architecture": "Express backend calling GitHub REST APIs, frontend visualizations with Chart.js/EJS for rapid prototyping.",
-        "technicalChallenges": [
-          "Handling API rate limits",
-          "Designing clean visualizations for small datasets"
-        ],
-        "learnings": "API integration patterns, rate limit handling strategies, and data visualization basics."
-      },
-      "tech": ["Node.js", "Express.js", "Axios", "Chart.js"],
-      "futureImprovements": [
-        "Add caching for API results",
-        "Support OAuth for user-specific analytics"
-      ]
-    },
-    {
       "id": "school-api",
       "slug": "school-management-api",
       "title": "School Management API",
@@ -117,7 +165,7 @@
       "tags": ["Backend", "MySQL", "APIs"],
       "status": "Complete",
       "featured": false,
-      "priority": 4,
+      "priority": 5,
       "startDate": "2024-09-01",
       "endDate": "2024-11-01",
       "links": {

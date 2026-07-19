@@ -1,7 +1,53 @@
 [
   {
+    "id": "resyntha",
+    "title": "Resyntha",
+    "shortDescription": "Multi-Agent Research Intelligence Platform for automated literature review, structured knowledge extraction, and research landscape generation.",
+    "tags": ["Backend", "AI", "Research", "Pipeline", "FastAPI", "PostgreSQL", "Redis", "Groq"],
+    "status": "In Development",
+    "featured": true,
+    "overview": {
+      "problem": "Researchers face information overload — manually reviewing hundreds of papers, extracting key findings, and identifying research gaps is slow and inconsistent.",
+      "solution": "Resyntha orchestrates multiple AI agents across a stage-based pipeline to automate literature reviews: it searches academic sources, extracts structured knowledge, generates research landscapes, detects gaps, and provides an AI copilot for interactive exploration."
+    },
+    "architecture": "FastAPI backend with a stage-based pipeline engine driving asynchronous execution via ARQ and Redis. SQLAlchemy manages PostgreSQL persistence for versioned artifacts. React + TypeScript frontend with TanStack Query orchestrates real-time pipeline state. Modular agent architecture supports pluggable source adapters for Semantic Scholar, OpenAlex, and arXiv. Groq accelerates LLM inference for extraction and analysis stages.",
+    "challenges": [
+      "Building a stage-based pipeline engine with deterministic validation between stages",
+      "Managing asynchronous task execution with Redis queue and result backpressure",
+      "Orchestrating multi-agent coordination without deadlock or duplicated work",
+      "Implementing caching strategies across API sources to respect rate limits"
+    ],
+    "learnings": "Deepened understanding of pipeline architecture design, asynchronous task orchestration, multi-agent coordination patterns, and building observability into distributed data workflows.",
+    "tech": ["FastAPI", "PostgreSQL", "Redis", "React", "TypeScript", "TanStack Query", "SQLAlchemy", "ARQ", "Pipeline Engine", "Semantic Scholar", "OpenAlex", "arXiv", "Groq"],
+    "category": ["backend", "ai", "research", "projects"],
+    "keywords": ["research", "literature review", "multi-agent", "pipeline", "fastapi", "semantic scholar", "arxiv", "rag", "knowledge extraction", "groq"]
+  },
+  {
+    "id": "atlas",
+    "title": "Atlas",
+    "shortDescription": "Production-grade Retrieval-Augmented Generation platform with OCR pipeline, semantic search, streaming responses, and citation-aware AI.",
+    "tags": ["Backend", "AI", "RAG", "Semantic Search", "OCR", "pgvector"],
+    "status": "In Development",
+    "featured": true,
+    "overview": {
+      "problem": "Traditional search and Q&A systems lack document-grounded, citation-aware responses. Users need answers that are verifiable against source material, not black-box LLM outputs.",
+      "solution": "Atlas ingests documents through an OCR pipeline, embeds them into pgvector for semantic retrieval, and serves citation-grounded answers with streaming responses. A modular backend separates ingestion, retrieval, generation, and authentication layers."
+    },
+    "architecture": "Modular FastAPI backend with distinct ingestion, retrieval, generation, and auth services. OCR pipeline normalizes scanned documents before embedding. pgvector enables efficient hybrid search combining dense and sparse retrieval. Better Auth handles session and API key management. Streaming responses deliver citation-aware AI outputs in real time.",
+    "challenges": [
+      "Designing a modular architecture where ingestion, retrieval, and generation can scale independently",
+      "Building an OCR pipeline that normalizes diverse document formats into clean text",
+      "Implementing hybrid search (dense + sparse) over pgvector for optimal relevance",
+      "Streaming citation-grounded responses without breaking the document context window"
+    ],
+    "learnings": "Explored RAG architecture patterns, embedding strategies for domain-specific retrieval, streaming response design, and modular backend decomposition for AI systems.",
+    "tech": ["OCR Pipeline", "pgvector", "Better Auth", "Semantic Search", "Streaming Responses", "Citation-Aware AI", "Modular Backend"],
+    "category": ["backend", "ai", "rag", "projects"],
+    "keywords": ["rag", "retrieval", "ocr", "pgvector", "semantic search", "citation", "streaming", "fastapi", "modular"]
+  },
+  {
     "id": "portfolio-website",
-    "title": "Portfolio Website",
+    "title": "Engineering Portfolio",
     "shortDescription": "An engineering-focused portfolio showcasing projects, engineering notes, and an AI assistant using React, Vite, and an Express backend.",
     "tags": ["Frontend", "Backend", "AI", "React", "Vite", "Express"],
     "status": "Complete",
@@ -34,24 +80,6 @@
     "tech": ["Node.js", "Express.js", "PostgreSQL", "SQL"],
     "category": ["backend", "databases", "projects"],
     "keywords": ["university", "management", "postgresql", "role-based", "rbac", "api", "express", "database", "normalization"]
-  },
-  {
-    "id": "github-analyzer",
-    "title": "GitHub Project Analyzer",
-    "shortDescription": "A small analytics dashboard that surfaces repository metrics and language distributions using GitHub APIs.",
-    "tags": ["Backend", "APIs", "Visualization"],
-    "status": "Complete",
-    "featured": false,
-    "overview": {
-      "problem": "Developers and small teams need quick insights into repository metrics.",
-      "solution": "Built a simple API-backed dashboard that aggregates GitHub repo stats and visualizes language usage and stars/forks trends."
-    },
-    "architecture": "Express backend calling GitHub REST APIs, frontend visualizations with Chart.js/EJS for rapid prototyping.",
-    "challenges": ["Handling API rate limits", "Designing clean visualizations for small datasets"],
-    "learnings": "API integration patterns, rate limit handling strategies, and data visualization basics.",
-    "tech": ["Node.js", "Express.js", "Axios", "Chart.js"],
-    "category": ["backend", "devops", "projects"],
-    "keywords": ["github", "analytics", "api", "visualization", "dashboard", "metrics", "chart"]
   },
   {
     "id": "school-api",

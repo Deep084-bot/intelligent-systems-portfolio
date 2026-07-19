@@ -1,27 +1,32 @@
 [
   {
-    "category": "Backend & APIs",
-    "skills": ["Node.js", "Express.js", "REST APIs", "CRUD Architecture", "Middleware Systems", "Authentication Basics"],
-    "keywords": ["node", "express", "api", "rest", "backend", "server", "crud", "middleware"]
+    "category": "Backend Systems",
+    "skills": ["Node.js", "Express", "FastAPI", "REST APIs", "Authentication", "Pipeline Architecture"],
+    "keywords": ["backend", "api", "fastapi", "node", "express", "pipeline", "auth", "rest"]
   },
   {
     "category": "Databases",
-    "skills": ["PostgreSQL", "MongoDB", "MySQL", "Schema Design Fundamentals", "SQL Querying", "Relational Modeling"],
-    "keywords": ["database", "postgresql", "mongodb", "mysql", "sql", "nosql", "schema", "query"]
+    "skills": ["PostgreSQL", "pgvector", "Redis", "MongoDB", "MySQL"],
+    "keywords": ["database", "postgresql", "pgvector", "redis", "mongodb", "mysql", "vector", "cache"]
+  },
+  {
+    "category": "AI Systems",
+    "skills": ["RAG", "Vector Search", "Semantic Retrieval", "Prompt Engineering", "OCR", "LLM Integration"],
+    "keywords": ["rag", "vector search", "semantic", "retrieval", "prompt engineering", "ocr", "llm", "embedding"]
   },
   {
     "category": "Frontend",
-    "skills": ["React", "Tailwind CSS", "Vite", "Responsive UI", "Component Architecture"],
-    "keywords": ["react", "frontend", "css", "tailwind", "ui", "component"]
+    "skills": ["React", "TypeScript", "Tailwind", "Vite"],
+    "keywords": ["react", "typescript", "tailwind", "vite", "frontend", "ui"]
   },
   {
     "category": "Engineering Foundations",
-    "skills": ["Data Structures", "Algorithms", "OOP", "DBMS", "Operating Systems", "Computer Networks"],
-    "keywords": ["dsa", "algorithms", "data structures", "oop", "dbms", "os", "networks"]
+    "skills": ["OS", "CN", "DBMS", "DSA", "OOP"],
+    "keywords": ["operating systems", "computer networks", "dbms", "dsa", "algorithms", "oop"]
   },
   {
     "category": "Currently Exploring",
-    "skills": ["System Design", "Docker", "DevOps Fundamentals", "Distributed Systems Concepts", "AI Engineering Workflows", "Redis"],
-    "keywords": ["learning", "exploring", "system design", "docker", "devops", "distributed", "ai"]
+    "skills": ["Distributed Systems", "Docker", "CI/CD", "System Design"],
+    "keywords": ["distributed", "docker", "ci/cd", "system design", "scalability"]
   }
 ]

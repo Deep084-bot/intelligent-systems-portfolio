@@ -1,43 +1,60 @@
 {
   "name": "Deep Mehta",
-  "title": "Backend Engineer",
+  "title": "Backend Infrastructure & AI Systems Engineer",
   "location": "Gujarat, India",
   "education": {
     "institution": "IIIT Vadodara",
     "degree": "BTech Computer Science & Engineering",
     "cgpa": 8.88,
-    "startYear": 2022,
-    "endYear": 2026,
+    "startYear": 2024,
+    "endYear": 2028,
     "status": "Pursuing"
   },
   "engineeringIdentity": {
-    "primaryFocus": "Backend Engineering & Systems Development",
-    "secondaryFocus": "Distributed Systems, AI Engineering",
-    "philosophy": "I prefer building real systems over chasing buzzwords. Most learning comes from hands-on debugging, iteration, and consistent technical practice."
+    "primaryFocus": "Backend Infrastructure & AI Systems Engineering",
+    "secondaryFocus": "Distributed Systems, Production Engineering",
+    "philosophy": "I prefer building real production-quality systems over chasing buzzwords. Most learning comes from hands-on debugging, iteration, and consistent technical practice."
   },
   "interests": [
-    "Backend engineering",
+    "AI Infrastructure and RAG systems",
+    "Backend engineering and API design",
     "Distributed systems architecture",
-    "API design and REST architecture",
-    "Database systems (SQL & NoSQL)",
-    "System design",
-    "Competitive programming",
-    "AI systems integration",
-    "Cloud computing",
-    "Security-oriented systems"
+    "Production engineering patterns",
+    "Database systems (SQL, vector, cache)",
+    "System design and scalability",
+    "Competitive programming and DSA",
+    "LLM integration and prompt engineering"
   ],
   "keyMetrics": {
-    "leetcodeProblems": 700,
+    "leetcodeProblems": 813,
+    "leetcodeRating": 1678,
     "codechefRating": 1600,
-    "contests": {
-      "name": "DAIICT HackOut",
-      "achievement": "Finalist",
-      "year": 2025
-    }
+    "streak": {
+      "current": 3,
+      "best": 136
+    },
+    "contests": [
+      {
+        "name": "DAIICT HackOut",
+        "achievement": "Finalist",
+        "year": 2025
+      },
+      {
+        "name": "Odoo Hackathon",
+        "achievement": "Participant",
+        "year": 2025
+      }
+    ]
   },
+  "flagshipProjects": [
+    "Resyntha — Multi-Agent Research Intelligence Platform",
+    "Atlas — Production-grade RAG platform",
+    "Engineering Portfolio — Full-stack AI-integrated portfolio",
+    "SUMS — Smart University Management System"
+  ],
   "contact": {
     "github": "https://github.com/Deep084-bot",
     "leetcode": "https://leetcode.com/u/Deep04_Mehta/",
-    "email": "deep084@email.com"
+    "email": "dpmehta1211@gmail.com"
   }
 }
