@@ -110,3 +110,111 @@ export async function getCategoryNotes(category) {
 export function clearCache() {
   sessionStorage.removeItem(CACHE_KEY);
 }
+
+function stripPrefix(name) {
+  return name
+    .replace(/^\d+[-_\s]+/, '')
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function insertIntoTree(children, parts, sha, fullPath, parentPath) {
+  const [head, ...rest] = parts;
+  const isFile = rest.length === 0;
+  const currentPath = parentPath ? `${parentPath}/${head}` : head;
+
+  if (isFile) {
+    const name = head.replace(/\.md$/, '');
+    children.push({
+      type: 'file',
+      name,
+      displayName: stripPrefix(name),
+      path: fullPath,
+      sha,
+    });
+  } else {
+    let folder = children.find(c => c.type === 'folder' && c.name === head);
+    if (!folder) {
+      folder = {
+        type: 'folder',
+        name: head,
+        displayName: stripPrefix(head),
+        path: currentPath,
+        children: [],
+      };
+      children.push(folder);
+    }
+    insertIntoTree(folder.children, rest, sha, fullPath, currentPath);
+  }
+}
+
+function sortTree(nodes) {
+  nodes.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+  nodes.forEach(n => {
+    if (n.children) sortTree(n.children);
+  });
+}
+
+function countTreeNotes(nodes) {
+  return nodes.reduce(
+    (sum, n) => sum + (n.type === 'file' ? 1 : countTreeNotes(n.children)),
+    0
+  );
+}
+
+export function findFirstFile(nodes) {
+  for (const n of nodes) {
+    if (n.type === 'file') return { name: n.name, displayName: n.displayName, path: n.path, sha: n.sha };
+    if (n.children) {
+      const found = findFirstFile(n.children);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+export async function getHandbookTree() {
+  const cached = getCached('gh-handbook-tree');
+  if (cached) return cached;
+
+  const tree = await getFileTree();
+
+  const readmeItem = tree.find(i => i.path === 'README.md');
+  const readme = readmeItem
+    ? { path: 'README.md', sha: readmeItem.sha }
+    : null;
+
+  const mdItems = tree.filter(
+    i => i.type === 'blob' && i.path.endsWith('.md') && i.path !== 'README.md'
+  );
+
+  const root = [];
+  for (const item of mdItems) {
+    const parts = item.path.split('/');
+    insertIntoTree(root, parts, item.sha, item.path, '');
+  }
+  sortTree(root);
+
+  const categories = root
+    .filter(n => n.type === 'folder')
+    .map(n => n.displayName);
+
+  const latestCommit = await getRepoLatestCommit();
+  const latestCommitDate = latestCommit?.commit?.committer?.date || null;
+  const repoUrl = `https://github.com/${OWNER}/${REPO}`;
+
+  const result = {
+    readme,
+    tree: root,
+    categories,
+    totalNotes: countTreeNotes(root),
+    latestCommitDate,
+    repoUrl,
+  };
+
+  setCached('gh-handbook-tree', result);
+  return result;
+}

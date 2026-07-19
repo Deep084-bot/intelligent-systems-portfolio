@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -12,7 +12,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { getFileContent, getNotesTree } from '../services/github';
+import { getFileContent, getHandbookTree, findFirstFile } from '../services/github';
 import MarkdownRenderer from '../components/molecules/MarkdownRenderer';
 
 const FILE_CACHE_KEY = 'hb-file-cache';
@@ -34,93 +34,111 @@ function setFileCache(path, content) {
   } catch {}
 }
 
-function SidebarTree({ categories, selectedPath, onSelect, searchQuery }) {
-  const [openFolders, setOpenFolders] = useState(() => {
-    const initial = {};
-    const keys = Object.keys(categories);
-    if (keys.length <= 5) keys.forEach(k => (initial[k] = true));
-    return initial;
-  });
+function getParentPaths(filePath) {
+  const parts = filePath.split('/');
+  const paths = [];
+  for (let i = 0; i < parts.length - 1; i++) {
+    paths.push(parts.slice(0, i + 1).join('/'));
+  }
+  return paths;
+}
 
-  const toggleFolder = (name) => {
-    setOpenFolders(prev => ({ ...prev, [name]: !prev[name] }));
-  };
+function filterNode(node, q) {
+  if (!q) return true;
+  if (node.displayName.toLowerCase().includes(q)) return true;
+  if (node.type === 'folder') {
+    return node.children.some(child => filterNode(child, q));
+  }
+  return false;
+}
+
+function SidebarTree({ tree, selectedPath, onSelect, searchQuery }) {
+  const [openPaths, setOpenPaths] = useState(new Set());
+  const prevSelected = useRef(null);
 
   const q = searchQuery.toLowerCase().trim();
 
-  return (
-    <div className="space-y-0.5">
-      {Object.entries(categories)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([folder, notes]) => {
-          const filtered = q
-            ? notes.filter(
-                n =>
-                  n.name.toLowerCase().includes(q) ||
-                  folder.toLowerCase().includes(q)
-              )
-            : notes;
+  useEffect(() => {
+    if (!selectedPath || selectedPath === prevSelected.current) return;
+    prevSelected.current = selectedPath;
+    const parents = getParentPaths(selectedPath);
+    if (parents.length === 0) return;
+    setOpenPaths(prev => {
+      const next = new Set(prev);
+      parents.forEach(p => next.add(p));
+      return next;
+    });
+  }, [selectedPath]);
 
-          if (q && filtered.length === 0 && !folder.toLowerCase().includes(q)) {
-            return null;
-          }
+  const toggle = useCallback((path) => {
+    setOpenPaths(prev => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  }, []);
 
-          const isOpen = openFolders[folder] || q.length > 0;
+  const renderNode = useCallback((node) => {
+    if (q && !filterNode(node, q)) return null;
 
-          return (
-            <div key={folder}>
-              <button
-                onClick={() => toggleFolder(folder)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50 rounded-lg transition group"
+    if (node.type === 'folder') {
+      const isOpen = openPaths.has(node.path) || !!q;
+
+      return (
+        <div key={node.path}>
+          <button
+            onClick={() => toggle(node.path)}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50 rounded-lg transition group"
+          >
+            {isOpen ? (
+              <ChevronDown size={12} className="shrink-0" />
+            ) : (
+              <ChevronRight size={12} className="shrink-0" />
+            )}
+            {isOpen ? (
+              <FolderOpen size={14} className="shrink-0 text-accent-400" />
+            ) : (
+              <Folder size={14} className="shrink-0 text-neutral-500" />
+            )}
+            <span className="truncate">{node.displayName}</span>
+          </button>
+
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
               >
-                {isOpen ? (
-                  <ChevronDown size={12} className="shrink-0" />
-                ) : (
-                  <ChevronRight size={12} className="shrink-0" />
-                )}
-                {isOpen ? (
-                  <FolderOpen size={14} className="shrink-0 text-accent-400" />
-                ) : (
-                  <Folder size={14} className="shrink-0 text-neutral-500" />
-                )}
-                <span className="truncate">{folder.replace(/-/g, ' ')}</span>
-                <span className="ml-auto text-[10px] text-neutral-600">
-                  {notes.length}
-                </span>
-              </button>
+                <div className="ml-3 border-l border-neutral-800/50 pl-2 space-y-0.5">
+                  {node.children.map(renderNode)}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      );
+    }
 
-              <AnimatePresence>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="ml-4 border-l border-neutral-800/50 pl-2 space-y-0.5">
-                      {filtered.map((note) => (
-                        <button
-                          key={note.path}
-                          onClick={() => onSelect(note)}
-                          className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition group ${
-                            selectedPath === note.path
-                              ? 'bg-accent-500/10 text-accent-400 border border-accent-500/20'
-                              : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/30 border border-transparent'
-                          }`}
-                        >
-                          <FileText size={12} className="shrink-0" />
-                          <span className="truncate">{note.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-    </div>
-  );
+    return (
+      <button
+        key={node.path}
+        onClick={() => onSelect(node)}
+        className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition group ${
+          selectedPath === node.path
+            ? 'bg-accent-500/10 text-accent-400 border border-accent-500/20'
+            : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/30 border border-transparent'
+        }`}
+      >
+        <FileText size={12} className="shrink-0" />
+        <span className="truncate">{node.displayName}</span>
+      </button>
+    );
+  }, [openPaths, q, selectedPath, onSelect, toggle]);
+
+  return <div className="space-y-0.5">{tree.map(renderNode)}</div>;
 }
 
 function ReadingProgress() {
@@ -160,11 +178,13 @@ export function HandbookPage({ onBack }) {
   useEffect(() => {
     const loadTree = async () => {
       try {
-        const tree = await getNotesTree();
+        const tree = await getHandbookTree();
         setData(tree);
-        const firstNote = Object.values(tree.notes).flat()[0];
-        if (firstNote) {
-          setSelectedNote(firstNote);
+        const initial = tree.readme
+          ? { name: 'README', displayName: 'README', path: 'README.md', sha: tree.readme.sha }
+          : findFirstFile(tree.tree);
+        if (initial) {
+          setSelectedNote(initial);
         }
       } catch (err) {
         setError(err.message || 'Failed to load handbook');
@@ -207,8 +227,6 @@ export function HandbookPage({ onBack }) {
     }
   }, []);
 
-  const categories = data?.notes || {};
-
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
@@ -241,7 +259,6 @@ export function HandbookPage({ onBack }) {
     <div className="min-h-screen bg-neutral-950 flex flex-col">
       <ReadingProgress />
 
-      {/* Top bar */}
       <header className="sticky top-0 z-40 bg-neutral-950/95 backdrop-blur-sm border-b border-neutral-800/50">
         <div className="flex items-center gap-3 px-4 h-14">
           <button
@@ -261,7 +278,6 @@ export function HandbookPage({ onBack }) {
 
           <div className="flex-1" />
 
-          {/* Desktop search */}
           <div className="hidden md:flex relative w-64">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
@@ -273,7 +289,6 @@ export function HandbookPage({ onBack }) {
             />
           </div>
 
-          {/* Mobile sidebar toggle */}
           <button
             onClick={() => setMobileSidebar(!mobileSidebar)}
             className="md:hidden text-neutral-400 hover:text-neutral-200 transition p-1"
@@ -282,7 +297,6 @@ export function HandbookPage({ onBack }) {
           </button>
         </div>
 
-        {/* Mobile search */}
         <div className="md:hidden px-4 pb-3">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
@@ -298,11 +312,10 @@ export function HandbookPage({ onBack }) {
       </header>
 
       <div className="flex flex-1 min-h-0">
-        {/* Desktop sidebar */}
         <aside className="hidden md:flex flex-col w-72 border-r border-neutral-800/50 bg-neutral-950/50 shrink-0">
           <div className="flex-1 overflow-y-auto p-3">
             <SidebarTree
-              categories={categories}
+              tree={data?.tree || []}
               selectedPath={selectedNote?.path}
               onSelect={handleSelectNote}
               searchQuery={search}
@@ -310,7 +323,6 @@ export function HandbookPage({ onBack }) {
           </div>
         </aside>
 
-        {/* Mobile sidebar drawer */}
         <AnimatePresence>
           {mobileSidebar && (
             <>
@@ -330,7 +342,7 @@ export function HandbookPage({ onBack }) {
               >
                 <div className="h-full overflow-y-auto p-3">
                   <SidebarTree
-                    categories={categories}
+                    tree={data?.tree || []}
                     selectedPath={selectedNote?.path}
                     onSelect={handleSelectNote}
                     searchQuery={search}
@@ -341,7 +353,6 @@ export function HandbookPage({ onBack }) {
           )}
         </AnimatePresence>
 
-        {/* Main content */}
         <main
           ref={contentRef}
           className="flex-1 overflow-y-auto min-w-0"
