@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { LayoutContainer, Navbar } from './components/layout';
 import HeroSection from './sections/HeroSection';
 import TerminalSection from './sections/TerminalSection';
@@ -12,6 +12,9 @@ import {
 } from './sections/PlaceholderSections';
 import LoadingScreen from './components/primitives/LoadingScreen';
 import HandbookPage from './pages/HandbookPage';
+
+const DeepVerse = lazy(() => import('./modules/deepverse'));
+
 import './styles/globals.css';
 
 function App() {
@@ -38,9 +41,21 @@ function App() {
     return <HandbookPage onBack={() => navigate('/')} />;
   }
 
+  if (route.startsWith('/deepverse')) {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full border-2 border-neutral-700 border-t-primary-500 animate-spin" />
+        </div>
+      }>
+        <DeepVerse route={route} navigate={navigate} />
+      </Suspense>
+    );
+  }
+
   return (
     <LayoutContainer>
-      <Navbar />
+      <Navbar onNavigate={navigate} />
       {showLoader && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-neutral-900">
           <LoadingScreen onFinish={() => { setShowLoader(false); window.dispatchEvent(new Event('app:loaded')); }} />
