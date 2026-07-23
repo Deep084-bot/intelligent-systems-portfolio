@@ -51,6 +51,10 @@ export default function Hub({ navigate }) {
   const handleCardClick = (id) => {
     if (id === 'vision-arena') {
       navigate('/deepverse/vision-arena')
+    } else if (id === 'cosmos') {
+      navigate('/deepverse/cosmos')
+    } else if (id === 'music-lab') {
+      navigate('/deepverse/music-lab')
     }
   }
 

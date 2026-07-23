@@ -1,22 +1,19 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '../../../../utils'
 
-export default function ExperienceCard({ id, icon, title, description, onClick }) {
-  const [clicked, setClicked] = useState(false)
-  const isReady = id === 'vision-arena'
+const BADGE = {
+  'vision-arena': { text: 'Play Now', ready: true },
+  'cosmos': { text: 'Begin Journey', ready: true },
+  'music-lab': { text: 'Play Now', ready: true },
+}
 
-  const handleClick = () => {
-    onClick(id)
-    if (!isReady) {
-      setClicked(true)
-      setTimeout(() => setClicked(false), 2000)
-    }
-  }
+export default function ExperienceCard({ id, icon, title, description, onClick }) {
+  const badge = BADGE[id] || { text: 'Coming Soon', ready: false }
+  const isReady = badge.ready
 
   return (
     <motion.button
-      onClick={handleClick}
+      onClick={() => onClick(id)}
       whileHover={{ y: -6, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
@@ -47,22 +44,8 @@ export default function ExperienceCard({ id, icon, title, description, onClick }
             : 'bg-neutral-700/60 text-neutral-500 border-neutral-600/40',
         )}
       >
-        {isReady ? 'Play Now' : 'Coming Soon'}
+        {badge.text}
       </div>
-
-      {!isReady && clicked && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="absolute inset-0 flex items-center justify-center bg-neutral-900/90 backdrop-blur-sm rounded-xl"
-        >
-          <span className="text-sm text-neutral-300 font-mono">
-            Coming in the next milestone.
-          </span>
-        </motion.div>
-      )}
     </motion.button>
   )
 }
