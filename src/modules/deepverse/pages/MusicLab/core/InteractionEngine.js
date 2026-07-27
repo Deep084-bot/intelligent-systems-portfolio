@@ -6,7 +6,9 @@
  */
 
 export class InteractionEngine {
-  constructor() {
+  constructor(svgWidth = 1600, svgHeight = 560) {
+    this.svgWidth = svgWidth
+    this.svgHeight = svgHeight
     this.listeners = new Set()
     this.activePointers = new Map() // Track multiple simultaneous touches
   }
@@ -133,8 +135,8 @@ export class InteractionEngine {
     // landmark: { x: 0-1, y: 0-1, z: depth, visibility: 0-1 }
     // Convert normalized coordinates to SVG space
     const pointer = {
-      x: landmark.x * 1200,
-      y: landmark.y * 800,
+      x: landmark.x * this.svgWidth,
+      y: landmark.y * this.svgHeight,
       z: landmark.z || 0,
     }
 
@@ -150,14 +152,14 @@ export class InteractionEngine {
   }
 
   /**
-   * Convert DOM coordinates to SVG viewBox coordinates (1200x800)
+   * Convert DOM coordinates to SVG viewBox coordinates
    */
   normalizePointer(event, bounds) {
     const x = event.clientX - bounds.left
     const y = event.clientY - bounds.top
     return {
-      x: (x / bounds.width) * 1200,
-      y: (y / bounds.height) * 800,
+      x: (x / bounds.width) * this.svgWidth,
+      y: (y / bounds.height) * this.svgHeight,
     }
   }
 
@@ -165,8 +167,8 @@ export class InteractionEngine {
     const x = touch.clientX - bounds.left
     const y = touch.clientY - bounds.top
     return {
-      x: (x / bounds.width) * 1200,
-      y: (y / bounds.height) * 800,
+      x: (x / bounds.width) * this.svgWidth,
+      y: (y / bounds.height) * this.svgHeight,
     }
   }
 

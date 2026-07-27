@@ -17,52 +17,42 @@ import InteractionLayer from '../layers/InteractionLayer'
 
 export default function GuitarScene({ orchestrator }) {
   return (
-    <motion.div
-      className="relative w-full max-w-6xl mx-auto"
-      style={{
-        aspectRatio: '1200 / 800',
-      }}
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{
-        opacity: 1,
-        scale: 1,
-      }}
-      transition={{
-        opacity: { duration: 1.2, ease: 'easeOut' },
-        scale: { duration: 1.2, ease: 'easeOut' },
-      }}
-    >
-      {/* Layer 1: Background */}
-      <div className="absolute inset-0" style={{ zIndex: 0 }}>
-        <BackgroundLayer />
+    <>
+      {/* Mobile message — guitar is desktop-only */}
+      <div className="sm:hidden flex items-center justify-center min-h-[200px] px-8 text-center">
+        <p className="text-sm text-neutral-500 leading-relaxed">
+          Music Lab is best experienced on desktop.
+        </p>
       </div>
 
-      {/* Layer 2: Guitar Context (body, fretboard) */}
-      <div
-        className="absolute inset-0"
-        style={{
-          zIndex: 10,
-          filter: 'drop-shadow(0 16px 32px rgba(0, 0, 0, 0.4))',
+      <motion.div
+        className="relative w-full max-w-[1400px] mx-auto hidden sm:block"
+        style={{ aspectRatio: '1600 / 560' }}
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{
+          opacity: { duration: 1.2, ease: 'easeOut' },
+          scale:   { duration: 1.2, ease: 'easeOut' },
         }}
       >
-        <GuitarContextLayer />
-      </div>
+        {/* Layer 1: Background */}
+        <div className="absolute inset-0" style={{ zIndex: 0 }}>
+          <BackgroundLayer />
+        </div>
 
-      {/* Layer 3: Interactive Strings */}
-      <div
-        className="absolute inset-0"
-        style={{
-          zIndex: 20,
-          filter: 'drop-shadow(0 12px 24px rgba(0, 0, 0, 0.5))',
-        }}
-      >
-        <InteractionLayer orchestrator={orchestrator} />
-      </div>
+        {/* Layer 2: Guitar Context (body, fretboard) */}
+        <div className="absolute inset-0" style={{ zIndex: 10 }}>
+          <GuitarContextLayer />
+        </div>
 
-      {/* Layer 4: Effects (future - particles, hand visualization, etc.) */}
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }}>
-        {/* Reserved for future effects layer */}
-      </div>
-    </motion.div>
+        {/* Layer 3: Interactive Strings */}
+        <div className="absolute inset-0" style={{ zIndex: 20 }}>
+          <InteractionLayer orchestrator={orchestrator} />
+        </div>
+
+        {/* Layer 4: Effects (reserved) */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }} />
+      </motion.div>
+    </>
   )
 }

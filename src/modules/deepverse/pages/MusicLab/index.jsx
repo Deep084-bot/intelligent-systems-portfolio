@@ -3,6 +3,37 @@ import { motion } from 'framer-motion'
 import Guitar from './components/Guitar'
 import AudioEngine from './components/AudioEngine'
 
+// Minimal inline guitar silhouette icon
+function GuitarIcon({ size = 64, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* Guitar body */}
+      <ellipse cx="32" cy="44" rx="16" ry="13" fill="rgba(200,150,80,0.25)" stroke="rgba(200,150,80,0.5)" strokeWidth="1.5" />
+      {/* Waist */}
+      <path d="M22 36 Q28 32 32 32 Q36 32 42 36" stroke="rgba(200,150,80,0.35)" strokeWidth="1.5" fill="none" />
+      {/* Upper bout */}
+      <ellipse cx="32" cy="27" rx="11" ry="9" fill="rgba(200,150,80,0.18)" stroke="rgba(200,150,80,0.4)" strokeWidth="1.5" />
+      {/* Sound hole */}
+      <circle cx="32" cy="44" r="5" fill="none" stroke="rgba(160,110,50,0.5)" strokeWidth="1" />
+      {/* Neck */}
+      <rect x="30" y="10" width="4" height="20" rx="1" fill="rgba(160,100,50,0.4)" stroke="rgba(180,120,60,0.3)" strokeWidth="0.8" />
+      {/* Headstock */}
+      <rect x="28" y="6" width="8" height="6" rx="1.5" fill="rgba(120,75,35,0.4)" stroke="rgba(160,100,50,0.35)" strokeWidth="0.8" />
+      {/* Strings */}
+      {[30, 31, 32, 33, 34].map(x => (
+        <line key={x} x1={x} y1="12" x2={x} y2="50" stroke="rgba(220,200,160,0.22)" strokeWidth="0.5" />
+      ))}
+    </svg>
+  )
+}
+
 export default function MusicLab({ navigate }) {
   const audioEngineRef = useRef(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -86,7 +117,7 @@ export default function MusicLab({ navigate }) {
             transition={{ duration: 0.6 }}
             className="text-center max-w-md"
           >
-            <div className="text-7xl mb-8">🎸</div>
+            <GuitarIcon size={72} className="mx-auto mb-8 opacity-80" />
             <h2 className="text-2xl font-bold text-neutral-200 mb-4">
               Ready to Play
             </h2>
@@ -116,7 +147,7 @@ export default function MusicLab({ navigate }) {
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <div className="text-6xl mb-6">🎸</div>
+          <GuitarIcon size={64} className="mx-auto mb-6 opacity-70" />
           <h2 className="text-2xl font-bold text-neutral-200 mb-4">
             Loading audio samples...
           </h2>
@@ -228,3 +259,4 @@ export default function MusicLab({ navigate }) {
     </div>
   )
 }
+

@@ -17,6 +17,8 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+DeepVerse-Execution-Plan.md
+DeepVerse-Product-Design-Document.md
 
 # Logs
 npm-debug.log*

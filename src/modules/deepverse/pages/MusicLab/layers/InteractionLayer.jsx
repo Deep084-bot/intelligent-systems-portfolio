@@ -8,15 +8,15 @@
 import { useEffect, useRef, useState } from 'react'
 import StringLayer from './StringLayer'
 
-// String layout configuration
-// Extended to 960px (80% of viewport), positioned for interaction-first composition
+// String layout — real acoustic guitar proportions, nut (x=148) to bridge saddle (x=1175)
+// Strings are 18px apart; index 0 = low E (thickest), index 5 = high E (thinnest)
 const STRING_CONFIG = [
-  { index: 0, note: 'E', y: 310, x1: 160, x2: 1120, hitRadius: 30 },
-  { index: 1, note: 'B', y: 370, x1: 160, x2: 1120, hitRadius: 30 },
-  { index: 2, note: 'G', y: 430, x1: 160, x2: 1120, hitRadius: 30 },
-  { index: 3, note: 'D', y: 490, x1: 160, x2: 1120, hitRadius: 30 },
-  { index: 4, note: 'A', y: 550, x1: 160, x2: 1120, hitRadius: 30 },
-  { index: 5, note: 'E', y: 610, x1: 160, x2: 1120, hitRadius: 30 },
+  { index: 0, note: 'E2', y: 224, x1: 148, x2: 1175, hitRadius: 18 },
+  { index: 1, note: 'A2', y: 242, x1: 148, x2: 1175, hitRadius: 18 },
+  { index: 2, note: 'D3', y: 260, x1: 148, x2: 1175, hitRadius: 18 },
+  { index: 3, note: 'G3', y: 278, x1: 148, x2: 1175, hitRadius: 18 },
+  { index: 4, note: 'B3', y: 296, x1: 148, x2: 1175, hitRadius: 18 },
+  { index: 5, note: 'E4', y: 314, x1: 148, x2: 1175, hitRadius: 18 },
 ]
 
 export default function InteractionLayer({ orchestrator }) {
@@ -59,7 +59,7 @@ export default function InteractionLayer({ orchestrator }) {
   return (
     <svg
       ref={svgRef}
-      viewBox="0 0 1200 800"
+      viewBox="0 0 1600 560"
       className="w-full h-full absolute inset-0 cursor-pointer"
       preserveAspectRatio="xMidYMid meet"
       style={{ touchAction: 'none' }}

@@ -30,6 +30,13 @@ const EXPERIENCES = [
     description:
       'Engineering decisions through branching scenarios.',
   },
+  {
+    id: 'reading-room',
+    icon: '📖',
+    title: 'The Reading Room',
+    description:
+      'Books that shaped how I think, build, and see the world.',
+  },
 ]
 
 const containerVariants = {
@@ -55,6 +62,8 @@ export default function Hub({ navigate }) {
       navigate('/deepverse/cosmos')
     } else if (id === 'music-lab') {
       navigate('/deepverse/music-lab')
+    } else if (id === 'reading-room') {
+      navigate('/deepverse/reading-room')
     }
   }
 
