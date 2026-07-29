@@ -20,8 +20,8 @@ export default function ReadingRoom({ navigate }) {
   const [selectedBook, setSelectedBook] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState(null)
-  const [searchHightlight, setSearchHighlight] = useState(false)
   const shelfRefs = useRef({})
+  const shelvesRef = useRef([])
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 })
 
   const filteredBySearch = useMemo(() => {
@@ -42,10 +42,12 @@ export default function ReadingRoom({ navigate }) {
   }, [filteredBySearch, activeFilter])
 
   const shelves = useMemo(() => {
-    return SHELF_CONFIG.map((s) => ({
+    const result = SHELF_CONFIG.map((s) => ({
       ...s,
       books: filteredBooks.filter((b) => b.shelf === s.id),
     })).filter((s) => s.books.length > 0)
+    shelvesRef.current = result
+    return result
   }, [filteredBooks])
 
   const handleSelectBook = useCallback((book) => {
@@ -84,17 +86,15 @@ export default function ReadingRoom({ navigate }) {
   const handleSearchChange = useCallback((q) => {
     setSearchQuery(q)
     if (q && q.length > 1) {
-      setSearchHighlight(true)
-      setTimeout(() => setSearchHighlight(false), 2000)
-      if (shelves.length > 0) {
-        const firstShelf = shelves[0]
+      const currentShelves = shelvesRef.current
+      if (currentShelves.length > 0) {
         setTimeout(() => {
-          const el = shelfRefs.current[firstShelf.id]
+          const el = shelfRefs.current[currentShelves[0].id]
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }, 100)
       }
     }
-  }, [shelves])
+  }, [])
 
   useEffect(() => {
     const handleMouse = (e) => {

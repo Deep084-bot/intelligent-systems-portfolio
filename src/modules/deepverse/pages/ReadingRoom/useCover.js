@@ -45,7 +45,6 @@ async function fetchByISBN(isbn) {
 async function fetchBySearch(title, author) {
   const query = `${title} ${author}`.trim()
   if (!query) return null
-
   try {
     const res = await fetch(
       `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5`,
@@ -70,10 +69,8 @@ function buildCacheKey(book) {
 
 function validateCachedUrl(book, url) {
   if (!url) return false
-  if (book.isbn) {
-    return url.includes(book.isbn)
-  }
-  return true
+  if (url.startsWith('http')) return true
+  return false
 }
 
 export function preloadCover(book) {
@@ -102,6 +99,14 @@ export function useCover(book) {
     let cancelled = false
 
     async function load() {
+      if (book.manualCover) {
+        if (mountedRef.current) {
+          setCoverUrl(book.manualCover)
+          setLoading(false)
+        }
+        return
+      }
+
       if (memoryCache.has(cacheKey)) {
         const cachedUrl = memoryCache.get(cacheKey)
         if (validateCachedUrl(book, cachedUrl)) {
@@ -166,7 +171,7 @@ export function useCover(book) {
     load()
 
     return () => { cancelled = true }
-  }, [cacheKey, book.isbn, book.title, book.author])
+  }, [cacheKey, book.isbn, book.title, book.author, book.manualCover])
 
   return { coverUrl, loading }
 }

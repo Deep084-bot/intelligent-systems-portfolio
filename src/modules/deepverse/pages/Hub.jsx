@@ -37,6 +37,13 @@ const EXPERIENCES = [
     description:
       'Books that shaped how I think, build, and see the world.',
   },
+  {
+    id: 'system-design',
+    icon: '🏗',
+    title: 'System Design Playground',
+    description:
+      'Design scalable backend architectures with interactive diagrams, validation, templates, and export.',
+  },
 ]
 
 const containerVariants = {
@@ -64,6 +71,8 @@ export default function Hub({ navigate }) {
       navigate('/deepverse/music-lab')
     } else if (id === 'reading-room') {
       navigate('/deepverse/reading-room')
+    } else if (id === 'system-design') {
+      navigate('/deepverse/system-design')
     }
   }
 

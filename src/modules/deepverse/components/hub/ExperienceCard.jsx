@@ -6,6 +6,7 @@ const BADGE = {
   'cosmos': { text: 'Begin Journey', ready: true },
   'music-lab': { text: 'Play Now', ready: true },
   'reading-room': { text: 'Explore', ready: true },
+  'system-design': { text: 'Open Playground', ready: true },
 }
 
 export default function ExperienceCard({ id, icon, title, description, onClick }) {

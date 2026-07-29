@@ -220,6 +220,71 @@ pre {
   }
 }
 
+/* React Flow Custom Handles */
+.custom-handle {
+  position: relative;
+}
+.custom-handle::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: rgba(109, 92, 252, 0.35);
+  border: 1.5px solid rgba(109, 92, 252, 0.25);
+  transition: all 0.2s ease;
+  box-shadow: 0 0 4px rgba(109, 92, 252, 0.1);
+}
+.custom-handle:hover::after {
+  background: rgba(109, 92, 252, 0.6);
+  border-color: rgba(109, 92, 252, 0.5);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+  transform: scale(1.1);
+}
+.react-flow__handle-connecting .custom-handle::after {
+  background: rgba(59, 130, 246, 0.6);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+/* Node appear animation */
+.node-appear {
+  animation: nodeAppear 0.3s ease-out;
+}
+@keyframes nodeAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Edge animated flow */
+@keyframes dashFlow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+.edge-flow {
+  animation: dashFlow 1s linear infinite;
+}
+
+/* React Flow overrides */
+.react-flow__pane {
+  cursor: grab;
+}
+.react-flow__pane:active {
+  cursor: grabbing;
+}
+.react-flow__node {
+  cursor: pointer !important;
+}
+.react-flow__node.selected .custom-handle::after {
+  box-shadow: 0 0 10px rgba(109, 92, 252, 0.5);
+}
+
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   * {

@@ -7,6 +7,7 @@ const VisionArena = lazy(() => import('./pages/VisionArena'))
 const Cosmos = lazy(() => import('./pages/Cosmos'))
 const MusicLab = lazy(() => import('./pages/MusicLab'))
 const ReadingRoom = lazy(() => import('./pages/ReadingRoom'))
+const SystemDesign = lazy(() => import('./pages/SystemDesign'))
 
 export default function DeepVerse({ route, navigate }) {
   const [phase, setPhase] = useState('portal')
@@ -59,6 +60,18 @@ export default function DeepVerse({ route, navigate }) {
         </div>
       }>
         <ReadingRoom navigate={navigate} />
+      </Suspense>
+    )
+  }
+
+  if (route === '/deepverse/system-design') {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full border-2 border-neutral-700 border-t-primary-500 animate-spin" />
+        </div>
+      }>
+        <SystemDesign navigate={navigate} />
       </Suspense>
     )
   }
