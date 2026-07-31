@@ -28,7 +28,7 @@ const EXPERIENCES = [
     icon: '🧠',
     title: 'Inside My Mind',
     description:
-      'Engineering decisions through branching scenarios.',
+      'The cognitive operating system inside my brain — a neural graph of engineering modules.',
   },
   {
     id: 'reading-room',
@@ -73,6 +73,8 @@ export default function Hub({ navigate }) {
       navigate('/deepverse/reading-room')
     } else if (id === 'system-design') {
       navigate('/deepverse/system-design')
+    } else if (id === 'inside-my-mind') {
+      navigate('/deepverse/inside-my-mind')
     }
   }
 

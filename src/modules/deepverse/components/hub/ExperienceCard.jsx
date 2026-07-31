@@ -7,6 +7,7 @@ const BADGE = {
   'music-lab': { text: 'Play Now', ready: true },
   'reading-room': { text: 'Explore', ready: true },
   'system-design': { text: 'Open Playground', ready: true },
+  'inside-my-mind': { text: 'Enter Brain OS', ready: true },
 }
 
 export default function ExperienceCard({ id, icon, title, description, onClick }) {
