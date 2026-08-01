@@ -62,4 +62,11 @@ export const ACHIEVEMENTS = [
     icon: '🧠',
     locked: true,
   },
+  {
+    id: 'problem-solver',
+    label: 'Decision Maker',
+    description: 'Complete your first Engineering Decision Lab scenario.',
+    icon: '🧩',
+    locked: true,
+  },
 ]

@@ -12,6 +12,7 @@ import Toast from './Toast'
 import ShootingStar from './ShootingStar'
 import HiddenQuote from './HiddenQuote'
 import CuriosityPage from './CuriosityPage'
+import DecisionLab from './experiences/components/DecisionLab'
 import useBrainStore, { DEBUG_EASTER_EGGS } from './store'
 
 const KONAMI_SEQ = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']
@@ -116,7 +117,8 @@ export default function InsideMyMind() {
       <HUD />
 
       <AnimatePresence>
-        {activeModule && (
+        {activeModule === 'problem-solving' && <DecisionLab key="lab" onBack={handleBack} />}
+        {activeModule && activeModule !== 'problem-solving' && (
           <ModulePlaceholder key="module" moduleId={activeModule} onBack={handleBack} />
         )}
       </AnimatePresence>

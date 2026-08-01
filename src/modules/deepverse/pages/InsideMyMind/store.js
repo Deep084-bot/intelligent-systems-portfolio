@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { MODULES } from './nodes.config'
 
 export const DEBUG_EASTER_EGGS = true
 
@@ -23,6 +24,7 @@ function saveProgress(state) {
       achievements: state.achievements,
       sessionCount: state.sessionCount,
       discoveries: state.discoveries,
+      scenarioProgress: state.scenarioProgress,
     }))
   } catch {}
 }
@@ -36,6 +38,7 @@ const useBrainStore = create((set, get) => ({
   achievements: saved?.achievements || [],
   sessionCount: saved?.sessionCount || 0,
   discoveries: saved?.discoveries || [],
+  scenarioProgress: saved?.scenarioProgress || {},
   particlesEnabled: true,
   ambientGlow: true,
   reducedMotion: false,
@@ -49,7 +52,6 @@ const useBrainStore = create((set, get) => ({
   constellationAt: 0,
   toast: null,
 
-  moduleOpenCount: {},
   recentOpens: [],
 
   completeBoot: () => set({ booted: true }),
@@ -85,21 +87,28 @@ const useBrainStore = create((set, get) => ({
   endDeveloperMode: () => set({ developerMode: false }),
 
   openModule: (moduleId) => {
-    const { visitedModules, moduleOpenCount, recentOpens } = get()
-    const nextVisited = visitedModules.includes(moduleId) ? visitedModules : [...visitedModules, moduleId]
-    const count = (moduleOpenCount[moduleId] || 0) + 1
-    const nextCounts = { ...moduleOpenCount, [moduleId]: count }
+    const { visitedModules, recentOpens } = get()
+    const isNew = !visitedModules.includes(moduleId)
+    const nextVisited = isNew ? [...visitedModules, moduleId] : visitedModules
     const nextRecent = [...recentOpens, moduleId].slice(-CONSTELLATION_ORDER.length)
 
-    if (DEBUG_EASTER_EGGS) console.log(`[brainos] Visited: ${moduleId}`)
-    if (DEBUG_EASTER_EGGS && moduleId === 'problem-solving') {
-      console.log(`[brainos] Problem Solving clicks: ${count}/${CURIOSITY_TRIGGER}`)
+    if (DEBUG_EASTER_EGGS) {
+      const label = MODULES.find((m) => m.id === moduleId)?.label || moduleId
+      console.log(`[brainos] Visited: ${label}`)
+      const progressing = recentOpens.every((r, i) => r === CONSTELLATION_ORDER[i])
+      const expectedNext = CONSTELLATION_ORDER[recentOpens.length]
+      if (progressing && moduleId !== expectedNext) {
+        console.log('[brainos] Sequence reset')
+      }
+      console.log(`[brainos] Current sequence: ${nextRecent.map((r) => MODULES.find((m) => m.id === r)?.label || r).join(', ')}`)
+      if (isNew) console.log(`[brainos] Explored: ${label} (${nextVisited.length}/${CURIOSITY_TRIGGER})`)
     }
 
     let curiosityVisible = get().curiosityVisible
-    if (moduleId === 'problem-solving' && count >= CURIOSITY_TRIGGER) {
+    if (!curiosityVisible && nextVisited.length >= CURIOSITY_TRIGGER) {
       curiosityVisible = true
-      if (DEBUG_EASTER_EGGS) console.log('[brainos] Curiosity unlocked (click 7)')
+      if (DEBUG_EASTER_EGGS) console.log('[brainos] Unlocking Curiosity...')
+      get().notify('Curiosity Found')
     }
 
     let constellationAt = get().constellationAt
@@ -115,7 +124,6 @@ const useBrainStore = create((set, get) => ({
     set({
       activeModule: moduleId,
       visitedModules: nextVisited,
-      moduleOpenCount: nextCounts,
       recentOpens: nextRecent,
       curiosityVisible,
       constellationAt,
@@ -127,7 +135,6 @@ const useBrainStore = create((set, get) => ({
   openCuriosity: () => {
     set({ curiosityOpen: true, activeModule: null })
     get().recordDiscovery('curiosity')
-    get().notify('Curiosity Found')
   },
   closeCuriosity: () => set({ curiosityOpen: false }),
 
@@ -147,6 +154,26 @@ const useBrainStore = create((set, get) => ({
     saveProgress(get())
   },
 
+  recordScenarioResult: (scenarioId, score) => {
+    const { scenarioProgress, achievements } = get()
+    const prev = scenarioProgress[scenarioId]
+    const nextProgress = {
+      ...scenarioProgress,
+      [scenarioId]: {
+        bestScore: prev ? Math.max(prev.bestScore, score) : score,
+        completed: true,
+        attempts: (prev?.attempts || 0) + 1,
+      },
+    }
+    let nextAchievements = achievements
+    const firstCompletion = Object.values(nextProgress).filter((p) => p.completed).length === 1
+    if (firstCompletion && !achievements.includes('problem-solver')) {
+      nextAchievements = [...achievements, 'problem-solver']
+    }
+    set({ scenarioProgress: nextProgress, achievements: nextAchievements })
+    saveProgress(get())
+  },
+
   incrementSession: () => {
     const { sessionCount } = get()
     set({ sessionCount: sessionCount + 1 })
@@ -159,7 +186,7 @@ const useBrainStore = create((set, get) => ({
       achievements: [],
       sessionCount: 0,
       discoveries: [],
-      moduleOpenCount: {},
+      scenarioProgress: {},
       recentOpens: [],
       curiosityVisible: false,
     })

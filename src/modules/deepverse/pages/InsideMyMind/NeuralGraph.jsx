@@ -205,6 +205,10 @@ const CuriosityNode = memo(function CuriosityNode({ onOpen, zoomRef, reducedMoti
   const pos = { x: CURIOSITY_POS.x * GW, y: CURIOSITY_POS.y * GH }
   const s = hovered ? NR + 6 : NR
 
+  useEffect(() => {
+    if (DEBUG_EASTER_EGGS) console.log('[brainos] Curiosity mounted.')
+  }, [])
+
   const handlePointerDown = useCallback((e) => {
     e.stopPropagation()
     const start = { x: e.clientX, y: e.clientY }
@@ -265,6 +269,7 @@ export default function NeuralGraph({ onSelectModule }) {
   const [whisper, setWhisper] = useState(false)
   const [whisperKey, setWhisperKey] = useState(0)
   const [flicker, setFlicker] = useState(false)
+  const [curiosityRevealed, setCuriosityRevealed] = useState(false)
 
   const containerRef = useRef(null)
   const gRef = useRef(null)
@@ -283,6 +288,7 @@ export default function NeuralGraph({ onSelectModule }) {
   const prevActiveRef = useRef(activeModule)
   const flickeredRef = useRef(false)
   const whisperedRef = useRef(false)
+  const curiosityLoggedRef = useRef(false)
 
   const startSpring = useCallback((tx, ty, tzoom, done) => {
     springRef.current = {
@@ -309,10 +315,10 @@ export default function NeuralGraph({ onSelectModule }) {
       return
     }
     if (prevActiveRef.current && !activeModule) {
-      const wasProblemSolving = prevActiveRef.current === 'problem-solving'
       prevActiveRef.current = null
-      if (wasProblemSolving && curiosityVisible && !flickeredRef.current) {
+      if (curiosityVisible && !flickeredRef.current) {
         flickeredRef.current = true
+        setCuriosityRevealed(true)
         setFlicker(true)
         if (DEBUG_EASTER_EGGS) console.log('[brainos] Graph flicker')
         setTimeout(() => setFlicker(false), 750)
@@ -578,6 +584,11 @@ export default function NeuralGraph({ onSelectModule }) {
   const constellationNodes = CONSTELLATION_ORDER.map((id) => MODULES.find((m) => m.id === id)).filter(Boolean)
   const whisperNode = MODULES.find((m) => m.id === WHISPER_NODE)
 
+  if (curiosityVisible && curiosityRevealed && !curiosityLoggedRef.current) {
+    curiosityLoggedRef.current = true
+    if (DEBUG_EASTER_EGGS) console.log('[brainos] Rendering Curiosity node...')
+  }
+
   return (
     <div
       ref={containerRef}
@@ -623,28 +634,47 @@ export default function NeuralGraph({ onSelectModule }) {
               developerMode={developerMode}
             />
           ))}
-          {curiosityVisible && (
+          {curiosityVisible && curiosityRevealed && (
             <CuriosityNode onOpen={openCuriosity} zoomRef={zoomRef} reducedMotion={reducedMotion} />
           )}
           {constellationAt > 0 && (
             <g key={`constellation-${constellationAt}`} style={{ pointerEvents: 'none' }}>
-              <animate attributeName="opacity" values="0;0.8;0.8;0" keyTimes="0;0.25;0.75;1" dur="5.2s" fill="freeze" />
+              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.25;0.85;1" dur="5.2s" fill="freeze" />
               {constellationNodes.slice(0, -1).map((m, i) => {
                 const a = getNodePos(m, holdOffsets)
                 const b = getNodePos(constellationNodes[i + 1], holdOffsets)
+                const len = Math.hypot(b.x - a.x, b.y - a.y) || 1
                 return (
-                  <line
-                    key={`cl-${i}`}
-                    x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                    stroke="rgba(212,175,55,0.6)"
-                    strokeWidth={1}
-                  />
+                  <g key={`cl-${i}`}>
+                    <line
+                      x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                      stroke="rgba(212,175,55,0.22)"
+                      strokeWidth={4}
+                      strokeLinecap="round"
+                      style={{ filter: 'blur(1px)' }}
+                    />
+                    <line
+                      x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                      stroke="rgba(240,217,138,0.9)"
+                      strokeWidth={1.2}
+                      strokeLinecap="round"
+                      strokeDasharray={len}
+                      strokeDashoffset={len}
+                    >
+                      <animate attributeName="stroke-dashoffset" from={len} to={0} dur="0.9s" begin={`${i * 0.2}s`} fill="freeze" />
+                    </line>
+                  </g>
                 )
               })}
-              {constellationNodes.map((m) => {
+              {constellationNodes.map((m, i) => {
                 const p = getNodePos(m, holdOffsets)
                 return (
-                  <circle key={`cs-${m.id}`} cx={p.x} cy={p.y} r={3} fill="rgba(212,175,55,0.8)" />
+                  <g key={`cs-${m.id}`}>
+                    <circle cx={p.x} cy={p.y} r={7} fill="rgba(212,175,55,0.12)" style={{ filter: 'blur(2px)' }} />
+                    <circle cx={p.x} cy={p.y} r={3} fill="rgba(240,217,138,0.95)">
+                      <animate attributeName="r" values="3;5.5;3" keyTimes="0;0.5;1" dur="1.1s" begin={`${1.4 + i * 0.12}s`} fill="freeze" />
+                    </circle>
+                  </g>
                 )
               })}
             </g>
