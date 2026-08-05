@@ -69,4 +69,11 @@ export const ACHIEVEMENTS = [
     icon: '🧩',
     locked: true,
   },
+  {
+    id: 'incident-commander',
+    label: 'Incident Commander',
+    description: 'Complete all three Debugging Lab investigations.',
+    icon: '🚨',
+    locked: true,
+  },
 ]

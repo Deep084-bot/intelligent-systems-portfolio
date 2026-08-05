@@ -8,6 +8,8 @@ const STORAGE_KEY = 'brainos_progress'
 const DISCOVERY_IDS = ['curiosity', 'shooting-star', 'developer-mode', 'constellation', 'long-hover', 'quote']
 const CONSTELLATION_ORDER = ['learning', 'problem-solving', 'architecture', 'ai', 'performance']
 const CURIOSITY_TRIGGER = 7
+const TRADEOFF_IDS = ['rest-grpc', 'sql-nosql', 'redis-memcached']
+const DEBUGGING_IDS = ['memory-leak', 'database-slowdown', 'api-timeout']
 
 function loadProgress() {
   try {
@@ -25,6 +27,8 @@ function saveProgress(state) {
       sessionCount: state.sessionCount,
       discoveries: state.discoveries,
       scenarioProgress: state.scenarioProgress,
+      tradeoffProgress: state.tradeoffProgress,
+      debuggingProgress: state.debuggingProgress,
     }))
   } catch {}
 }
@@ -39,6 +43,8 @@ const useBrainStore = create((set, get) => ({
   sessionCount: saved?.sessionCount || 0,
   discoveries: saved?.discoveries || [],
   scenarioProgress: saved?.scenarioProgress || {},
+  tradeoffProgress: saved?.tradeoffProgress || {},
+  debuggingProgress: saved?.debuggingProgress || {},
   particlesEnabled: true,
   ambientGlow: true,
   reducedMotion: false,
@@ -174,6 +180,48 @@ const useBrainStore = create((set, get) => ({
     saveProgress(get())
   },
 
+  recordTradeoffResult: (scenarioId, score) => {
+    const { tradeoffProgress, achievements } = get()
+    const prev = tradeoffProgress[scenarioId]
+    const nextProgress = {
+      ...tradeoffProgress,
+      [scenarioId]: {
+        bestScore: prev ? Math.max(prev.bestScore, score) : score,
+        completed: true,
+        attempts: (prev?.attempts || 0) + 1,
+      },
+    }
+    let nextAchievements = achievements
+    const allComplete = TRADEOFF_IDS.every((id) => nextProgress[id]?.completed)
+    if (allComplete && !achievements.includes('tradeoff-master')) {
+      nextAchievements = [...achievements, 'tradeoff-master']
+      get().notify('Tradeoff Master unlocked')
+    }
+    set({ tradeoffProgress: nextProgress, achievements: nextAchievements })
+    saveProgress(get())
+  },
+
+  recordDebuggingResult: (scenarioId, score) => {
+    const { debuggingProgress, achievements } = get()
+    const prev = debuggingProgress[scenarioId]
+    const nextProgress = {
+      ...debuggingProgress,
+      [scenarioId]: {
+        bestScore: prev ? Math.max(prev.bestScore, score) : score,
+        completed: true,
+        attempts: (prev?.attempts || 0) + 1,
+      },
+    }
+    let nextAchievements = achievements
+    const allComplete = DEBUGGING_IDS.every((id) => nextProgress[id]?.completed)
+    if (allComplete && !achievements.includes('incident-commander')) {
+      nextAchievements = [...achievements, 'incident-commander']
+      get().notify('Incident Commander unlocked')
+    }
+    set({ debuggingProgress: nextProgress, achievements: nextAchievements })
+    saveProgress(get())
+  },
+
   incrementSession: () => {
     const { sessionCount } = get()
     set({ sessionCount: sessionCount + 1 })
@@ -187,6 +235,8 @@ const useBrainStore = create((set, get) => ({
       sessionCount: 0,
       discoveries: [],
       scenarioProgress: {},
+      tradeoffProgress: {},
+      debuggingProgress: {},
       recentOpens: [],
       curiosityVisible: false,
     })
