@@ -15,6 +15,7 @@ import CuriosityPage from './CuriosityPage'
 import DecisionLab from './experiences/components/DecisionLab'
 import TradeoffLab from './tradeoffs/components/TradeoffLab'
 import DebuggingLab from './debugging/components/DebuggingLab'
+import ReviewArena from './review/components/ReviewArena'
 import useBrainStore, { DEBUG_EASTER_EGGS } from './store'
 
 const KONAMI_SEQ = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']
@@ -122,7 +123,8 @@ export default function InsideMyMind() {
         {activeModule === 'problem-solving' && <DecisionLab key="lab" onBack={handleBack} />}
         {activeModule === 'tradeoffs' && <TradeoffLab key="tradeoff" onBack={handleBack} />}
         {activeModule === 'debugging' && <DebuggingLab key="debug" onBack={handleBack} />}
-        {activeModule && activeModule !== 'problem-solving' && activeModule !== 'tradeoffs' && activeModule !== 'debugging' && (
+        {activeModule === 'architecture' && <ReviewArena key="review" onBack={handleBack} />}
+        {activeModule && activeModule !== 'problem-solving' && activeModule !== 'tradeoffs' && activeModule !== 'debugging' && activeModule !== 'architecture' && (
           <ModulePlaceholder key="module" moduleId={activeModule} onBack={handleBack} />
         )}
       </AnimatePresence>

@@ -10,6 +10,7 @@ const CONSTELLATION_ORDER = ['learning', 'problem-solving', 'architecture', 'ai'
 const CURIOSITY_TRIGGER = 7
 const TRADEOFF_IDS = ['rest-grpc', 'sql-nosql', 'redis-memcached']
 const DEBUGGING_IDS = ['memory-leak', 'database-slowdown', 'api-timeout']
+const REVIEW_IDS = ['auth-middleware', 'react-dashboard', 'database-repository']
 
 function loadProgress() {
   try {
@@ -29,6 +30,7 @@ function saveProgress(state) {
       scenarioProgress: state.scenarioProgress,
       tradeoffProgress: state.tradeoffProgress,
       debuggingProgress: state.debuggingProgress,
+      reviewProgress: state.reviewProgress,
     }))
   } catch {}
 }
@@ -45,6 +47,7 @@ const useBrainStore = create((set, get) => ({
   scenarioProgress: saved?.scenarioProgress || {},
   tradeoffProgress: saved?.tradeoffProgress || {},
   debuggingProgress: saved?.debuggingProgress || {},
+  reviewProgress: saved?.reviewProgress || {},
   particlesEnabled: true,
   ambientGlow: true,
   reducedMotion: false,
@@ -222,6 +225,27 @@ const useBrainStore = create((set, get) => ({
     saveProgress(get())
   },
 
+  recordReviewResult: (scenarioId, score) => {
+    const { reviewProgress, achievements } = get()
+    const prev = reviewProgress[scenarioId]
+    const nextProgress = {
+      ...reviewProgress,
+      [scenarioId]: {
+        bestScore: prev ? Math.max(prev.bestScore, score) : score,
+        completed: true,
+        attempts: (prev?.attempts || 0) + 1,
+      },
+    }
+    let nextAchievements = achievements
+    const allComplete = REVIEW_IDS.every((id) => nextProgress[id]?.completed)
+    if (allComplete && !achievements.includes('principal-reviewer')) {
+      nextAchievements = [...achievements, 'principal-reviewer']
+      get().notify('Principal Reviewer unlocked')
+    }
+    set({ reviewProgress: nextProgress, achievements: nextAchievements })
+    saveProgress(get())
+  },
+
   incrementSession: () => {
     const { sessionCount } = get()
     set({ sessionCount: sessionCount + 1 })
@@ -237,6 +261,7 @@ const useBrainStore = create((set, get) => ({
       scenarioProgress: {},
       tradeoffProgress: {},
       debuggingProgress: {},
+      reviewProgress: {},
       recentOpens: [],
       curiosityVisible: false,
     })

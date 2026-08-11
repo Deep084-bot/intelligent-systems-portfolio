@@ -76,4 +76,11 @@ export const ACHIEVEMENTS = [
     icon: '🚨',
     locked: true,
   },
+  {
+    id: 'principal-reviewer',
+    label: 'Principal Reviewer',
+    description: 'Complete all three Code Review Arena reviews.',
+    icon: '🧐',
+    locked: true,
+  },
 ]
