@@ -3,9 +3,13 @@ import { detectCategory } from '../classifiers/index.js';
 import { retrieveRelevantContext } from '../retrieval/index.js';
 import { buildPrompt } from '../prompt/builder.js';
 import { getProvider } from '../aiProviders/index.js';
+import { DEFAULT_MODEL as GROQ_DEFAULT_MODEL } from '../aiProviders/groq.js';
 
 const router = express.Router();
 const REQUEST_TIMEOUT_MS = 60_000; // temporarily extended for connectivity debugging
+
+// Resolve Groq model from the centralized provider config (single source of truth)
+const groqModel = () => process.env.GROQ_MODEL || GROQ_DEFAULT_MODEL;
 
 function safeJson(res, status, data) {
   if (res.headersSent) return;
@@ -278,14 +282,14 @@ router.get('/test', async (req, res) => {
         // Attempt to call compatible API — many SDKs map to openai-like methods; try common patterns
         let sdkResp = null;
         if (typeof sdk.chat === 'object' && typeof sdk.chat.completions?.create === 'function') {
-          sdkResp = await sdk.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] });
+          sdkResp = await sdk.chat.completions.create({ model: groqModel(), messages: [{ role: 'user', content: 'ping' }] });
         } else if (typeof sdk.chatCompletion === 'function') {
-          sdkResp = await sdk.chatCompletion({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] });
+          sdkResp = await sdk.chatCompletion({ model: groqModel(), messages: [{ role: 'user', content: 'ping' }] });
         } else if (typeof sdk.createCompletion === 'function') {
           // fallback
-          sdkResp = await sdk.createCompletion({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] });
+          sdkResp = await sdk.createCompletion({ model: groqModel(), messages: [{ role: 'user', content: 'ping' }] });
         } else if (typeof sdk.request === 'function') {
-          sdkResp = await sdk.request({ method: 'POST', path: '/openai/v1/chat/completions', body: { model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] } });
+          sdkResp = await sdk.request({ method: 'POST', path: '/openai/v1/chat/completions', body: { model: groqModel(), messages: [{ role: 'user', content: 'ping' }] } });
         } else {
           console.log(JSON.stringify({ event: 'groq_sdk_unknown_api', requestId }));
         }
@@ -312,7 +316,7 @@ router.get('/test', async (req, res) => {
     const resp = await fetch(apiUrl, {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: 'ping' }] }),
+      body: JSON.stringify({ model: groqModel(), messages: [{ role: 'user', content: 'ping' }] }),
       signal: controller.signal,
     });
     const fetchMs = Date.now() - fetchStart;

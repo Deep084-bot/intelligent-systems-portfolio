@@ -136,7 +136,7 @@ Create `server/.env` for the backend:
 ```
 AI_PROVIDER=groq                          # groq | gemini
 GROQ_API_KEY=                             # https://console.groq.com
-GROQ_MODEL=llama-3.1-8b-instant           # or llama-3.3-70b-versatile
+GROQ_MODEL=openai/gpt-oss-20b        # or llama-3.3-70b-versatile
 GROQ_ENDPOINT=                            # optional API endpoint override
 GEMINI_API_KEY=                           # https://aistudio.google.com
 GEMINI_MODEL=gemini-2.0-flash             # or gemini-1.5-pro
@@ -160,7 +160,7 @@ The assistant uses a **roleplay-style system prompt** — the model speaks as De
 
 **Anti-hedging constraints:** the system prompt explicitly forbids phrases like "I don't have information about..." and "Based on the provided context...". The model is told to answer directly or respond briefly if something is unknown.
 
-**Providers:** Groq (default with `llama-3.1-8b-instant`) with circuit breaker, exponential backoff, and configurable retry. Gemini (fallback). Mock mode when no API key is present — useful for development.
+**Providers:** Groq (default with `openai/gpt-oss-20b`) with circuit breaker, exponential backoff, and configurable retry. Gemini (fallback). Mock mode when no API key is present — useful for development.
 
 ## Deployment
 

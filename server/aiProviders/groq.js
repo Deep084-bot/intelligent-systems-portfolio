@@ -1,4 +1,4 @@
-const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+export const DEFAULT_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
 const TIMEOUT_MS = 10_000; // per-provider attempt timeout (reduced to keep total under frontend timeout)
 const MAX_SYSTEM_CHARS = 20_000; // reduce oversized prompts to improve latency
 
