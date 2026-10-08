@@ -2,6 +2,7 @@ import { useState, useCallback, lazy, Suspense } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import Portal from './pages/Portal'
 import Hub from './pages/Hub'
+import DeepPet from './components/DeepPet/DeepPet'
 
 const VisionArena = lazy(() => import('./pages/VisionArena'))
 const Cosmos = lazy(() => import('./pages/Cosmos'))
@@ -11,6 +12,15 @@ const SystemDesign = lazy(() => import('./pages/SystemDesign'))
 const InsideMyMind = lazy(() => import('./pages/InsideMyMind'))
 
 export default function DeepVerse({ route, navigate }) {
+  return (
+    <>
+      <DeepVerseWorlds route={route} navigate={navigate} />
+      <DeepPet route={route} />
+    </>
+  );
+}
+
+function DeepVerseWorlds({ route, navigate }) {
   const [phase, setPhase] = useState('portal')
 
   const handleEnter = useCallback(() => {
