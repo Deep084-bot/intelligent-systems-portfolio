@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { MODULES } from './nodes.config'
+import { pet } from '../../components/DeepPet/store'
 
 export const DEBUG_EASTER_EGGS = true
 
@@ -79,12 +80,14 @@ const useBrainStore = create((set, get) => ({
     if (discoveries.includes(id)) return
     if (DEBUG_EASTER_EGGS) console.log(`[brainos] Discovery: ${id}`)
     const next = [...discoveries, id]
+    pet.emit('discovery', { discoveryId: id })
     let nextAchievements = achievements
     if (DISCOVERY_IDS.every((d) => next.includes(d)) && !achievements.includes('mind-explorer')) {
       nextAchievements = [...achievements, 'mind-explorer']
       const id = Date.now()
       set({ toast: { text: 'Mind Explorer unlocked', id } })
       setTimeout(() => set((s) => (s.toast?.id === id ? { toast: null } : {})), 2600)
+      pet.emit('achievement', { achievementId: 'mind-explorer' })
     }
     set({ discoveries: next, achievements: nextAchievements })
     saveProgress(get())
@@ -160,6 +163,7 @@ const useBrainStore = create((set, get) => ({
     if (achievements.includes(id)) return
     const next = [...achievements, id]
     set({ achievements: next })
+    pet.emit('achievement', { achievementId: id })
     saveProgress(get())
   },
 
@@ -178,7 +182,9 @@ const useBrainStore = create((set, get) => ({
     const firstCompletion = Object.values(nextProgress).filter((p) => p.completed).length === 1
     if (firstCompletion && !achievements.includes('problem-solver')) {
       nextAchievements = [...achievements, 'problem-solver']
+      pet.emit('achievement', { achievementId: 'problem-solver' })
     }
+    pet.emit('success', { scenarioId })
     set({ scenarioProgress: nextProgress, achievements: nextAchievements })
     saveProgress(get())
   },
@@ -199,6 +205,7 @@ const useBrainStore = create((set, get) => ({
     if (allComplete && !achievements.includes('tradeoff-master')) {
       nextAchievements = [...achievements, 'tradeoff-master']
       get().notify('Tradeoff Master unlocked')
+      pet.emit('achievement', { achievementId: 'tradeoff-master' })
     }
     set({ tradeoffProgress: nextProgress, achievements: nextAchievements })
     saveProgress(get())
@@ -220,6 +227,7 @@ const useBrainStore = create((set, get) => ({
     if (allComplete && !achievements.includes('incident-commander')) {
       nextAchievements = [...achievements, 'incident-commander']
       get().notify('Incident Commander unlocked')
+      pet.emit('achievement', { achievementId: 'incident-commander' })
     }
     set({ debuggingProgress: nextProgress, achievements: nextAchievements })
     saveProgress(get())
@@ -241,6 +249,7 @@ const useBrainStore = create((set, get) => ({
     if (allComplete && !achievements.includes('principal-reviewer')) {
       nextAchievements = [...achievements, 'principal-reviewer']
       get().notify('Principal Reviewer unlocked')
+      pet.emit('achievement', { achievementId: 'principal-reviewer' })
     }
     set({ reviewProgress: nextProgress, achievements: nextAchievements })
     saveProgress(get())
