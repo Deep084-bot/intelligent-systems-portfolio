@@ -1,7 +1,16 @@
 import { motion } from 'framer-motion'
 import ExperienceCard from '../components/hub/ExperienceCard'
+import PetPreview from '../components/DeepPet/PetPreview'
 
 const EXPERIENCES = [
+  {
+    id: 'deeppet',
+    icon: <PetPreview state="curious" size={64} />,
+    title: 'DeepPet',
+    subtitle: 'Your AI Companion',
+    description:
+      'A little robot with a big personality. Play, explore, listen to music, and discover what we can do together.',
+  },
   {
     id: 'cosmos',
     icon: '🌌',
@@ -63,7 +72,9 @@ const itemVariants = {
 
 export default function Hub({ navigate }) {
   const handleCardClick = (id) => {
-    if (id === 'vision-arena') {
+    if (id === 'deeppet') {
+      navigate('/deepverse/deeppet')
+    } else if (id === 'vision-arena') {
       navigate('/deepverse/vision-arena')
     } else if (id === 'cosmos') {
       navigate('/deepverse/cosmos')
@@ -130,6 +141,7 @@ export default function Hub({ navigate }) {
                   id={exp.id}
                   icon={exp.icon}
                   title={exp.title}
+                  subtitle={exp.subtitle}
                   description={exp.description}
                   onClick={handleCardClick}
                 />

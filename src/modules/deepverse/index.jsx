@@ -10,12 +10,17 @@ const MusicLab = lazy(() => import('./pages/MusicLab'))
 const ReadingRoom = lazy(() => import('./pages/ReadingRoom'))
 const SystemDesign = lazy(() => import('./pages/SystemDesign'))
 const InsideMyMind = lazy(() => import('./pages/InsideMyMind'))
+const DeepPetWorld = lazy(() => import('./pages/DeepPet'))
 
 export default function DeepVerse({ route, navigate }) {
+  const inPetWorld = route === '/deepverse/deeppet'
   return (
     <>
       <DeepVerseWorlds route={route} navigate={navigate} />
-      <DeepPet route={route} />
+      {/* The floating companion is rendered once, globally. It is hidden inside
+          its own world, where the large centrepiece is the same pet — this keeps
+          exactly one DeepPet instance on screen at any time. */}
+      {!inPetWorld && <DeepPet route={route} navigate={navigate} />}
     </>
   );
 }
@@ -95,6 +100,18 @@ function DeepVerseWorlds({ route, navigate }) {
         </div>
       }>
         <InsideMyMind navigate={navigate} />
+      </Suspense>
+    )
+  }
+
+  if (route === '/deepverse/deeppet') {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full border-2 border-neutral-700 border-t-primary-500 animate-spin" />
+        </div>
+      }>
+        <DeepPetWorld navigate={navigate} />
       </Suspense>
     )
   }

@@ -1,0 +1,534 @@
+/* DeepPet — motion + surface styles.
+   Every animated channel reads from CSS custom properties written once per
+   state change (see PetBody.jsx), so retuning the whole organism costs a single
+   style write and the browser interpolates the rest. No per-frame React. */
+
+.deeppet {
+  --pet-float-dur: 6.6s;
+  --pet-float-amp: 7px;
+  --pet-glow: 0.5;
+  --pet-orbit-dur: 15s;
+  --pet-tilt: 0deg;
+  --pet-core-dur: 3.4s;
+  --pet-core: 0.9;
+  --pet-trail: 1;
+
+  /* renderer channels */
+  --pet-tail-dur: 3.1s;
+  --pet-tail-amp: 3deg;
+  --pet-eye: 1;
+  --pet-spark: 0;
+
+  /* greeting voice tracks the pet's size so it never reads as a whisper on a
+     large silhouette or a shout on a small one */
+  --pet-line-size: 11px;
+  /* Interactive footprint, deliberately NOT tied to --pet-stage: the enlarged
+     silhouette must not grow the click target. Pinned to the v1.1 sizes and
+     anchored bottom-right so it stays in the corner and never sprawls over a
+     world's centred controls (e.g. the System Design canvas toolbar). */
+  --pet-hit: 88px;
+
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 55; /* above world UI (z-50), below easter-egg layers (z-60/70) */
+  pointer-events: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The stage IS the pet's size: the SVG is 100%x100% of it, so every tier scales
+   the whole organism — silhouette, glow bleed, trail canvas — by one number.
+   ~1.19x the v1.1 sizes: large enough to read as a character on arrival, small
+   enough to stay a secondary companion rather than compete with the world.
+   The interactive footprint is separate (see --pet-hit) and is NOT tied to it. */
+.deeppet-stage {
+  position: relative;
+  width: 105px;
+  height: 105px;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .deeppet {
+    bottom: 2rem;
+    right: 2rem;
+    --pet-line-size: 12.5px;
+    --pet-hit: 112px;
+  }
+  .deeppet-stage {
+    width: 135px;
+    height: 135px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .deeppet {
+    --pet-line-size: 13.5px;
+    --pet-hit: 126px;
+  }
+  .deeppet-stage {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+/* ---------- floating body ---------- */
+
+.deeppet-float {
+  animation: petFloat var(--pet-float-dur) ease-in-out infinite alternate;
+  transform-origin: 50% 50%;
+}
+
+@keyframes petFloat {
+  0% {
+    transform: translate3d(0, calc(var(--pet-float-amp) * -1), 0) rotate(var(--pet-tilt));
+  }
+  100% {
+    transform: translate3d(0, var(--pet-float-amp), 0) rotate(calc(var(--pet-tilt) * -0.55));
+  }
+}
+
+/* ---------- atmospheric glow ---------- */
+
+.deeppet-glow {
+  position: absolute;
+  /* was -34%: the halo grew in px as the stage grew, so pull it in and trim the
+     peak alpha to keep the enlarged pet reading as a lit character, not a lamp */
+  inset: -30%;
+  border-radius: 50%;
+  opacity: calc(var(--pet-glow) * 0.85);
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(95, 224, 138, 0.26) 0%,
+    rgba(47, 174, 99, 0.13) 36%,
+    rgba(169, 247, 196, 0.05) 54%,
+    transparent 68%
+  );
+  animation: petGlowBreath 5.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes petGlowBreath {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: calc(var(--pet-glow) * 0.6);
+  }
+  50% {
+    transform: scale(1.07);
+    opacity: var(--pet-glow);
+  }
+}
+
+/* ---------- orbiting fragments ---------- */
+
+.deeppet-orbit {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: petOrbit var(--pet-orbit-dur) linear infinite;
+}
+
+.deeppet-orbit--reverse {
+  animation-direction: reverse;
+}
+
+@keyframes petOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* counter-rotation keeps individual fragments legible while the group spins */
+.deeppet-fragment {
+  animation: petFragmentDrift 3.1s ease-in-out infinite alternate;
+}
+
+@keyframes petFragmentDrift {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-1.6px) rotate(14deg);
+  }
+}
+
+/* ---------- computational core (deliberately small) ---------- */
+
+.deeppet-core {
+  transform-box: view-box;
+  transform-origin: 47px 47px;
+  animation: petCorePulse var(--pet-core-dur) ease-in-out infinite;
+}
+
+@keyframes petCorePulse {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: calc(var(--pet-core) * 0.72);
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: var(--pet-core);
+  }
+}
+
+/* ---------- renderer channels: posture, scarf tail, optics ----------
+   These carry the six looks. Posture snaps in steps so a state change still
+   reads as pixel art rather than a smooth morph. */
+
+.deeppet-figure,
+.deeppet-head {
+  transform-box: view-box;
+  transition: transform 200ms steps(5, end);
+}
+
+.deeppet-tail {
+  transform-box: view-box;
+  transform-origin: 41px 52px;
+  animation-name: var(--pet-tail-anim, petTailSway);
+  animation-duration: var(--pet-tail-dur);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes petTailSway {
+  0% {
+    transform: rotate(calc(var(--pet-tail-amp) * -1));
+  }
+  100% {
+    transform: rotate(var(--pet-tail-amp));
+  }
+}
+
+@keyframes petTailSwayRev {
+  0% {
+    transform: rotate(var(--pet-tail-amp));
+  }
+  100% {
+    transform: rotate(calc(var(--pet-tail-amp) * -1));
+  }
+}
+
+.deeppet-antenna {
+  transform-box: view-box;
+  transform-origin: 47px 6px;
+  animation: petAntennaPulse var(--pet-core-dur) ease-in-out infinite;
+}
+
+@keyframes petAntennaPulse {
+  0%,
+  100% {
+    transform: scale(0.94);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.deeppet-eyeglow {
+  transform-box: view-box;
+  transform-origin: 50px 31px;
+  animation: petEyeGlow calc(var(--pet-core-dur) * 0.8) ease-in-out infinite;
+}
+
+@keyframes petEyeGlow {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: calc(0.72 + var(--pet-eye) * 0.2);
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: min(1, calc(0.6 + var(--pet-eye) * 0.34));
+  }
+}
+
+.deeppet-sparks {
+  transform-box: view-box;
+  opacity: var(--pet-spark);
+  animation: petSparkTwinkle 1.6s steps(3, end) infinite;
+}
+
+@keyframes petSparkTwinkle {
+  0%,
+  100% {
+    opacity: calc(var(--pet-spark) * 0.35);
+  }
+  50% {
+    opacity: var(--pet-spark);
+  }
+}
+
+/* ---------- confusion jitter ---------- */
+
+.deeppet[data-state='confused'] .deeppet-float {
+  animation-name: petFloatJitter;
+}
+
+@keyframes petFloatJitter {
+  0% {
+    transform: translate3d(-1.5px, calc(var(--pet-float-amp) * -1), 0) rotate(var(--pet-tilt));
+  }
+  25% {
+    transform: translate3d(2px, 0, 0) rotate(calc(var(--pet-tilt) * 1.3));
+  }
+  50% {
+    transform: translate3d(-1px, var(--pet-float-amp), 0) rotate(calc(var(--pet-tilt) * 0.4));
+  }
+  75% {
+    transform: translate3d(1.5px, 0, 0) rotate(calc(var(--pet-tilt) * -0.8));
+  }
+  100% {
+    transform: translate3d(0, calc(var(--pet-float-amp) * -0.7), 0) rotate(var(--pet-tilt));
+  }
+}
+
+/* ---------- hit area ---------- */
+
+.deeppet-hit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--pet-hit);
+  height: var(--pet-hit);
+  border-radius: 50%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  display: block;
+}
+
+.deeppet-hit:focus {
+  outline: none;
+}
+
+.deeppet-focusring {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--pet-hit);
+  height: var(--pet-hit);
+  border-radius: 50%;
+  border: 1px solid rgba(95, 224, 138, 0);
+  transition: border-color 220ms ease;
+  pointer-events: none;
+}
+
+.deeppet-hit:focus-visible + .deeppet-focusring {
+  border-color: rgba(95, 224, 138, 0.55);
+}
+
+/* ---------- floating voice ---------- */
+
+.deeppet-line {
+  position: absolute;
+  left: 50%;
+  /* was 96%: that put the text 4% *inside* the stage, where it grazed the antenna
+     tip. Anchored just above the stage box instead, so it clears the silhouette
+     and the clipped orbit motes at every size. */
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--pet-line-size);
+  letter-spacing: 0.02em;
+  color: rgba(246, 236, 199, 0.94);
+  text-shadow: 0 0 10px rgba(95, 224, 138, 0.5);
+  pointer-events: none;
+  animation: petLine 2.4s ease-out forwards;
+}
+
+@keyframes petLine {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  72% {
+    opacity: 1;
+    transform: translate(-50%, -3px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -11px);
+  }
+}
+
+/* ---------- reduced motion ----------
+   Preserve silhouette, visibility and interaction. Remove drift, orbit,
+   jitter and particle velocity. */
+
+.deeppet[data-reduced='true'] .deeppet-float {
+  animation: none;
+  transform: none;
+}
+
+.deeppet[data-reduced='true'] .deeppet-glow {
+  animation: none;
+  opacity: calc(var(--pet-glow) * 0.7);
+}
+
+.deeppet[data-reduced='true'] .deeppet-orbit,
+.deeppet[data-reduced='true'] .deeppet-fragment,
+.deeppet[data-reduced='true'] .deeppet-core,
+.deeppet[data-reduced='true'] .deeppet-tail,
+.deeppet[data-reduced='true'] .deeppet-antenna,
+.deeppet[data-reduced='true'] .deeppet-eyeglow {
+  animation: none;
+}
+
+.deeppet[data-reduced='true'] .deeppet-core {
+  opacity: var(--pet-core);
+}
+
+/* state must still read without motion: snap the pose, hold the optics,
+   and keep sparks visible instead of twinkling them away */
+.deeppet[data-reduced='true'] .deeppet-figure,
+.deeppet[data-reduced='true'] .deeppet-head {
+  transition: none;
+}
+
+.deeppet[data-reduced='true'] .deeppet-eyeglow {
+  opacity: var(--pet-eye);
+}
+
+.deeppet[data-reduced='true'] .deeppet-sparks {
+  animation: none;
+  opacity: var(--pet-spark);
+}
+
+.deeppet[data-reduced='true'] .deeppet-line {
+  animation: petLineReduced 2.4s ease-out forwards;
+}
+
+@keyframes petLineReduced {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- canvas particle layer ---------- */
+
+.deeppet-trail {
+  position: absolute;
+  inset: -55%;
+  width: 210%;
+  height: 210%;
+  pointer-events: none;
+  opacity: calc(0.55 + var(--pet-glow) * 0.45);
+}
+
+/* ---------- compact viewports ---------- */
+
+@media (max-width: 420px) {
+  .deeppet {
+    bottom: 1.1rem;
+    right: 1.1rem;
+    --pet-line-size: 10.5px;
+    --pet-hit: 74px;
+  }
+  .deeppet-stage {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+/* ---------- interaction hint + secondary poke ---------- */
+
+.deeppet-poke {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  background: rgba(15, 15, 15, 0.85);
+  border: 1px solid rgba(95, 224, 138, 0.4);
+  color: #a9f7c4;
+  cursor: pointer;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.9);
+  transition: opacity 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+.deeppet:hover .deeppet-poke,
+.deeppet:focus-within .deeppet-poke {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.deeppet-poke:hover {
+  background: rgba(95, 224, 138, 0.18);
+}
+
+.deeppet-poke:focus-visible {
+  outline: 2px solid rgba(95, 224, 138, 0.6);
+  outline-offset: 2px;
+}
+
+.deeppet-hint {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translate(6px, -50%);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: rgba(169, 247, 196, 0.92);
+  background: rgba(15, 15, 15, 0.82);
+  border: 1px solid rgba(95, 224, 138, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.deeppet:hover .deeppet-hint,
+.deeppet:focus-within .deeppet-hint {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* ---------- embedded + preview presentation ----------
+   The same renderer at other sizes. Fixed corner placement is dropped and the
+   stage fills whatever box the caller sets, so the vector art scales cleanly
+   from the 72px portal preview to the 440px world centrepiece with no stretch. */
+
+.deeppet--preview,
+.deeppet--embedded {
+  position: relative;
+  bottom: auto;
+  right: auto;
+  z-index: auto;
+}
+
+.deeppet--preview .deeppet-stage,
+.deeppet--embedded .deeppet-stage {
+  width: 100%;
+  height: 100%;
+}
