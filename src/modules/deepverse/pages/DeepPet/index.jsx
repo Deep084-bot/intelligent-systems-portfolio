@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
 import {
   PET_STATE_LIST,
@@ -6,9 +6,12 @@ import {
   EXPLICIT_PRIORITY,
 } from '../../components/DeepPet/petState'
 import { usePetStore } from '../../components/DeepPet/store'
+import { greetingLine } from '../../components/DeepPet/petPersona'
 import useReducedMotion from '../../components/DeepPet/useReducedMotion'
 import PetBody from '../../components/DeepPet/PetBody'
 import PetParticles from '../../components/DeepPet/PetParticles'
+import PetDialogue from '../../components/DeepPet/PetDialogue'
+import PetConversation from '../../components/DeepPet/PetConversation'
 import '../../components/DeepPet/DeepPet.css'
 
 // What each expression means, shown next to the controls so the test area is
@@ -50,6 +53,20 @@ export default function DeepPetWorld({ navigate }) {
   const lineToken = usePetStore((s) => s.override)
   const setState = usePetStore((s) => s.setState)
   const react = usePetStore((s) => s.react)
+  const setWorld = usePetStore((s) => s.setWorld)
+
+  // The floating companion is hidden inside this world, so nothing else sets the
+  // ambient mood here. Establish it, then greet once on arrival.
+  useEffect(() => {
+    setWorld('deeppet')
+  }, [setWorld])
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      react('greet', { force: true, hold: 6000, line: greetingLine() })
+    }, 900)
+    return () => clearTimeout(t)
+  }, [react])
 
   const active = useMemo(
     () => EXPRESSIONS.find((e) => e.state === state) || EXPRESSIONS[1],
@@ -169,13 +186,7 @@ export default function DeepPetWorld({ navigate }) {
                     <PetBody state={state} />
                   </motion.div>
 
-                  <div aria-live="polite">
-                    {line && (
-                      <div className="deeppet-line" key={lineToken}>
-                        {line}
-                      </div>
-                    )}
-                  </div>
+                  <PetDialogue text={line} token={lineToken} reduced={reduced} variant="embedded" />
                 </div>
               </div>
 
@@ -267,6 +278,9 @@ export default function DeepPetWorld({ navigate }) {
                 These are the same events the other worlds fire at the pet.
               </p>
             </div>
+
+            {/* conversation */}
+            <PetConversation navigate={navigate} reduced={reduced} />
 
             {/* music — deliberately disabled until a provider is chosen */}
             <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">

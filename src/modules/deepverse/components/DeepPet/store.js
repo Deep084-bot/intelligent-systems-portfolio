@@ -108,6 +108,11 @@ export const usePetStore = create((set, get) => ({
     const priority = options?.priority ?? getPriority(key)
     if (!acceptsReaction(key, priority, options?.force)) return null
     const payload = describeReaction(key)
+    // Conversation and world-context callers can supply their own line and hold
+    // so spoken dialogue and its expression are driven by one event, while the
+    // override still expires back to the world baseline (never sticky).
+    if (options?.line != null) payload.line = options.line
+    if (options?.hold != null) payload.hold = options.hold
     get().applyOverride({ ...payload, priority, source: key })
     if (key === 'poke' || key === 'achievement' || key === 'discovery') get().burst()
     return payload

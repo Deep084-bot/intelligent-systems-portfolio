@@ -10,6 +10,7 @@ import { on, emit } from './events'
 import useReducedMotion from './useReducedMotion'
 import PetBody from './PetBody'
 import PetParticles from './PetParticles'
+import PetDialogue from './PetDialogue'
 import './DeepPet.css'
 
 const IDLE_MIN_MS = 17000
@@ -193,11 +194,7 @@ export default function DeepPet({ route, navigate }) {
         </span>
 
         <div aria-live="polite">
-          {line && (
-            <div className="deeppet-line" key={lineToken}>
-              {line}
-            </div>
-          )}
+          <PetDialogue text={line} token={lineToken} reduced={reduced} variant="floating" />
         </div>
       </div>
     </motion.div>

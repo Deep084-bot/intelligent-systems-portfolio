@@ -9,7 +9,10 @@ function parseErrorBody(status, bodyText) {
   }
 }
 
-export async function chat(question, history = [], parentSignal = null) {
+// Shared transport for every AI endpoint: one timeout/abort/error-normalisation
+// path, so callers (portfolio assistant, DeepPet) reuse the same client instead
+// of duplicating fetch handling.
+async function request(path, payload, parentSignal) {
   const requestId = Math.random().toString(36).slice(2, 10);
 
   const controller = new AbortController();
@@ -26,11 +29,11 @@ export async function chat(question, history = [], parentSignal = null) {
   }
 
   try {
-    const payload = { question, history, requestId };
-    const resp = await fetch('/api/ai/chat', {
+    const requestBody = { ...payload, requestId };
+    const resp = await fetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(requestBody),
       signal: controller.signal,
     });
 
@@ -83,4 +86,14 @@ export async function chat(question, history = [], parentSignal = null) {
     err.requestId = err.requestId || requestId;
     throw err;
   }
+}
+
+// Portfolio assistant (unchanged contract).
+export function chat(question, history = [], parentSignal = null) {
+  return request('/api/ai/chat', { question, history }, parentSignal);
+}
+
+// DeepPet companion — persona-scoped endpoint, same transport and error shape.
+export function petChat(message, history = [], parentSignal = null) {
+  return request('/api/ai/pet', { message, history }, parentSignal);
 }

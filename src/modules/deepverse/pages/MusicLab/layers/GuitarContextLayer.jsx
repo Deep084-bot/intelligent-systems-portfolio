@@ -532,52 +532,48 @@ export default function GuitarContextLayer() {
         strokeWidth="0.8"
       />
 
-      {/* ═══════════ BRIDGE ═══════════ */}
+      {/* ═══════════ BRIDGE ═══════════
+          In this horizontal front view the six strings run parallel across the
+          body at STRING_YS, so the bridge is a plate that SPANS that band with
+          one pin per string — not a flat bar pinned at a single point. */}
       <g>
-        {/* Bridge base — dark rosewood */}
+        {/* Bridge plate — dark rosewood, spanning the string band */}
         <rect
-          x="1058"
-          y="292"
-          width="234"
-          height="28"
-          rx="3"
+          x="1140"
+          y="210"
+          width="78"
+          height="120"
+          rx="5"
           fill="#2C1A0C"
           stroke="rgba(80,50,20,0.4)"
           strokeWidth="1"
         />
-        {/* Bridge top bevel */}
-        <rect x="1058" y="292" width="234" height="4" rx="2" fill="rgba(60,35,12,0.6)" />
-
-        {/* Saddle */}
+        {/* Plate top bevel */}
+        <rect x="1140" y="210" width="78" height="5" rx="2.5" fill="rgba(60,35,12,0.55)" />
+        {/* Saddle — bone strip along the neck-side edge of the plate */}
         <rect
-          x="1060"
-          y="288"
-          width="230"
-          height="6"
-          rx="2"
+          x="1143"
+          y="214"
+          width="9"
+          height="112"
+          rx="3"
           fill="#EDE0C8"
           stroke="rgba(180,160,130,0.5)"
           strokeWidth="0.5"
         />
         {/* Saddle highlight */}
-        <rect x="1060" y="288" width="230" height="2" rx="1" fill="rgba(255,248,235,0.6)" />
+        <rect x="1143" y="214" width="3" height="112" rx="1.5" fill="rgba(255,248,235,0.6)" />
 
-        {/* Bridge pins — 6, aligned with strings */}
-        {STRING_YS.map((sy, i) => {
-          const px = 1155
-          return (
-            <g key={i}>
-              {/* Pin body */}
-              <ellipse cx={px} cy={305} rx={5} ry={6} fill="#1A0E06" stroke="rgba(100,70,35,0.5)" strokeWidth="0.8" />
-              {/* Pin dot */}
-              <circle cx={px} cy={305} r={1.8} fill="rgba(240,225,200,0.7)" />
-            </g>
-          )
-        })}
-
-        {/* Bridge wings */}
-        <path d="M 1058,296 C 1040,296 1030,300 1030,305 C 1030,310 1040,314 1058,314" fill="#2C1A0C" stroke="rgba(60,35,12,0.4)" strokeWidth="0.8" />
-        <path d="M 1292,296 C 1310,296 1320,300 1320,305 C 1320,310 1310,314 1292,314" fill="#2C1A0C" stroke="rgba(60,35,12,0.4)" strokeWidth="0.8" />
+        {/* Bridge pins — one per string, spread along the plate and aligned to
+            each string's y (STRING_YS) as it terminates at the bridge */}
+        {STRING_YS.map((sy, i) => (
+          <g key={i}>
+            {/* Pin body */}
+            <ellipse cx={1184} cy={sy} rx={4.6} ry={5} fill="#1A0E06" stroke="rgba(100,70,35,0.5)" strokeWidth="0.8" />
+            {/* Pin dot */}
+            <circle cx={1184} cy={sy - 1} r={1.7} fill="rgba(240,225,200,0.7)" />
+          </g>
+        ))}
       </g>
 
       {/* ═══════════ STRAP PIN (end of body) ═══════════ */}

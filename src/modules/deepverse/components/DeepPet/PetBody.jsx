@@ -103,10 +103,12 @@ const OPTICS = {
     body: [[39, 27, 8, 8], [53, 27, 8, 8]],
     hi: [[40, 28, 2.6, 2.6], [54, 28, 2.6, 2.6]],
   },
-  // curious — tall wide-open left eye against a small right one
+  // curious — one tall wide-open eye with a raised brow against a small,
+  // lowered counterpart; the bright core sits high and toward the centre so
+  // the gaze reads as lifted and attentive rather than merely rotated
   ask: {
-    body: [[41, 24, 4, 3], [39, 27, 8, 5], [40, 32, 6, 3], [41.5, 35, 3, 2], [55, 29, 5, 5]],
-    hi: [[42, 25.4, 2.2, 2.2], [56, 30, 2, 2]],
+    body: [[40, 24, 7, 3], [39, 27, 9, 6], [40.5, 33, 6, 3], [55.5, 29.5, 5.5, 5.5]],
+    hi: [[43, 25.6, 2.8, 2.8], [57, 31.2, 2, 2]],
   },
   // happy — closed upward arcs, stepped
   arc: {
@@ -127,10 +129,12 @@ const OPTICS = {
     body: [[38.5, 30.5, 9, 4], [55, 24.5, 5, 3], [53.5, 27.5, 7, 6], [54, 33.5, 6, 3]],
     hi: [[39.5, 31, 2.4, 2.4], [56, 26, 2.2, 2.2]],
   },
-  // sleepy — closed lids drooping away from the centre
+  // sleepy — heavy lids drooping outward, small lash accents below the
+  // outer corners so the eyes read as softly closed rather than absent
   shut: {
-    body: [[38, 32.6, 9, 3.4], [36.3, 34.4, 2.8, 1.8], [53, 32.6, 9, 3.4], [61.5, 34.4, 2.8, 1.8]],
-    hi: [[38, 32.6, 9, 1], [53, 32.6, 9, 1]],
+    body: [[38, 31.2, 9, 3.6], [36.3, 33.2, 2.8, 1.8], [53, 31.2, 9, 3.6], [61.7, 33.2, 2.8, 1.8]],
+    hi: [[38, 31.2, 9, 1.2], [53, 31.2, 9, 1.2]],
+    extra: [[36.8, 35.2, 1.6, 1.2], [62.4, 35.2, 1.6, 1.2]],
   },
 }
 
@@ -138,16 +142,18 @@ const OPTICS = {
 // visor rather than adding paint to it. Drawn before the optics.
 const CARVES = {
   none: [],
-  // curious — bites the upper-left corner: a raised brow over the tall eye
-  browL: [[33.5, 22.5, 7, 4], [35, 26.5, 4.5, 3]],
+  // curious — bites the upper-left corner: a raised brow that opens the frame
+  // high over the tall eye while the right side stays low
+  browL: [[33.5, 22.2, 8, 3.6], [35, 25.8, 5, 2.6]],
   // happy — drops the lower band so the smile has somewhere to sit
   smileLid: [[36, 37, 28, 1.8]],
   // excited — thins the frame top and bottom, opening the aperture up
   thinFrame: [[33, 21.5, 34, 2.6], [33, 37.4, 34, 2.6]],
   // confused — slanted brow falling inward over the open eye
   slantR: [[52, 22.5, 10, 2.2], [54, 24.7, 8, 1.8], [56, 26.5, 6, 1.6]],
-  // sleepy — heavy upper lids, so the opening reads short and drowsy
-  heavyLid: [[33, 21.5, 34, 4], [33, 25.5, 3.5, 3], [63.5, 25.5, 3.5, 3]],
+  // sleepy — heavy upper lids drop the aperture ceiling, so the opening reads
+  // short and drowsy and the closed eyes sit low in the frame
+  heavyLid: [[33, 21.5, 34, 4.4], [33, 25.9, 3.6, 3], [63.4, 25.9, 3.6, 3]],
 }
 
 // Mouths sit in the lower aperture, below every optic shape above.
@@ -187,7 +193,7 @@ const LOOKS = {
   idle: { eyes: 'round', carve: 'none', mouth: 'flat', glyph: null, orb: 'calm',
     head: 0, body: 0, rise: 0, lean: 0, tail: 3, spark: 0, eyeGlow: 1, scarf: [0, 0] },
   curious: { eyes: 'ask', carve: 'browL', mouth: 'o', glyph: null, orb: 'calm',
-    head: -8, body: -2, rise: -0.5, lean: -2, tail: 5, spark: 1, eyeGlow: 1.1, scarf: [-0.5, -1.5] },
+    head: -5, body: -1.5, rise: -1, lean: -2.5, tail: 5, spark: 1, eyeGlow: 1.2, scarf: [-0.5, -1.5] },
   happy: { eyes: 'arc', carve: 'smileLid', mouth: 'smile', glyph: null, orb: 'calm',
     head: 0, body: 0, rise: -2, lean: 0.5, tail: 6, spark: 2, eyeGlow: 1.15, scarf: [-0.8, 0] },
   excited: { eyes: 'wide', carve: 'thinFrame', mouth: 'grin', glyph: null, orb: 'bright',
@@ -195,7 +201,7 @@ const LOOKS = {
   confused: { eyes: 'squint', carve: 'slantR', mouth: 'wavy', glyph: 'q', orb: 'calm',
     head: 9, body: 3, rise: 1, lean: 2.5, tail: -7, spark: 1, eyeGlow: 1.05, scarf: [0.4, 1.5] },
   sleepy: { eyes: 'shut', carve: 'heavyLid', mouth: 'none', glyph: 'z', orb: 'dim',
-    head: 3.5, body: 3, rise: 3.5, lean: 1, tail: -2, spark: 0, eyeGlow: 0.85, scarf: [1.6, 0.5] },
+    head: 5, body: 3.5, rise: 4, lean: 1.5, tail: -2, spark: 0, eyeGlow: 0.8, scarf: [1.8, 0.5] },
 }
 
 function Rects({ list, fill, opacity }) {

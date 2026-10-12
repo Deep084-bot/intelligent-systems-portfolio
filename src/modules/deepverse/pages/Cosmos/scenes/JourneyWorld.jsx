@@ -35,6 +35,8 @@ export default function JourneyWorld({ progressRef }) {
 function HumanSilhouette({ progressRef }) {
   const groupRef = useRef()
   const glowRef = useRef()
+  const haloRef = useRef()
+  const shaftRef = useRef()
   const armLRef = useRef()
   const armRRef = useRef()
 
@@ -42,47 +44,76 @@ function HumanSilhouette({ progressRef }) {
 
   useFrame(({ clock }) => {
     const visibility = getVisibility()
+    const t = clock.getElapsedTime()
     if (groupRef.current) {
       groupRef.current.visible = visibility > 0.01
-      const breath = Math.sin(clock.getElapsedTime() * 0.6) * 0.01
+      // slow breath: the figure is alive, not a static prop
+      const breath = Math.sin(t * 0.6) * 0.008
       groupRef.current.position.y = breath
+      const swell = 1 + Math.sin(t * 0.6) * 0.006
+      groupRef.current.scale.setScalar(0.72 * swell)
     }
     if (armLRef.current) {
-      armLRef.current.rotation.z = Math.sin(clock.getElapsedTime() * 0.5) * 0.02 - 0.08
+      armLRef.current.rotation.z = Math.sin(t * 0.5) * 0.02 - 0.08
     }
     if (armRRef.current) {
-      armRRef.current.rotation.z = -Math.sin(clock.getElapsedTime() * 0.5) * 0.02 + 0.08
+      armRRef.current.rotation.z = -Math.sin(t * 0.5) * 0.02 + 0.08
+    }
+    // breathing halo: a soft luminous presence around the figure rather than a
+    // hard unlit mannequin
+    if (haloRef.current) {
+      const pulse = 0.65 + 0.35 * Math.sin(t * 0.4)
+      haloRef.current.material.opacity = visibility * 0.08 * pulse
+      haloRef.current.scale.setScalar(1 + 0.04 * Math.sin(t * 0.4))
+    }
+    // faint light shaft from above, so the figure reads as lit from elsewhere
+    if (shaftRef.current) {
+      shaftRef.current.material.opacity = visibility * 0.035 * (0.8 + 0.2 * Math.sin(t * 0.5))
     }
     if (glowRef.current) {
-      const pulse = 0.5 + 0.5 * Math.sin(clock.getElapsedTime() * 0.4)
-      glowRef.current.material.opacity = visibility * 0.1 * pulse
+      const pulse = 0.5 + 0.5 * Math.sin(t * 0.4)
+      glowRef.current.material.opacity = visibility * 0.12 * pulse
     }
   })
 
   const visibility = getVisibility()
   if (visibility <= 0.01) return null
 
+  // Cool, luminous tone — the figure is a soft light in the dark, deliberately
+  // low-contrast so it never reads as an untextured grey mannequin.
+  const flesh = '#c7d2fe'
+
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} scale={0.72}>
+      {/* Soft halo behind the figure */}
+      <mesh ref={haloRef} position={[0, 0.05, -0.05]}>
+        <sphereGeometry args={[0.42, 16, 16]} />
+        <meshBasicMaterial color="#6366f1" transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </mesh>
+      {/* Light shaft descending onto the figure */}
+      <mesh ref={shaftRef} position={[0, 0.12, -0.12]}>
+        <planeGeometry args={[0.14, 1.05]} />
+        <meshBasicMaterial color="#93c5fd" transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </mesh>
       {/* Body */}
       <mesh>
         <capsuleGeometry args={[0.04, 0.2, 4, 8]} />
-        <meshBasicMaterial color="#e2e8f0" transparent opacity={visibility * 0.7} />
+        <meshBasicMaterial color={flesh} transparent opacity={visibility * 0.42} />
       </mesh>
       {/* Head */}
       <mesh position={[0, 0.23, 0]}>
         <sphereGeometry args={[0.05, 12, 12]} />
-        <meshBasicMaterial color="#f1f5f9" transparent opacity={visibility * 0.8} />
+        <meshBasicMaterial color="#e0e7ff" transparent opacity={visibility * 0.5} />
       </mesh>
       {/* Left arm */}
       <mesh ref={armLRef} position={[-0.07, 0.1, 0]}>
         <capsuleGeometry args={[0.015, 0.1, 4, 6]} />
-        <meshBasicMaterial color="#e2e8f0" transparent opacity={visibility * 0.6} />
+        <meshBasicMaterial color={flesh} transparent opacity={visibility * 0.36} />
       </mesh>
       {/* Right arm */}
       <mesh ref={armRRef} position={[0.07, 0.1, 0]}>
         <capsuleGeometry args={[0.015, 0.1, 4, 6]} />
-        <meshBasicMaterial color="#e2e8f0" transparent opacity={visibility * 0.6} />
+        <meshBasicMaterial color={flesh} transparent opacity={visibility * 0.36} />
       </mesh>
       {/* Ground glow */}
       <mesh ref={glowRef} position={[0, -0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>

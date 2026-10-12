@@ -149,7 +149,7 @@ export default function MusicLab({ navigate }) {
         >
           <GuitarIcon size={64} className="mx-auto mb-6 opacity-70" />
           <h2 className="text-2xl font-bold text-neutral-200 mb-4">
-            Loading audio samples...
+            Tuning the strings…
           </h2>
           <div className="w-64 h-1 bg-neutral-800 rounded-full overflow-hidden mb-3">
             <motion.div
@@ -160,6 +160,9 @@ export default function MusicLab({ navigate }) {
             />
           </div>
           <p className="text-sm text-neutral-500">{loadingProgress}%</p>
+          <p className="text-xs text-neutral-600 mt-3">
+            Preparing the fretboard and strings
+          </p>
         </motion.div>
       </div>
     )
@@ -191,11 +194,13 @@ export default function MusicLab({ navigate }) {
             <h2 className="text-2xl font-bold text-neutral-200 mb-4">
               Audio Unavailable
             </h2>
-            <p className="text-neutral-400 mb-6 leading-relaxed">
+            <p className="text-neutral-400 mb-4 leading-relaxed">
               {audioError}
             </p>
-            <p className="text-sm text-neutral-500 mb-8">
-              The guitar will still work with synthesized tones as a fallback.
+            <p className="text-sm text-neutral-500 mb-8 leading-relaxed">
+              The guitar needs the browser&apos;s Web Audio engine to make sound.
+              Make sure your device isn&apos;t muted and that audio is allowed for
+              this site, then try again.
             </p>
             <button
               onClick={() => {
@@ -233,8 +238,11 @@ export default function MusicLab({ navigate }) {
             <h1 className="text-4xl sm:text-5xl font-bold text-neutral-50 tracking-tight mb-3">
               Music Lab
             </h1>
-            <p className="text-base text-neutral-500 max-w-lg">
+            <p className="text-base text-neutral-500 max-w-lg hidden sm:block">
               Click or drag across the strings to play
+            </p>
+            <p className="text-base text-neutral-500 max-w-lg sm:hidden">
+              Open on a larger screen to play
             </p>
           </motion.div>
         </div>
