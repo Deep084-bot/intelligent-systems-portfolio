@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import Guitar from './components/Guitar'
 import AudioEngine from './components/AudioEngine'
+import MusicControls from '../../audio/MusicControls'
 
 // Minimal inline guitar silhouette icon
 function GuitarIcon({ size = 64, className = '' }) {
@@ -248,9 +249,16 @@ export default function MusicLab({ navigate }) {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-6 pb-12">
+      <main className="flex-1 flex items-center justify-center px-6 pb-4">
         <Guitar audioEngine={audioEngineRef.current} />
       </main>
+
+      {/* Preset player — the same shared engine DeepPet controls */}
+      <section aria-label="Music player" className="relative z-20 px-6 pb-10">
+        <div className="mx-auto w-full max-w-2xl">
+          <MusicControls variant="full" />
+        </div>
+      </section>
 
       <footer className="relative z-20 pb-8 px-6">
         <motion.div

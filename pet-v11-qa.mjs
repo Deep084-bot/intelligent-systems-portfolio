@@ -717,12 +717,19 @@ check('navigation requires no confirmation (low friction)', () => {
   assert.equal(REG.getAction('navigate_to_world').requiresConfirmation, false)
 })
 
-check('reserved future capabilities are NOT registered as executable', () => {
+check('music actions are registered and executable', () => {
   freshRegistry()
-  for (const a of ACTIONS.RESERVED_ACTIONS) {
-    assert.equal(REG.hasAction(a.id), false, `${a.id} must not be registered yet`)
-    assert.ok(a.name && a.description, 'reserved actions are documented')
+  for (const id of ACTIONS.MUSIC_ACTION_IDS) {
+    assert.equal(REG.hasAction(id), true, `${id} must be registered`)
+    assert.ok(REG.getAction(id).name, `${id} has a display name`)
   }
+})
+
+check('ensurePetActions is idempotent for the music actions', () => {
+  freshRegistry()
+  assert.doesNotThrow(() => ACTIONS.ensurePetActions())
+  assert.doesNotThrow(() => ACTIONS.ensurePetActions())
+  assert.equal(REG.listActions().filter((a) => a.id === 'play_track').length, 1)
 })
 
 // ---------------------------------------------------------------- PR3: full command flow
@@ -773,11 +780,11 @@ check('intent -> reaction keeps face and words in agreement', () => {
   assert.equal(PERSONA.reactionForIntent('unknown'), 'greet')
 })
 
-check('music reply admits playback is not built, without silence', () => {
+check('music reply describes real playback capability', () => {
   const r = PERSONA.localReply('play me some music')
   assert.equal(r.intent, 'music')
-  assert.match(r.text, /Music Lab/)
-  assert.match(r.text, /(not|isn't|isn’t|can't|can’t|no )/i)
+  assert.match(r.text, /(play|music|track|Cosmic Drift|Greenhouse|Night Drive|Focus Mode)/i)
+  assert.doesNotMatch(r.text, /not built|not wired|isn't wired|no music engine/i)
 })
 
 check('greeting lines never repeat back-to-back', () => {
@@ -876,6 +883,191 @@ await checkAsync('a conversation override uses the success rung and is not stick
   await sleep(120)
   assert.equal(st().override, null)
   assert.equal(pet.getState(), 'curious')
+})
+
+// ---------------------------------------------------------------- PR5: shared music engine
+import { musicEngine, PRESETS as MUSIC_PRESETS } from './src/modules/deepverse/audio/MusicEngine.js'
+
+class MockParam {
+  constructor(v = 0) { this.value = v }
+  setValueAtTime(v) { this.value = v; return this }
+  linearRampToValueAtTime(v) { this.value = v; return this }
+  exponentialRampToValueAtTime(v) { this.value = v; return this }
+  cancelScheduledValues() { return this }
+}
+class MockNode {
+  constructor() { this._connections = [] }
+  connect(n) { this._connections.push(n); return n }
+  disconnect() { this._connections = [] }
+}
+class MockOsc extends MockNode {
+  constructor() { super(); this.type = 'sine'; this.frequency = new MockParam(440); this.detune = new MockParam(0) }
+  start() { this._started = true }
+  stop() { this._stopped = true; if (typeof this.onended === 'function') this.onended() }
+}
+class MockGain extends MockNode { constructor() { super(); this.gain = new MockParam(1) } }
+class MockFilter extends MockNode { constructor() { super(); this.type = 'lowpass'; this.frequency = new MockParam(500); this.Q = new MockParam(1) } }
+class MockAudioContext {
+  constructor() { this.state = 'running'; this.currentTime = 0; this.destination = new MockNode(); this.sampleRate = 48000 }
+  createGain() { return new MockGain() }
+  createOscillator() { return new MockOsc() }
+  createBiquadFilter() { return new MockFilter() }
+  async resume() { this.state = 'running' }
+  async suspend() { this.state = 'suspended' }
+}
+
+function withMockAudio() {
+  globalThis.window = { AudioContext: MockAudioContext }
+  musicEngine._reset()
+}
+function withoutAudio() {
+  delete globalThis.window
+  musicEngine._reset()
+}
+
+check('presets are distinct, declared four, and well formed', () => {
+  assert.equal(MUSIC_PRESETS.length, 4)
+  const ids = MUSIC_PRESETS.map((p) => p.id)
+  assert.equal(new Set(ids).size, 4, 'preset ids are unique')
+  for (const p of MUSIC_PRESETS) {
+    assert.ok(p.name && p.description, `${p.id} is documented`)
+    assert.ok(p.events && p.events.length > 0, `${p.id} has events`)
+    assert.ok(p.bpm > 0 && p.root > 0, `${p.id} has a tempo and root`)
+  }
+  const bpmSig = new Set(MUSIC_PRESETS.map((p) => p.bpm))
+  assert.ok(bpmSig.size >= 3, 'presets are not renamed copies (varied tempos)')
+})
+
+await checkAsync('engine reports unsupported rather than throwing without Web Audio', async () => {
+  withoutAudio()
+  const res = await musicEngine.play('cosmic-drift')
+  assert.equal(res.ok, false)
+  assert.equal(res.errorCode, 'AUDIO_UNSUPPORTED')
+})
+
+await checkAsync('engine rejects an unknown track id', async () => {
+  withMockAudio()
+  const res = await musicEngine.play('/etc/passwd')
+  assert.equal(res.ok, false)
+  assert.equal(res.errorCode, 'UNKNOWN_TRACK')
+  withoutAudio()
+})
+
+await checkAsync('engine plays, pauses, resumes, skips and stops cleanly', async () => {
+  withMockAudio()
+  const start = await musicEngine.play('cosmic-drift')
+  assert.equal(start.ok, true)
+  assert.equal(musicEngine.status, 'playing')
+  assert.ok(musicEngine._timer, 'a scheduler is running while playing')
+
+  const paused = await musicEngine.pause()
+  assert.equal(paused.ok, true)
+  assert.equal(musicEngine._timer, null, 'scheduler stops on pause')
+
+  const resumed = await musicEngine.resume()
+  assert.equal(resumed.ok, true)
+  assert.equal(musicEngine.status, 'playing')
+
+  const next = await musicEngine.next()
+  assert.equal(next.ok, true)
+  assert.notEqual(musicEngine.presetId, 'cosmic-drift', 'next advances the preset')
+
+  const stopped = musicEngine.stop()
+  assert.equal(stopped.ok, true)
+  assert.equal(musicEngine.status, 'idle')
+  assert.equal(musicEngine._timer, null)
+  withoutAudio()
+})
+
+await checkAsync('playing the same track twice does not start a second loop', async () => {
+  withMockAudio()
+  await musicEngine.play('greenhouse')
+  const timer1 = musicEngine._timer
+  const again = await musicEngine.play('greenhouse')
+  assert.equal(again.ok, true)
+  assert.equal(musicEngine._timer, timer1, 'same scheduler, not a duplicate loop')
+  musicEngine.stop()
+  withoutAudio()
+})
+
+await checkAsync('switching presets tears down the previous voices', async () => {
+  withMockAudio()
+  await musicEngine.play('cosmic-drift')
+  const before = musicEngine._pads.size
+  await musicEngine.play('night-drive')
+  assert.equal(musicEngine.presetId, 'night-drive')
+  assert.equal(musicEngine.status, 'playing')
+  assert.ok(before > 0 && musicEngine._pads.size > 0, 'new pads built for the new preset')
+  assert.ok(musicEngine._voices.size < 200, 'note queue is bounded')
+  musicEngine.stop()
+  withoutAudio()
+})
+
+check('engine clamps volume to [0,1] and rejects non-finite input', () => {
+  withMockAudio()
+  assert.equal(musicEngine.setVolume(0.3).ok, true)
+  assert.equal(musicEngine.getSnapshot().volume, 0.3)
+  assert.equal(musicEngine.setVolume(5).volume, 1)
+  assert.equal(musicEngine.setVolume(-3).volume, 0)
+  const bad = musicEngine.setVolume(Number.NaN)
+  assert.equal(bad.ok, false)
+  assert.equal(bad.errorCode, 'INVALID_VOLUME')
+  withoutAudio()
+})
+
+await checkAsync('music actions execute through the registry with valid args', async () => {
+  withMockAudio()
+  freshRegistry()
+  const play = await REG.runAction('play_track', { track: 'focus-mode' })
+  assert.equal(play.ok, true, 'play_track runs')
+  assert.equal(play.data.label, 'Focus Mode')
+  const vol = await REG.runAction('set_volume', { level: 0.4 })
+  assert.equal(vol.ok, true)
+  assert.equal(vol.data.volumePercent, 40)
+  musicEngine.stop()
+  withoutAudio()
+})
+
+await checkAsync('music actions reject invalid arguments before the handler runs', async () => {
+  withMockAudio()
+  freshRegistry()
+  const badTrack = await REG.runAction('play_track', { track: 'not-a-track' })
+  assert.equal(badTrack.ok, false)
+  assert.equal(badTrack.errorCode, 'UNKNOWN_TRACK')
+  const badVol = await REG.runAction('set_volume', { level: 4 })
+  assert.equal(badVol.ok, false)
+  assert.equal(badVol.errorCode, 'INVALID_VOLUME')
+  withoutAudio()
+})
+
+check('music command parsing is deterministic and never invents a preset', () => {
+  assert.deepEqual(CMD.parseActionProposal('play cosmic drift'), { actionId: 'play_track', args: { track: 'cosmic-drift' } })
+  assert.deepEqual(CMD.parseActionProposal('play something relaxing'), { actionId: 'play_track', args: { track: 'cosmic-drift' } })
+  assert.deepEqual(CMD.parseActionProposal('put on some night drive'), { actionId: 'play_track', args: { track: 'night-drive' } })
+  assert.deepEqual(CMD.parseActionProposal('pause the music'), { actionId: 'pause_playback', args: {} })
+  assert.deepEqual(CMD.parseActionProposal('resume playback'), { actionId: 'resume_playback', args: {} })
+  assert.deepEqual(CMD.parseActionProposal('play the next track'), { actionId: 'next_track', args: {} })
+  assert.deepEqual(CMD.parseActionProposal('set the volume to 30 percent'), { actionId: 'set_volume', args: { level: 0.3 } })
+  assert.deepEqual(CMD.parseActionProposal('play something heavy'), { actionId: 'play_track', args: { track: 'cosmic-drift' } }, 'unknown mood falls back to a safe default')
+  assert.equal(CMD.parseActionProposal('play a board game'), null, 'non-music play is not hijacked')
+})
+
+check('navigation commands still win where they should', () => {
+  assert.deepEqual(CMD.parseActionProposal('take me to cosmos'), { actionId: 'navigate_to_world', args: { world: 'cosmos' } })
+  assert.deepEqual(CMD.parseActionProposal('open the music lab'), { actionId: 'navigate_to_world', args: { world: 'music-lab' } })
+  assert.equal(CMD.parseActionProposal('play the guitar'), null, 'does not hijack the Music Lab')
+  assert.equal(CMD.parseActionProposal('navigate to http://evil.example.com'), null)
+})
+
+await checkAsync('the brain proposes music actions but never executes them itself', async () => {
+  withMockAudio()
+  freshRegistry()
+  const r = await getReply('play something relaxing', { aiEnabled: false })
+  assert.equal(r.kind, 'action')
+  assert.equal(r.proposal.actionId, 'play_track')
+  assert.equal(r.proposal.args.track, 'cosmic-drift')
+  musicEngine.stop()
+  withoutAudio()
 })
 
 // ---------------------------------------------------------------- report

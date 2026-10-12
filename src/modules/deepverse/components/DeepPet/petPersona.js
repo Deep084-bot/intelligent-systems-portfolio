@@ -6,11 +6,21 @@
 //
 // Design rules baked in here:
 //  - never claim an action the pet did not perform;
-//  - music playback is explicitly stated as not built yet;
+//  - music playback is real (backed by the shared MusicEngine), so the lines
+//    describe what actually happened rather than promising a future feature;
 //  - short, warm, slightly mischievous, and varied (anti-repeat per pool);
 //  - one reaction per intent so dialogue and expression stay in sync.
 
 import { worldLabel } from './worldRoutes'
+import { getPreset } from '../../audio/presets'
+import {
+  PLAY_TRACK_ACTION_ID,
+  PAUSE_PLAYBACK_ACTION_ID,
+  RESUME_PLAYBACK_ACTION_ID,
+  NEXT_TRACK_ACTION_ID,
+  SET_VOLUME_ACTION_ID,
+  MUSIC_ACTION_IDS,
+} from './petMusicActions'
 
 // ---------------------------------------------------------------------------
 // anti-repeat picker — never returns the same line twice in a row from a pool
@@ -110,9 +120,9 @@ const ABOUT = pool([
 ])
 
 const CAPABILITIES = pool([
-  "I can take you to any world — Cosmos, Music Lab, the Reading Room, System Design, and more. I can chat, and I react to what happens around us. Music playback and a real memory aren't built yet.",
-  'Ask me to go somewhere ("take me to Cosmos") or just talk. I react to the world too. I cannot play audio yet — that part is still a sketch.',
-  "Right now I can navigate DeepVerse for you and keep you company. Music and long-term memory are on the roadmap, not in my head yet.",
+  "I can take you to any world — Cosmos, Music Lab, the Reading Room, System Design, and more. I can also play music: ask for Cosmic Drift, Greenhouse, Night Drive, or Focus Mode. I react to what happens around us too.",
+  'Ask me to go somewhere ("take me to Cosmos"), to play a track ("play something relaxing"), or just talk. I can pause, resume, skip, and change the volume as well.',
+  'Right now I can navigate DeepVerse and play music for you. Long-term memory is still on the roadmap, not in my head yet.',
 ])
 
 const THANKS = pool([
@@ -134,10 +144,43 @@ const AFFIRM = pool([
 ])
 
 const MUSIC_REPLY = pool([
-  "Music playback isn't wired up yet. But I can take you to the Music Lab to look around.",
-  "I can't play a track yet — no music engine back here. I can walk you to the Music Lab though.",
-  'No audio circuits yet, sorry. Say the word and I will take you to the Music Lab.',
+  'I can play music now — try "play Cosmic Drift", or say "play something relaxing".',
+  "Music is wired up. Name a track (Cosmic Drift, Greenhouse, Night Drive, Focus Mode) or just ask for something relaxing.",
+  'I have a little synth in here. Ask me to play a track, pause it, or set the volume.',
 ])
+
+const MUSIC_PRE = {
+  play: pool([
+    'Queuing {label}…',
+    'Starting {label}…',
+    'Cueing up {label}…',
+  ]),
+  pause: pool(['Pausing…', 'Holding that note…']),
+  resume: pool(['Picking it back up…', 'Back on…']),
+  next: pool(['Skipping ahead…', 'On to the next one…']),
+  volume: pool(['Setting the volume to {percent}%…', 'Adjusting volume to {percent}%…']),
+}
+
+const MUSIC_SUCCESS = {
+  play: pool(['Now playing {label}.', '{label} is on.', 'Spinning up {label}.']),
+  pause: pool(['Paused.', 'Held. Say the word to resume.']),
+  resume: pool(['Back on — {label}.', 'Resuming {label}.']),
+  next: pool(['Up next: {label}.', 'Skipped to {label}.']),
+  volume: pool(['Volume at {percent}%.', 'Set to {percent}%.']),
+  nothing: pool(['Nothing is playing right now.', 'There is no track to do that to yet.']),
+  blocked: pool([
+    "I need a tap before I can make sound — press play and I'll start.",
+    "The browser is holding my audio until you tap. Give me a click and I'm on.",
+  ]),
+  unavailable: pool([
+    "This browser won't let me play audio, sorry.",
+    'I have no audio engine here — Web Audio is unavailable.',
+  ]),
+  unknown: pool([
+    "I don't have a track called that.",
+    'That track is not in my little library.',
+  ]),
+}
 
 const UNKNOWN = pool([
   "Hmm. I'm not sure I follow. Ask me to take you somewhere, or ask what I can do.",
@@ -188,10 +231,38 @@ export function preActionLine(world) {
   return PRE_ACTION().replace('{label}', worldLabel(world))
 }
 
+function presetLabel(track) {
+  const preset = getPreset(track)
+  return preset ? preset.name : 'that track'
+}
+
+// Intent line for any proposal kind. Navigation keeps its own phrasing; music
+// actions announce what is about to happen without claiming it already did.
+export function preActionLineFor(proposal) {
+  const { actionId, args = {} } = proposal || {}
+  switch (actionId) {
+    case PLAY_TRACK_ACTION_ID:
+      return MUSIC_PRE.play().replace('{label}', presetLabel(args.track))
+    case PAUSE_PLAYBACK_ACTION_ID:
+      return MUSIC_PRE.pause()
+    case RESUME_PLAYBACK_ACTION_ID:
+      return MUSIC_PRE.resume()
+    case NEXT_TRACK_ACTION_ID:
+      return MUSIC_PRE.next()
+    case SET_VOLUME_ACTION_ID:
+      return MUSIC_PRE.volume().replace('{percent}', String(Math.round((args.level ?? 0) * 100)))
+    default:
+      return preActionLine(args.world)
+  }
+}
+
 // The single user-facing line for an action *result*. Only ever called with the
 // real result returned by the registry, so it never claims a success that did
 // not happen.
 export function actionResultLine(result) {
+  if (result && MUSIC_ACTION_IDS.includes(result.actionId)) {
+    return musicResultLine(result)
+  }
   const status = result?.status
   const label = result?.data?.label || worldLabel(result?.data?.world)
 
@@ -214,13 +285,57 @@ export function actionResultLine(result) {
   }
 }
 
+function musicResultLine(result) {
+  const status = result?.status
+  const data = result?.data || {}
+  const label = data.label || 'that track'
+  const percent = data.volumePercent
+
+  if (status === 'ok') {
+    switch (result.actionId) {
+      case PLAY_TRACK_ACTION_ID:
+        return MUSIC_SUCCESS.play().replace('{label}', label)
+      case PAUSE_PLAYBACK_ACTION_ID:
+        return MUSIC_SUCCESS.pause()
+      case RESUME_PLAYBACK_ACTION_ID:
+        return MUSIC_SUCCESS.resume().replace('{label}', label)
+      case NEXT_TRACK_ACTION_ID:
+        return MUSIC_SUCCESS.next().replace('{label}', label)
+      case SET_VOLUME_ACTION_ID:
+        return MUSIC_SUCCESS.volume().replace('{percent}', String(percent ?? ''))
+      default:
+        return ACTION_SUCCESS().replace('{label}', label)
+    }
+  }
+
+  const errorCode = result?.errorCode
+  if (errorCode === 'AUTOPLAY_BLOCKED') return MUSIC_SUCCESS.blocked()
+  if (errorCode === 'AUDIO_UNSUPPORTED') return MUSIC_SUCCESS.unavailable()
+  if (errorCode === 'UNKNOWN_TRACK') return MUSIC_SUCCESS.unknown()
+  if (errorCode === 'NOTHING_PLAYING') return MUSIC_SUCCESS.nothing()
+
+  switch (status) {
+    case 'cancelled':
+      return ACTION_CANCELLED()
+    case 'timeout':
+    case 'failed':
+      return ACTION_FAILED()
+    default:
+      return ACTION_UNSUPPORTED()
+  }
+}
+
 export function actionUnsupportedLine() {
   return ACTION_UNSUPPORTED()
 }
 
 export function reactionForActionResult(result) {
-  switch (result?.status) {
-    case 'ok': return 'success'
+  const status = result?.status
+  if (status === 'ok') {
+    if (result?.actionId === PAUSE_PLAYBACK_ACTION_ID) return 'rest'
+    return 'success'
+  }
+  switch (status) {
     case 'cancelled': return 'rest'
     case 'timeout':
     case 'failed': return 'error'

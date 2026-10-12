@@ -12,6 +12,7 @@ import PetBody from '../../components/DeepPet/PetBody'
 import PetParticles from '../../components/DeepPet/PetParticles'
 import PetDialogue from '../../components/DeepPet/PetDialogue'
 import PetConversation from '../../components/DeepPet/PetConversation'
+import MusicControls from '../../audio/MusicControls'
 import '../../components/DeepPet/DeepPet.css'
 
 // What each expression means, shown next to the controls so the test area is
@@ -282,25 +283,8 @@ export default function DeepPetWorld({ navigate }) {
             {/* conversation */}
             <PetConversation navigate={navigate} reduced={reduced} />
 
-            {/* music — deliberately disabled until a provider is chosen */}
-            <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-neutral-200">Music</h3>
-                <span className="rounded-full border border-neutral-700 bg-neutral-800/60 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-neutral-500">
-                  Coming soon
-                </span>
-              </div>
-              <p className="mt-2 text-xs leading-relaxed text-neutral-500">
-                A music companion is planned, but no provider has been selected or
-                verified yet. This section stays off until that ships.
-              </p>
-              <button
-                disabled
-                className="mt-3 w-full cursor-not-allowed rounded-lg border border-neutral-800 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-600"
-              >
-                Choose a track
-              </button>
-            </div>
+            {/* music — the same shared engine the Music Lab uses */}
+            <MusicControls variant="compact" />
           </section>
         </main>
       </div>

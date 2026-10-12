@@ -14,7 +14,7 @@
 import { parseActionProposal, looksLikeNavigation } from './petCommands'
 import {
   localReply,
-  preActionLine,
+  preActionLineFor,
   actionUnsupportedLine,
   reactionForIntent,
 } from './petPersona'
@@ -56,7 +56,7 @@ export async function getReply(message, { history = [], aiEnabled = false, signa
       return {
         kind: REPLY_KIND.ACTION,
         proposal,
-        text: preActionLine(proposal.args.world),
+        text: preActionLineFor(proposal),
         reaction: 'greet',
         intent: 'action',
       }

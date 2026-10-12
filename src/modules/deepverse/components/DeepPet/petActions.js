@@ -1,14 +1,17 @@
 // DeepPet — the actions DeepPet actually knows how to perform.
 //
-// Only actions with a real, working handler are registered. Anything that is
-// merely planned is listed in RESERVED_ACTIONS for documentation and is NOT
-// registered, so it can never appear executable.
+// Only actions with a real, working handler are registered. Two families exist:
+//   - navigation (this file), and
+//   - music playback (petMusicActions.js), backed by the shared MusicEngine.
+// Anything merely planned is simply not registered, so it can never appear
+// executable.
 //
 // Registration happens at import time (via ensurePetActions). Tests may call
 // resetActionRegistry() then ensurePetActions() to rebuild a clean registry.
 
 import { registerAction, hasAction } from './actionRegistry'
 import { WORLD_ROUTES, isKnownWorld } from './worldRoutes'
+import { ensureMusicActions, MUSIC_ACTION_IDS } from './petMusicActions'
 
 export const NAVIGATE_ACTION_ID = 'navigate_to_world'
 
@@ -54,19 +57,11 @@ function registerNavigateAction() {
 // Idempotent: registers built-in actions only if they are not already present.
 export function ensurePetActions() {
   if (!hasAction(NAVIGATE_ACTION_ID)) registerNavigateAction()
+  ensureMusicActions()
 }
 
-// Declared for a future Music Lab module. These are NOT registered: DeepPet has
-// no playback engine yet, so none of them are executable. When a real Music Lab
-// stops living behind this boundary, it can register handlers for the same ids
-// (see the pattern in registerNavigateAction) without touching the registry core
-// or the conversation UI.
-export const RESERVED_ACTIONS = [
-  { id: 'play_track', name: 'Play a track', description: 'Start playback of a chosen track.' },
-  { id: 'pause_playback', name: 'Pause playback', description: 'Pause the current track.' },
-  { id: 'resume_playback', name: 'Resume playback', description: 'Resume the paused track.' },
-  { id: 'next_track', name: 'Next track', description: 'Skip to the next track.' },
-  { id: 'set_volume', name: 'Set volume', description: 'Change the playback volume.' },
-]
+// The music action ids, re-exported so callers have one place to discover the
+// full set of implemented actions.
+export { MUSIC_ACTION_IDS }
 
 ensurePetActions()
