@@ -34,38 +34,47 @@ export default function GuitarContextLayer() {
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        {/* Wood body gradient — warm spruce top */}
+        {/* Wood body gradient — warm spruce top (lifted so the instrument
+            reads clearly against the dark stage) */}
         <linearGradient id="gcl-body-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#DDA870" />
-          <stop offset="30%" stopColor="#C8895A" />
-          <stop offset="65%" stopColor="#B87848" />
-          <stop offset="100%" stopColor="#9E6438" />
+          <stop offset="0%" stopColor="#F2C88E" />
+          <stop offset="30%" stopColor="#E0A46E" />
+          <stop offset="65%" stopColor="#CC8E58" />
+          <stop offset="100%" stopColor="#B07446" />
         </linearGradient>
 
         {/* Body highlight — soft top-left light source */}
-        <radialGradient id="gcl-body-highlight" cx="20%" cy="18%" r="55%">
-          <stop offset="0%" stopColor="rgba(255,230,180,0.18)" />
-          <stop offset="60%" stopColor="rgba(255,200,140,0.05)" />
+        <radialGradient id="gcl-body-highlight" cx="24%" cy="16%" r="58%">
+          <stop offset="0%" stopColor="rgba(255,235,190,0.34)" />
+          <stop offset="55%" stopColor="rgba(255,205,145,0.12)" />
           <stop offset="100%" stopColor="rgba(0,0,0,0)" />
         </radialGradient>
 
-        {/* Neck gradient — rosewood-like */}
+        {/* Top edge rim light — catches the upper contour so the silhouette
+            separates from the background */}
+        <linearGradient id="gcl-rim" x1="600" y1="150" x2="1200" y2="180" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stopColor="rgba(255,240,210,0.10)" />
+          <stop offset="45%"  stopColor="rgba(255,245,220,0.55)" />
+          <stop offset="100%" stopColor="rgba(255,225,180,0.15)" />
+        </linearGradient>
+
+        {/* Neck gradient — rosewood-like (lifted for contrast on the dark stage) */}
         <linearGradient id="gcl-neck-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#5A3E28" />
-          <stop offset="50%" stopColor="#4A3020" />
-          <stop offset="100%" stopColor="#3A2416" />
+          <stop offset="0%" stopColor="#76502F" />
+          <stop offset="50%" stopColor="#5E3E26" />
+          <stop offset="100%" stopColor="#472C1A" />
         </linearGradient>
 
         {/* Fretboard gradient */}
         <linearGradient id="gcl-fb-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#422C1A" />
-          <stop offset="100%" stopColor="#2E1C0E" />
+          <stop offset="0%" stopColor="#573A24" />
+          <stop offset="100%" stopColor="#3E2815" />
         </linearGradient>
 
         {/* Headstock gradient */}
         <linearGradient id="gcl-head-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#4A3020" />
-          <stop offset="100%" stopColor="#2E1A0A" />
+          <stop offset="0%" stopColor="#5E3E28" />
+          <stop offset="100%" stopColor="#3A2412" />
         </linearGradient>
 
         {/* Sound hole depth */}
@@ -263,7 +272,7 @@ export default function GuitarContextLayer() {
             C 606,173 598,170 610,165 Z
           "
           fill="none"
-          stroke="rgba(240,225,200,0.45)"
+          stroke="rgba(248,236,214,0.72)"
           strokeWidth="2"
         />
 
@@ -293,6 +302,21 @@ export default function GuitarContextLayer() {
           stroke="rgba(160,120,80,0.15)"
           strokeWidth="1"
         />
+
+        {/* Top edge rim light — separates the instrument from the dark stage */}
+        <path
+          d="M 610,165
+             C 640,160 680,155 720,152
+             C 780,148 840,150 880,155
+             C 920,160 950,165 970,168
+             C 1010,172 1060,168 1100,165
+             C 1160,160 1230,158 1300,162
+             C 1380,167 1460,178 1510,195"
+          fill="none"
+          stroke="url(#gcl-rim)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
       </g>
 
       {/* ═══════════ NECK ═══════════ */}
@@ -300,7 +324,7 @@ export default function GuitarContextLayer() {
         {/* Neck base (maple-like) — slight trapezoid */}
         <path
           d="M 148,170 L 610,170 L 610,390 L 148,390 Z"
-          fill="#7A5535"
+          fill="#8E6740"
           opacity="0.95"
         />
 

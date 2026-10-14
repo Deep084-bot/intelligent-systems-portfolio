@@ -4,19 +4,55 @@
 // densities, but both read and write the same singleton, so a change made in
 // one is instantly reflected in the other. There is no second player and no
 // second AudioContext.
+//
+// Accessibility: the transport, volume and preset controls are all real
+// buttons / inputs with visible focus rings; the status is a polite live
+// region; and the little activity meter only animates when the OS motion
+// preference allows it.
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import useMusicEngine from './useMusicEngine'
+import useReducedMotion from '../components/DeepPet/useReducedMotion'
 import { musicEngine } from './MusicEngine'
 
-function statusLabel(status) {
+function statusLabel(supported, status) {
+  if (!supported) return 'Unavailable'
   if (status === 'playing') return 'Playing'
   if (status === 'paused') return 'Paused'
   return 'Stopped'
 }
 
+const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900'
+
+function ActivityMeter({ playing, reduced }) {
+  const bars = [0, 1, 2]
+  return (
+    <span aria-hidden="true" className="flex h-3 items-end gap-[2px]">
+      {bars.map((i) => (
+        <motion.span
+          key={i}
+          className={'w-[2px] rounded-full ' + (playing ? 'bg-green-300/80' : 'bg-neutral-600/60')}
+          style={{ height: '100%', originY: 1 }}
+          animate={
+            playing && !reduced
+              ? { scaleY: [0.35, 1, 0.55, 0.9, 0.35] }
+              : { scaleY: playing ? 0.7 : 0.3 }
+          }
+          transition={
+            playing && !reduced
+              ? { duration: 1.2, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }
+              : { duration: 0.2 }
+          }
+        />
+      ))}
+    </span>
+  )
+}
+
 export default function MusicControls({ variant = 'compact' }) {
   const snap = useMusicEngine()
+  const reduced = useReducedMotion()
   const [notice, setNotice] = useState(null)
   const full = variant === 'full'
 
@@ -61,7 +97,16 @@ export default function MusicControls({ variant = 'compact' }) {
     musicEngine.setVolume(Number(e.target.value) / 100)
   }
 
-  const activeName = snap.preset ? snap.preset.name : 'Choose a track'
+  const currentName = snap.preset ? snap.preset.name : null
+  const nowPlaying = !currentName
+    ? 'Ready — choose a preset'
+    : snap.status === 'playing'
+      ? `Now playing · ${currentName}`
+      : snap.status === 'paused'
+        ? `Paused · ${currentName}`
+        : `Ready · ${currentName}`
+
+  const playLabel = playing ? 'Pause' : snap.status === 'paused' ? 'Resume' : 'Play'
 
   return (
     <div
@@ -75,23 +120,31 @@ export default function MusicControls({ variant = 'compact' }) {
         <h3 className={'font-semibold text-neutral-200 ' + (full ? 'text-base' : 'text-sm')}>
           {full ? 'Music Player' : 'Music'}
         </h3>
-        <span
-          className={
-            'rounded-full border px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider ' +
-            (playing
-              ? 'border-green-400/40 bg-green-400/10 text-green-200'
-              : snap.status === 'paused'
-                ? 'border-amber-400/30 bg-amber-400/10 text-amber-200'
-                : 'border-neutral-700 bg-neutral-800/60 text-neutral-500')
-          }
-          role="status"
-          aria-live="polite"
-        >
-          {statusLabel(snap.status)}
+        <span className="flex items-center gap-2">
+          <ActivityMeter playing={playing} reduced={reduced} />
+          <span
+            className={
+              'rounded-full border px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider ' +
+              (!supported
+                ? 'border-neutral-700 bg-neutral-800/60 text-neutral-500'
+                : playing
+                  ? 'border-green-400/40 bg-green-400/10 text-green-200'
+                  : snap.status === 'paused'
+                    ? 'border-amber-400/30 bg-amber-400/10 text-amber-200'
+                    : 'border-neutral-700 bg-neutral-800/60 text-neutral-500')
+            }
+            role="status"
+            aria-live="polite"
+          >
+            {statusLabel(supported, snap.status)}
+          </span>
         </span>
       </div>
 
-      <p className="mt-1 text-xs text-neutral-500">
+      <p className={'mt-1 text-xs font-medium ' + (playing ? 'text-green-200/90' : 'text-neutral-400')}>
+        {nowPlaying}
+      </p>
+      <p className="mt-0.5 text-xs text-neutral-500">
         {snap.preset ? snap.preset.description : 'Procedural synth presets, made in your browser.'}
       </p>
 
@@ -106,16 +159,16 @@ export default function MusicControls({ variant = 'compact' }) {
         <button
           onClick={handlePlayPause}
           disabled={!supported}
-          aria-label={playing ? 'Pause' : snap.status === 'paused' ? 'Resume' : 'Play'}
-          className="rounded-lg border border-green-400/30 bg-green-400/10 px-3 py-2 text-sm text-green-200 transition-colors hover:bg-green-400/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label={playLabel}
+          className={'rounded-lg border border-green-400/30 bg-green-400/10 px-3 py-2 text-sm text-green-200 transition-colors hover:bg-green-400/20 disabled:opacity-40 disabled:cursor-not-allowed ' + FOCUS_RING}
         >
-          {playing ? 'Pause' : snap.status === 'paused' ? 'Resume' : 'Play'}
+          {playLabel}
         </button>
         <button
           onClick={handleNext}
           disabled={!supported}
           aria-label="Next track"
-          className="rounded-lg border border-neutral-700 bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-700/60 disabled:opacity-40 disabled:cursor-not-allowed"
+          className={'rounded-lg border border-neutral-700 bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-700/60 disabled:opacity-40 disabled:cursor-not-allowed ' + FOCUS_RING}
         >
           Next
         </button>
@@ -124,7 +177,7 @@ export default function MusicControls({ variant = 'compact' }) {
             onClick={handleStop}
             disabled={!supported || snap.status === 'idle'}
             aria-label="Stop"
-            className="rounded-lg border border-neutral-700 bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-700/60 disabled:opacity-40 disabled:cursor-not-allowed"
+            className={'rounded-lg border border-neutral-700 bg-neutral-800/60 px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-700/60 disabled:opacity-40 disabled:cursor-not-allowed ' + FOCUS_RING}
           >
             Stop
           </button>
@@ -146,7 +199,7 @@ export default function MusicControls({ variant = 'compact' }) {
           max="100"
           value={snap.volumePercent}
           onChange={handleVolume}
-          className="mt-1 w-full accent-green-400"
+          className="mt-1 w-full rounded accent-green-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400/60"
           aria-label="Volume"
         />
       </div>
@@ -165,15 +218,22 @@ export default function MusicControls({ variant = 'compact' }) {
                   disabled={!supported}
                   aria-pressed={isActive}
                   className={
-                    'rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed ' +
+                    'rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed ' + FOCUS_RING + ' ' +
                     (isActive
                       ? 'border-green-400/50 bg-green-400/10'
                       : 'border-neutral-800 bg-neutral-900/60 hover:border-neutral-700 hover:bg-neutral-800/60')
                   }
                 >
-                  <span className={'block text-sm ' + (isActive ? 'text-green-200' : 'text-neutral-200')}>
-                    {p.name}
-                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={'text-sm ' + (isActive ? 'text-green-200' : 'text-neutral-200')}>
+                      {p.name}
+                    </span>
+                    {isActive && (
+                      <span className={'text-[10px] font-mono uppercase tracking-wider ' + (playing ? 'text-green-300/80' : 'text-amber-300/80')}>
+                        {playing ? 'Playing' : 'Selected'}
+                      </span>
+                    )}
+                  </div>
                   <span className="mt-0.5 block text-[11px] leading-snug text-neutral-500">
                     {p.description}
                   </span>
@@ -190,9 +250,9 @@ export default function MusicControls({ variant = 'compact' }) {
             value={snap.presetId || ''}
             onChange={(e) => e.target.value && handlePreset(e.target.value)}
             disabled={!supported}
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 py-2 text-sm text-neutral-200 outline-none transition focus:border-green-400/50 disabled:opacity-40"
+            className={'w-full rounded-lg border border-neutral-700 bg-neutral-800 px-2 py-2 text-sm text-neutral-200 outline-none transition focus:border-green-400/50 disabled:opacity-40 ' + FOCUS_RING}
           >
-            <option value="">{activeName}</option>
+            <option value="">Choose a preset…</option>
             {snap.presets.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}

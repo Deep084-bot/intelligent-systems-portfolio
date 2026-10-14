@@ -229,6 +229,26 @@ class AudioEngine {
       contextState: this.audioContext?.state,
     }
   }
+
+  /**
+   * Release the AudioContext. Safe to call multiple times; used on unmount so
+   * React StrictMode's double-invoked effects do not leak a second context.
+   */
+  dispose() {
+    if (this.audioContext) {
+      try {
+        this.audioContext.close()
+      } catch {
+        /* already closed or unsupported */
+      }
+    }
+    this.audioContext = null
+    this.buffers = {}
+    this.reverbBuffer = null
+    this.isInitialized = false
+    this.isLoading = false
+    this.loadError = null
+  }
 }
 
 export default AudioEngine

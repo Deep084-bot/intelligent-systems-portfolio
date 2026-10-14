@@ -16,41 +16,41 @@ export class CollisionEngine {
    * @returns {{ stringIndex: number, localX: number, velocity: number } | null}
    */
   testCollision(x, y, pointerId, velocity = 0) {
+    // Pick the NEAREST string within the hit radius rather than the first
+    // match. The hit radius equals the string spacing, so a first-match loop
+    // would always resolve to the lowest-index string in an overlap zone and
+    // make the highest strings (index 4/5) impossible to pluck.
+    let match = null
+
     for (const string of this.strings) {
-      // Check if point is within string bounds
       if (x >= string.x1 && x <= string.x2) {
         const distance = Math.abs(y - string.y)
 
-        // Hit detection with configurable radius
-        if (distance <= string.hitRadius) {
-          // Calculate local X position on string (0 to 1)
-          const localX = (x - string.x1) / (string.x2 - string.x1)
-
-          // Check if this is a new collision (crossing threshold)
-          const lastString = this.activeCollisions.get(pointerId)
-          const isNewCollision = lastString !== string.index
-
-          if (isNewCollision) {
-            this.activeCollisions.set(pointerId, string.index)
-
-            return {
-              stringIndex: string.index,
-              localX, // Normalized position along string (for pluck effect)
-              absoluteX: x, // Absolute SVG coordinate
-              velocity: Math.min(velocity * 2, 1.0), // Scale velocity to 0-1
-              isNewCollision: true,
-            }
-          }
-
-          // Update position but don't trigger new collision
-          return {
-            stringIndex: string.index,
-            localX,
-            absoluteX: x,
-            velocity: 0,
-            isNewCollision: false,
+        if (distance <= string.hitRadius && (!match || distance < match.distance)) {
+          match = {
+            string,
+            distance,
+            // Normalized position along string (0 to 1)
+            localX: (x - string.x1) / (string.x2 - string.x1),
           }
         }
+      }
+    }
+
+    if (match) {
+      const lastString = this.activeCollisions.get(pointerId)
+      const isNewCollision = lastString !== match.string.index
+
+      if (isNewCollision) {
+        this.activeCollisions.set(pointerId, match.string.index)
+      }
+
+      return {
+        stringIndex: match.string.index,
+        localX: match.localX,
+        absoluteX: x, // Absolute SVG coordinate
+        velocity: isNewCollision ? Math.min(velocity * 2, 1.0) : 0, // Scale velocity to 0-1
+        isNewCollision,
       }
     }
 

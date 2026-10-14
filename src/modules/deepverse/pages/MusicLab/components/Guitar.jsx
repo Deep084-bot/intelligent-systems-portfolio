@@ -6,21 +6,30 @@
  * only manages lifecycle and dependency injection.
  */
 
-import { useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import GuitarScene from './GuitarScene'
 import InteractionOrchestrator from '../core/InteractionOrchestrator'
 
 export default function Guitar({ audioEngine }) {
-  const orchestratorRef = useRef(null)
+  // The orchestrator must live in state, not a ref: GuitarScene and
+  // InteractionLayer can only wire up collision + DOM events once they
+  // actually receive it. A ref mutation would not trigger the re-render
+  // that hands the orchestrator down, leaving the strings silent.
+  const [orchestrator, setOrchestrator] = useState(null)
 
-  // Initialize interaction orchestrator with audio engine
   useEffect(() => {
-    orchestratorRef.current = new InteractionOrchestrator(audioEngine)
+    if (!audioEngine) return undefined
 
+    const instance = new InteractionOrchestrator(audioEngine)
+    setOrchestrator(instance)
+
+    // StrictMode-safe: tear the instance down cleanly on unmount/remount and
+    // drop the reference so InteractionLayer removes its DOM listeners.
     return () => {
-      orchestratorRef.current?.destroy()
+      instance.destroy()
+      setOrchestrator((current) => (current === instance ? null : current))
     }
   }, [audioEngine])
 
-  return <GuitarScene orchestrator={orchestratorRef.current} />
+  return <GuitarScene orchestrator={orchestrator} />
 }

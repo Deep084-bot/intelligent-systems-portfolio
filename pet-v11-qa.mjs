@@ -907,11 +907,24 @@ class MockOsc extends MockNode {
 }
 class MockGain extends MockNode { constructor() { super(); this.gain = new MockParam(1) } }
 class MockFilter extends MockNode { constructor() { super(); this.type = 'lowpass'; this.frequency = new MockParam(500); this.Q = new MockParam(1) } }
+class MockCompressor extends MockNode {
+  constructor() {
+    super()
+    this.threshold = new MockParam(-24)
+    this.knee = new MockParam(0)
+    this.ratio = new MockParam(1)
+    this.attack = new MockParam(0)
+    this.release = new MockParam(0)
+  }
+}
+class MockPanner extends MockNode { constructor() { super(); this.pan = new MockParam(0) } }
 class MockAudioContext {
   constructor() { this.state = 'running'; this.currentTime = 0; this.destination = new MockNode(); this.sampleRate = 48000 }
   createGain() { return new MockGain() }
   createOscillator() { return new MockOsc() }
   createBiquadFilter() { return new MockFilter() }
+  createDynamicsCompressor() { return new MockCompressor() }
+  createStereoPanner() { return new MockPanner() }
   async resume() { this.state = 'running' }
   async suspend() { this.state = 'suspended' }
 }
@@ -1012,6 +1025,61 @@ check('engine clamps volume to [0,1] and rejects non-finite input', () => {
   const bad = musicEngine.setVolume(Number.NaN)
   assert.equal(bad.ok, false)
   assert.equal(bad.errorCode, 'INVALID_VOLUME')
+  withoutAudio()
+})
+
+check('each preset is musically coherent and in a sane register', () => {
+  const notesOf = (p) => p.events.flatMap((e) => (Array.isArray(e.notes) ? e.notes : [e.semitone || 0]))
+  for (const p of MUSIC_PRESETS) {
+    assert.ok(Number.isInteger(p.steps) && p.steps > 0, `${p.id} has a whole-number loop length`)
+    assert.ok(p.bpm >= 40 && p.bpm <= 140, `${p.id} tempo stays calm and consistent`)
+    assert.ok(p.trim > 0 && p.trim <= 1, `${p.id} declares a sane mix trim`)
+    assert.ok(Array.isArray(p.pad) && p.pad.length > 0, `${p.id} has a pad bed`)
+    for (const s of notesOf(p)) {
+      assert.ok(Number.isInteger(s), `${p.id} note offsets are whole semitones`)
+      assert.ok(s >= -12 && s <= 31, `${p.id} note ${s} stays inside a pleasing register`)
+    }
+  }
+  assert.ok(new Set(MUSIC_PRESETS.map((p) => p.root)).size >= 3, 'presets use distinct roots')
+  assert.ok(new Set(MUSIC_PRESETS.map((p) => p.steps)).size >= 2, 'presets vary in length')
+})
+
+await checkAsync('the master chain filters and compresses where the browser provides it', async () => {
+  withMockAudio()
+  const unlocked = await musicEngine.unlock()
+  assert.equal(unlocked.ok, true)
+  assert.ok(musicEngine._tone, 'a soft tone lowpass sits in the master chain')
+  assert.ok(musicEngine._comp, 'a compressor sits in the master chain')
+  musicEngine.stop()
+  withoutAudio()
+})
+
+await checkAsync('switching presets stops the outgoing pad oscillators and leaks nothing', async () => {
+  withMockAudio()
+  await musicEngine.play('cosmic-drift')
+  const outgoing = Array.from(musicEngine._pads).flatMap((pad) => pad.oscs)
+  assert.ok(outgoing.length > 0, 'cosmic-drift built pad oscillators')
+  await musicEngine.play('night-drive')
+  assert.ok(outgoing.every((osc) => osc._stopped === true), 'every outgoing pad oscillator was stopped')
+  assert.equal(musicEngine._pads.size, 1, 'only the new preset pads remain')
+  assert.ok(musicEngine._voices.size < 200, 'no runaway voices')
+  musicEngine.stop()
+  withoutAudio()
+})
+
+await checkAsync('stereo panning is applied where supported and skipped where not', async () => {
+  withMockAudio()
+  await musicEngine.unlock()
+  let captured = null
+  const original = musicEngine._track.bind(musicEngine)
+  musicEngine._track = (osc, end, nodes) => { captured = nodes; return original(osc, end, nodes) }
+  musicEngine._playNote({ semitone: 0, gain: 0.01, pan: 0.5 }, 0)
+  assert.ok(captured && captured.some((n) => n.pan !== undefined), 'a pan node is inserted when supported')
+  musicEngine.context.createStereoPanner = undefined
+  musicEngine._playNote({ semitone: 0, gain: 0.01, pan: 0.5 }, 0)
+  assert.ok(captured && !captured.some((n) => n.pan !== undefined), 'no pan node when unsupported, and no throw')
+  musicEngine._track = original
+  musicEngine.stop()
   withoutAudio()
 })
 

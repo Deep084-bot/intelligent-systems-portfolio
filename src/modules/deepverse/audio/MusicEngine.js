@@ -11,7 +11,11 @@
 //   - every scheduled note is a short-lived oscillator with a clean stop time,
 //     so no loop survives a pause / preset switch / stop;
 //   - sustained "pad" voices are tracked and torn down explicitly;
-//   - volume is always clamped to [0, 1];
+//   - a gentle master chain (soft tone lowpass + compressor where available)
+//     tames harsh highs and stops overlapping voices from clipping;
+//   - preset switches / pause / resume cross-fade the master so there are no
+//     clicks, and a generation guard discards stale fades;
+//   - volume is always clamped to [0, 1] and scales the preset's own `trim`;
 //   - the module is Node-safe: with no Web Audio it degrades to an unsupported
 //     result instead of throwing.
 
@@ -42,6 +46,18 @@ const SCHEDULE_AHEAD = 0.15 // seconds of lookahead
 const TIMER_MS = 25
 const LOOKAHEAD_MS = 0.05
 
+// Cross-fade timings (seconds). Kept short so transport feels instant while
+// still avoiding clicks at note boundaries.
+const FADE_OUT = 0.12
+const FADE_IN = 0.4
+const FADE_RESUME = 0.3
+const FADE_VOLUME = 0.05
+const FADE_WAIT_MS = 130
+
+// Hard ceiling on simultaneous scheduled voices. Generous for these presets,
+// but a guarantee that a bug can never spawn an unbounded graph.
+const MAX_VOICES = 80
+
 function clamp01(v) {
   const n = Number(v)
   if (!Number.isFinite(n)) return null
@@ -50,10 +66,16 @@ function clamp01(v) {
   return n
 }
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export class MusicEngine {
   constructor() {
     this.context = null
     this.master = null
+    this._tone = null
+    this._comp = null
     this.volume = 0.7
     this.presetId = null
     this.status = MUSIC_STATUS.IDLE
@@ -65,6 +87,9 @@ export class MusicEngine {
     this._pads = new Set()
     this._eventsByStep = null
     this._snapshot = null
+    // Monotonic token: bumped by every transport change so a fade/teardown
+    // scheduled by an older play() can never clobber a newer one.
+    this._gen = 0
   }
 
   // ---- capability -----------------------------------------------------------
@@ -127,18 +152,68 @@ export class MusicEngine {
       return false
     }
     if (!this.master) {
-      this.master = this.context.createGain()
-      this.master.gain.value = this.volume
-      this.master.connect(this.context.destination)
+      const ctx = this.context
+      this.master = ctx.createGain()
+      this.master.gain.value = 0.0001 // silent until a preset fades in
+
+      // master -> [soft tone lowpass] -> [compressor] -> destination
+      let node = this.master
+      try {
+        if (typeof ctx.createBiquadFilter === 'function') {
+          const tone = ctx.createBiquadFilter()
+          tone.type = 'lowpass'
+          tone.frequency.value = 9000 // take the edge off synthy highs
+          tone.Q.value = 0.5
+          node.connect(tone)
+          node = tone
+          this._tone = tone
+        }
+      } catch {
+        this._tone = null
+      }
+      try {
+        if (typeof ctx.createDynamicsCompressor === 'function') {
+          const comp = ctx.createDynamicsCompressor()
+          comp.threshold.value = -18
+          comp.knee.value = 24
+          comp.ratio.value = 3
+          comp.attack.value = 0.01
+          comp.release.value = 0.25
+          node.connect(comp)
+          node = comp
+          this._comp = comp
+        }
+      } catch {
+        this._comp = null
+      }
+      node.connect(ctx.destination)
     }
     return true
   }
 
-  _applyVolume() {
-    if (this.master) {
-      const t = this.context?.currentTime ?? 0
-      this.master.gain.cancelScheduledValues?.(t)
-      this.master.gain.setValueAtTime(this.volume, t)
+  _targetMasterGain() {
+    const preset = getPreset(this.presetId)
+    const trim = preset && typeof preset.trim === 'number' ? preset.trim : 1
+    return Math.max(0.0001, this.volume * trim)
+  }
+
+  // Ramp the master to `target`, optionally starting from an explicit value.
+  _fadeMaster(target, seconds, from) {
+    if (!this.master) return
+    const g = this.master.gain
+    const t = this.context?.currentTime ?? 0
+    const start = from != null ? from : typeof g.value === 'number' ? g.value : target
+    g.cancelScheduledValues?.(t)
+    g.setValueAtTime(Math.max(0.0001, start), t)
+    g.linearRampToValueAtTime(Math.max(0.0001, target), t + seconds)
+  }
+
+  _applyVolume(seconds = FADE_VOLUME) {
+    if (!this.master) return
+    if (this.status === MUSIC_STATUS.PLAYING) {
+      this._fadeMaster(this._targetMasterGain(), seconds)
+    } else {
+      this._fadeMaster(0.0001, seconds)
     }
   }
 
@@ -179,11 +254,25 @@ export class MusicEngine {
       return { ok: false, errorCode: unlocked.errorCode || MUSIC_ERROR.BLOCKED }
     }
 
+    const switching = this.status === MUSIC_STATUS.PLAYING
+    const gen = ++this._gen
+
+    // Fade out the outgoing preset before mutating the graph, so switching
+    // never clicks. First play from idle skips the wait entirely.
+    if (switching) {
+      this._fadeMaster(0.0001, FADE_OUT)
+      await wait(FADE_WAIT_MS)
+      if (gen !== this._gen) {
+        // A newer transport op superseded us; it owns the graph now.
+        return { ok: true, presetId: this.presetId, status: this.status }
+      }
+    }
+
     this._teardownVoices()
     this.presetId = presetId
     this._eventsByStep = buildEventsByStep(getPreset(presetId))
     this._buildPads(getPreset(presetId))
-    this._applyVolume()
+    this._fadeMaster(this._targetMasterGain(), FADE_IN, 0.0001)
     this.status = MUSIC_STATUS.PLAYING
     this._startScheduler()
     this._emit()
@@ -194,7 +283,14 @@ export class MusicEngine {
     if (this.status !== MUSIC_STATUS.PLAYING) {
       return { ok: false, errorCode: MUSIC_ERROR.NOTHING_PLAYING }
     }
+    const gen = ++this._gen
     this._stopScheduler()
+    // Fade the master down before suspending so the last notes don't click.
+    this._fadeMaster(0.0001, FADE_OUT)
+    await wait(FADE_WAIT_MS)
+    if (gen !== this._gen) {
+      return { ok: true, presetId: this.presetId, status: this.status }
+    }
     if (this.context && this.context.state === 'running') {
       try {
         await this.context.suspend()
@@ -215,6 +311,8 @@ export class MusicEngine {
     if (!unlocked.ok) {
       return { ok: false, errorCode: unlocked.errorCode || MUSIC_ERROR.BLOCKED }
     }
+    ++this._gen
+    this._fadeMaster(this._targetMasterGain(), FADE_RESUME, 0.0001)
     this.status = MUSIC_STATUS.PLAYING
     this._startScheduler()
     this._emit()
@@ -228,9 +326,11 @@ export class MusicEngine {
 
   stop() {
     const hadPreset = this.presetId
+    ++this._gen // invalidate any in-flight fade/teardown
     this._stopScheduler()
     this._teardownVoices()
     this.status = MUSIC_STATUS.IDLE
+    this._fadeMaster(0.0001, FADE_OUT)
     this._emit()
     return { ok: true, presetId: hadPreset, status: this.status }
   }
@@ -271,17 +371,31 @@ export class MusicEngine {
     const stepDur = 60 / preset.bpm / 4 // a 16th note
     while (this._nextTime < ctx.currentTime + SCHEDULE_AHEAD) {
       const events = this._eventsByStep[this._step] || []
-      for (const e of events) this._playNote(e, this._nextTime, preset)
+      for (const e of events) this._playEvent(e, this._nextTime)
       this._nextTime += stepDur
       this._step = (this._step + 1) % preset.steps
     }
   }
 
-  _playNote(event, time, preset) {
+  // Schedule one event. `event.notes` may hold several semitone offsets (a
+  // chord); `event.semitone` is the single-note shorthand. `event.strum` fans
+  // the chord out in time; `event.pan` places it in the stereo field.
+  _playEvent(event, time) {
+    const notes = Array.isArray(event.notes) ? event.notes : [event.semitone || 0]
+    const strum = event.strum || 0
+    notes.forEach((semitone, i) => {
+      this._playNote({ ...event, semitone }, time + i * strum)
+    })
+  }
+
+  _playNote(event, time) {
+    if (this._voices.size >= MAX_VOICES) return // never let the graph run away
     const ctx = this.context
+    if (!ctx) return
+
     const osc = ctx.createOscillator()
     osc.type = event.type || 'sine'
-    osc.frequency.value = preset.root * Math.pow(2, (event.semitone || 0) / 12)
+    osc.frequency.value = presetRootFreq(this.presetId, event.semitone || 0)
 
     const gain = ctx.createGain()
     const peak = Math.max(0.0001, event.gain ?? 0.15)
@@ -295,6 +409,7 @@ export class MusicEngine {
     gain.gain.setValueAtTime(peak, Math.max(time + attack, time + dur))
     gain.gain.exponentialRampToValueAtTime(0.0001, end)
 
+    const nodes = [osc, gain]
     let tail = gain
     if (event.filter) {
       const filter = ctx.createBiquadFilter()
@@ -303,11 +418,24 @@ export class MusicEngine {
       filter.Q.value = 0.7
       gain.connect(filter)
       tail = filter
+      nodes.push(filter)
+    }
+    // Optional stereo placement — only where the browser provides it.
+    if (event.pan && typeof ctx.createStereoPanner === 'function') {
+      try {
+        const panner = ctx.createStereoPanner()
+        panner.pan.value = Math.max(-1, Math.min(1, event.pan))
+        tail.connect(panner)
+        tail = panner
+        nodes.push(panner)
+      } catch {
+        /* fall through to mono */
+      }
     }
     osc.connect(gain)
     tail.connect(this.master)
 
-    this._track(osc, end, [osc, gain, tail])
+    this._track(osc, end, nodes)
     osc.start(time)
     osc.stop(end + 0.05)
   }
@@ -316,19 +444,19 @@ export class MusicEngine {
     const ctx = this.context
     if (!ctx || !preset.pad) return
     for (const layer of preset.pad) {
-      const osc = ctx.createOscillator()
-      osc.type = layer.type || 'sine'
-      osc.frequency.value = preset.root * Math.pow(2, (layer.semitone || 0) / 12)
-      osc.detune.value = layer.detune || 0
-
+      const notes = Array.isArray(layer.notes) ? layer.notes : [layer.semitone || 0]
       const gain = ctx.createGain()
       gain.gain.value = 0.0001
-      gain.gain.linearRampToValueAtTime(Math.max(0.0001, layer.gain ?? 0.06), ctx.currentTime + 2.5)
+      gain.gain.linearRampToValueAtTime(
+        Math.max(0.0001, layer.gain ?? 0.06),
+        ctx.currentTime + 2.5,
+      )
 
-      const nodes = [osc, gain]
+      const nodes = [gain]
       let tail = gain
+      let filter = null
       if (layer.filter) {
-        const filter = ctx.createBiquadFilter()
+        filter = ctx.createBiquadFilter()
         filter.type = 'lowpass'
         filter.frequency.value = layer.filter
         filter.Q.value = 0.6
@@ -336,8 +464,17 @@ export class MusicEngine {
         tail = filter
         nodes.push(filter)
       }
-      osc.connect(gain)
       tail.connect(this.master)
+
+      const oscs = notes.map((semitone) => {
+        const osc = ctx.createOscillator()
+        osc.type = layer.type || 'sine'
+        osc.frequency.value = preset.root * Math.pow(2, semitone / 12)
+        osc.detune.value = layer.detune || 0
+        osc.connect(gain)
+        nodes.push(osc)
+        return osc
+      })
 
       if (layer.lfoRate) {
         const lfo = ctx.createOscillator()
@@ -345,13 +482,19 @@ export class MusicEngine {
         const lfoGain = ctx.createGain()
         lfoGain.gain.value = layer.lfoDepth || 0
         lfo.connect(lfoGain)
-        lfoGain.connect(osc.frequency)
+        // Sweep the filter if there is one (a moving timbre reads as "alive"),
+        // otherwise gently bend the first oscillator.
+        if (filter) {
+          lfoGain.connect(filter.frequency)
+        } else if (oscs[0]) {
+          lfoGain.connect(oscs[0].frequency)
+        }
         lfo.start()
         nodes.push(lfo, lfoGain)
       }
 
-      osc.start()
-      this._pads.add({ osc, nodes })
+      for (const osc of oscs) osc.start()
+      this._pads.add({ oscs, nodes })
     }
   }
 
@@ -388,10 +531,12 @@ export class MusicEngine {
     this._voices.clear()
 
     for (const pad of Array.from(this._pads)) {
-      try {
-        pad.osc.stop()
-      } catch {
-        /* ignore */
+      for (const osc of pad.oscs || []) {
+        try {
+          osc.stop()
+        } catch {
+          /* ignore */
+        }
       }
       for (const n of pad.nodes) {
         try {
@@ -414,13 +559,29 @@ export class MusicEngine {
         /* ignore */
       }
     }
+    for (const node of [this._tone, this._comp]) {
+      try {
+        node?.disconnect()
+      } catch {
+        /* ignore */
+      }
+    }
     this.master = null
+    this._tone = null
+    this._comp = null
     this.context = null
     this._eventsByStep = null
     this.volume = 0.7
+    this._gen = 0
     this.listeners.clear()
     this._snapshot = null
   }
+}
+
+function presetRootFreq(presetId, semitone) {
+  const preset = getPreset(presetId)
+  const root = preset ? preset.root : 440
+  return root * Math.pow(2, semitone / 12)
 }
 
 function buildEventsByStep(preset) {

@@ -2,7 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import Guitar from './components/Guitar'
 import AudioEngine from './components/AudioEngine'
+import FocusSessions from './components/FocusSessions'
+import LocalPlaylist from './components/LocalPlaylist'
 import MusicControls from '../../audio/MusicControls'
+
+const TABS = [
+  { id: 'guitar', label: 'Guitar' },
+  { id: 'focus', label: 'Focus Session' },
+  { id: 'music', label: 'My Music' },
+]
 
 // Minimal inline guitar silhouette icon
 function GuitarIcon({ size = 64, className = '' }) {
@@ -37,17 +45,31 @@ function GuitarIcon({ size = 64, className = '' }) {
 
 export default function MusicLab({ navigate }) {
   const audioEngineRef = useRef(null)
+  const loadTimerRef = useRef(null)
+  const mountedRef = useRef(true)
+  const [activeTab, setActiveTab] = useState('guitar')
   const [isLoading, setIsLoading] = useState(true)
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [audioError, setAudioError] = useState(null)
   const [needsUserGesture, setNeedsUserGesture] = useState(false)
 
   useEffect(() => {
-    // Create AudioEngine instance but don't initialize yet
-    // (AudioContext must be created after user gesture)
-    audioEngineRef.current = new AudioEngine()
+    mountedRef.current = true
+    // Create the AudioEngine instance but don't initialize it yet (the
+    // AudioContext must be created after a user gesture). Guard against
+    // React StrictMode's double-invoked effect by reusing any existing
+    // instance, and dispose on unmount so no second context leaks.
+    if (!audioEngineRef.current) {
+      audioEngineRef.current = new AudioEngine()
+    }
     setNeedsUserGesture(true)
     setIsLoading(false)
+    return () => {
+      mountedRef.current = false
+      if (loadTimerRef.current) clearTimeout(loadTimerRef.current)
+      audioEngineRef.current?.dispose?.()
+      audioEngineRef.current = null
+    }
   }, [])
 
   const handleEnableAudio = async () => {
@@ -59,8 +81,10 @@ export default function MusicLab({ navigate }) {
     try {
       // Initialize audio with real progress tracking
       const result = await audioEngineRef.current.init((loaded, total) => {
-        setLoadingProgress(Math.round((loaded / total) * 100))
+        if (mountedRef.current) setLoadingProgress(Math.round((loaded / total) * 100))
       })
+
+      if (!mountedRef.current) return
 
       if (!result.success) {
         setAudioError(result.error || 'Failed to initialize audio')
@@ -69,10 +93,11 @@ export default function MusicLab({ navigate }) {
       }
 
       setLoadingProgress(100)
-      setTimeout(() => {
-        setIsLoading(false)
+      loadTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) setIsLoading(false)
       }, 300)
     } catch (error) {
+      if (!mountedRef.current) return
       setAudioError(error.message || 'Unexpected error loading audio')
       setIsLoading(false)
     }
@@ -85,8 +110,21 @@ export default function MusicLab({ navigate }) {
   // Initial state: Show "Enable Audio" overlay
   if (needsUserGesture) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 flex flex-col">
-        <header className="relative z-20 pt-12 pb-6 px-6">
+      <div className="relative min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 flex flex-col overflow-hidden">
+        {/* Render the guitar behind the call-to-action so the instrument is
+            actually visible on first load instead of a near-black screen. It is
+            inert (no pointer events) until the user enables audio. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-24 hidden sm:flex justify-center opacity-80"
+        >
+          <div className="w-full max-w-[1400px] px-6">
+            <Guitar audioEngine={audioEngineRef.current} />
+          </div>
+        </div>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-neutral-950/50" />
+
+        <header className="relative z-10 pt-12 pb-6 px-6">
           <div className="max-w-6xl mx-auto">
             <button
               onClick={handleBack}
@@ -111,14 +149,14 @@ export default function MusicLab({ navigate }) {
           </div>
         </header>
 
-        <main className="flex-1 flex items-center justify-center px-6 pb-12">
+        <main className="relative z-10 flex-1 flex items-center justify-center px-6 pb-12">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-md"
+            className="text-center max-w-md rounded-3xl border border-neutral-800/70 bg-neutral-950/75 backdrop-blur-sm px-8 py-10 shadow-2xl shadow-black/40"
           >
-            <GuitarIcon size={72} className="mx-auto mb-8 opacity-80" />
+            <GuitarIcon size={64} className="mx-auto mb-6 opacity-80" />
             <h2 className="text-2xl font-bold text-neutral-200 mb-4">
               Ready to Play
             </h2>
@@ -128,6 +166,7 @@ export default function MusicLab({ navigate }) {
             </p>
             <button
               onClick={handleEnableAudio}
+              data-testid="enable-audio"
               className="px-8 py-4 bg-gradient-to-r from-primary-500 to-accent-400 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-primary-500/30 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
             >
               Enable Audio
@@ -240,17 +279,56 @@ export default function MusicLab({ navigate }) {
               Music Lab
             </h1>
             <p className="text-base text-neutral-500 max-w-lg hidden sm:block">
-              Click or drag across the strings to play
+              Play the guitar, run a focus session, or bring your own music
             </p>
             <p className="text-base text-neutral-500 max-w-lg sm:hidden">
-              Open on a larger screen to play
+              Play the guitar, focus, or bring your own music
             </p>
           </motion.div>
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-6 pb-4">
-        <Guitar audioEngine={audioEngineRef.current} />
+      <div className="relative z-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div role="tablist" aria-label="Music Lab sections" className="flex flex-wrap gap-2 border-b border-neutral-800 pb-3">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                id={`musiclab-tab-${tab.id}`}
+                aria-selected={activeTab === tab.id}
+                aria-controls={`musiclab-panel-${tab.id}`}
+                data-testid={`musiclab-tab-${tab.id}`}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 text-sm rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 ${
+                  activeTab === tab.id
+                    ? 'bg-primary-500/20 text-primary-100'
+                    : 'text-neutral-400 hover:text-neutral-100 hover:bg-neutral-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <main className="flex-1 px-6 pt-6 pb-4">
+        <div
+          id={`musiclab-panel-${activeTab}`}
+          role="tabpanel"
+          aria-labelledby={`musiclab-tab-${activeTab}`}
+          className="max-w-6xl mx-auto"
+        >
+          {activeTab === 'guitar' && (
+            <div className="flex items-center justify-center">
+              <Guitar audioEngine={audioEngineRef.current} />
+            </div>
+          )}
+          {activeTab === 'focus' && <FocusSessions />}
+          {activeTab === 'music' && <LocalPlaylist />}
+        </div>
       </main>
 
       {/* Preset player — the same shared engine DeepPet controls */}
