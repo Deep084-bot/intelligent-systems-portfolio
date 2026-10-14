@@ -68,36 +68,46 @@ export function useCosmosScroll() {
 
   useEffect(() => {
     let rafId
+    let last = performance.now()
 
-    function update() {
+    function update(now) {
+      // Advance by elapsed time rather than per-frame so the journey feels (and
+      // times) the same regardless of the renderer's frame rate — the scene is
+      // heavy enough that a fixed per-frame step made the ending unreachable on
+      // slower devices.
+      const dt = Math.min(50, now - last)
+      last = now
+      const k = dt / (1000 / 60)
+
       const current = progressRef.current
       const target = targetRef.current
       const diff = target - current
       let velocity = velocityRef.current
 
       if (Math.abs(diff) > SNAP_THRESHOLD) {
-        velocity += Math.sign(diff) * ACCELERATION * Math.min(Math.abs(diff) * 3, 1)
-        velocity *= FRICTION
+        velocity += Math.sign(diff) * ACCELERATION * Math.min(Math.abs(diff) * 3, 1) * k
+        velocity *= Math.pow(FRICTION, k)
         velocity = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, velocity))
 
         if (Math.sign(velocity) !== Math.sign(diff) && Math.abs(velocity) > Math.abs(diff) * 0.5) {
           velocity = Math.sign(diff) * Math.abs(diff) * 0.3
         }
 
-        progressRef.current = Math.max(0, Math.min(1, current + velocity))
+        let next = current + velocity * k
+        if ((diff > 0 && next > target) || (diff < 0 && next < target)) next = target
+        progressRef.current = Math.max(0, Math.min(1, next))
       } else {
-        velocity *= 0.85
+        velocity *= Math.pow(0.85, k)
         if (Math.abs(velocity) < 0.0001) {
           progressRef.current = target
           velocity = 0
         } else {
-          progressRef.current = Math.max(0, Math.min(1, current + velocity))
+          progressRef.current = Math.max(0, Math.min(1, current + velocity * k))
         }
       }
 
       velocityRef.current = velocity
 
-      const now = performance.now()
       if (now - lastStateUpdate.current > STATE_UPDATE_INTERVAL) {
         setProgressState(progressRef.current)
         lastStateUpdate.current = now
