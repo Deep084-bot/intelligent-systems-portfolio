@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import aiRouter from './routes/ai.js';
+import petRouter from './routes/pet.js';
 import contactRouter from './routes/contact.js';
 import leetcodeRouter from './routes/leetcode.js';
 import projectsRouter from './routes/projects.js';
@@ -26,6 +27,7 @@ app.use(express.json({ limit: '64kb' }));
 app.use(rateLimitMiddleware);
 
 app.use('/api/ai', aiRouter);
+app.use('/api/ai', petRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/leetcode', leetcodeRouter);
 app.use('/api/projects', projectsRouter);

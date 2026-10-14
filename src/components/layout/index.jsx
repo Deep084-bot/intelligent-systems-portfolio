@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '../../utils';
 import { NAVBAR_HEIGHT, Z_INDEX } from '../../constants';
 
-export const Navbar = ({ className, ...props }) => {
+export const Navbar = ({ className, onNavigate, ...props }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
@@ -14,14 +14,19 @@ export const Navbar = ({ className, ...props }) => {
     { label: 'Telemetry', href: '#leetcode' },
     { label: 'Projects', href: '#projects' },
     { label: 'AI', href: '#ai-assistant' },
+    { label: 'DeepVerse', href: '/deepverse' },
     { label: 'Contact', href: '#contact' },
   ];
 
-  const handleScrollTo = (href) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsMenuOpen(false);
+  const handleNavClick = (href) => {
+    setIsMenuOpen(false);
+    if (href.startsWith('/')) {
+      if (onNavigate) onNavigate(href);
+    } else {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
@@ -40,7 +45,7 @@ export const Navbar = ({ className, ...props }) => {
           href="#hero"
           onClick={(e) => {
             e.preventDefault();
-            handleScrollTo('#hero');
+            handleNavClick('#hero');
           }}
           className="font-bold text-lg text-gradient hover:opacity-80 transition"
         >
@@ -52,7 +57,7 @@ export const Navbar = ({ className, ...props }) => {
           {navItems.map((item) => (
             <button
               key={item.href}
-              onClick={() => handleScrollTo(item.href)}
+              onClick={() => handleNavClick(item.href)}
               className="text-neutral-400 hover:text-neutral-100 text-sm font-medium transition-colors"
             >
               {item.label}
@@ -86,7 +91,7 @@ export const Navbar = ({ className, ...props }) => {
             {navItems.map((item) => (
               <button
                 key={item.href}
-                onClick={() => handleScrollTo(item.href)}
+                onClick={() => handleNavClick(item.href)}
                 className="block w-full text-left px-4 py-2 text-neutral-400 hover:text-neutral-100 hover:bg-neutral-700 rounded transition"
               >
                 {item.label}
