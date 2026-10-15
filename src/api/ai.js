@@ -88,9 +88,12 @@ async function request(path, payload, parentSignal) {
   }
 }
 
-// Portfolio assistant (unchanged contract).
-export function chat(question, history = [], parentSignal = null) {
-  return request('/api/ai/chat', { question, history }, parentSignal);
+// Portfolio assistant (contract unchanged; `conversationId` is an optional
+// continuity locator, not a credential).
+export function chat(question, history = [], parentSignal = null, conversationId = null) {
+  const payload = { question, history };
+  if (conversationId) payload.conversationId = conversationId;
+  return request('/api/ai/chat', payload, parentSignal);
 }
 
 // DeepPet companion — persona-scoped endpoint, same transport and error shape.

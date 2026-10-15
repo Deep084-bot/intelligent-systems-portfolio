@@ -245,20 +245,15 @@ export default function createGroqProvider({ apiKey = null, name = 'groq' } = {}
           total_tokens: rawTokens, content_length: rawContentLen, has_choices: !!j?.choices?.length,
         }));
 
-        // Log full response details for debugging (non-sensitive parts)
-        const respPreview = (() => {
-          try {
-            return j?.choices?.[0]?.message?.content?.slice(0, 120) || String(JSON.stringify(j)).slice(0, 120);
-          } catch (e) { return null; }
-        })();
-
         circuitBreaker.recordSuccess();
         const latencyMs = Date.now() - start;
         const normalized = normalizeResp(j);
+        // NOTE: the model's answer text is user-visible and may echo user-
+        // provided details, so it is NOT logged. Only its length is recorded.
         console.log(JSON.stringify({
           event: 'provider_success', provider: 'groq', model: rawModel, latencyMs,
           attempt, requestId, provider_latency_ms: latencyMs, provider_call_ms: providerCallMs,
-          groq_request_id: groqRequestId, response_preview: respPreview,
+          groq_request_id: groqRequestId,
           reply_length: normalized?.text?.length ?? 0, tokens_used: normalized?.tokensUsed ?? 0,
         }));
 

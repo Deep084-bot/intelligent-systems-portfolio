@@ -3,13 +3,28 @@ import { detectCategory } from '../classifiers/index.js';
 import { retrieveRelevantContext } from '../retrieval/index.js';
 import { buildPrompt } from '../prompt/builder.js';
 import { getProvider } from '../aiProviders/index.js';
-import { DEFAULT_MODEL as GROQ_DEFAULT_MODEL } from '../aiProviders/groq.js';
+import { assembleMemory } from '../memory/assemble.js';
+import { CONTEXT_BUDGET } from '../prompt/budget.js';
+import {
+  ownerMemoryEnabled,
+  requestOwner,
+  OWNER_MUTATION_DISABLED_MESSAGE,
+  OWNER_INSPECT_DISABLED_MESSAGE,
+} from '../memory/access.js';
+import { parseMemoryCommand } from '../memory/commands.js';
+import { executeMemoryCommand } from '../memory/service.js';
+import { analyzeQuestion, SCOPE_REFUSAL } from '../prompt/scope.js';
+import {
+  newConversationId,
+  isConversationId,
+  loadConversation,
+  getRecentTurns,
+  appendExchange,
+} from '../memory/conversation.js';
 
 const router = express.Router();
 const REQUEST_TIMEOUT_MS = 60_000; // temporarily extended for connectivity debugging
-
-// Resolve Groq model from the centralized provider config (single source of truth)
-const groqModel = () => process.env.GROQ_MODEL || GROQ_DEFAULT_MODEL;
+const CONTROL_RE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 
 function safeJson(res, status, data) {
   if (res.headersSent) return;
@@ -20,15 +35,34 @@ function toErrorPayload(statusCode, message, requestId) {
   return { success: false, status: statusCode, message, requestId };
 }
 
-function normalizeHistory(history) {
+export function normalizeHistory(history, question = '') {
   if (!Array.isArray(history)) return [];
-  return history
+  let items = history
     .filter(m => m && typeof m === 'object')
     .map(m => ({
       role: ['system', 'user', 'assistant'].includes(m.role) ? m.role : 'user',
-      content: String(m.content ?? m.text ?? ''),
+      content: String(m.content ?? m.text ?? '').replace(CONTROL_RE, ' ').trim(),
     }))
-    .filter(m => m.content.trim().length > 0);
+    .filter(m => m.content.length > 0);
+
+  // Defense-in-depth: the client may include the current turn in history while
+  // also sending it as `question`; drop a trailing duplicate so the model does
+  // not see the same user message twice.
+  const qTrim = String(question || '').trim();
+  const last = items[items.length - 1];
+  if (qTrim && last && last.role === 'user' && last.content === qTrim) items = items.slice(0, -1);
+
+  // Bound both the number of turns and their total size.
+  items = items.slice(-CONTEXT_BUDGET.historyMessages);
+  const bounded = [];
+  let total = 0;
+  for (let i = items.length - 1; i >= 0; i--) {
+    const content = items[i].content.slice(0, CONTEXT_BUDGET.historyMessageChars);
+    if (total + content.length > CONTEXT_BUDGET.historyTotalChars) break;
+    bounded.unshift({ role: items[i].role, content });
+    total += content.length;
+  }
+  return bounded;
 }
 
 function errorStatus(err) {
@@ -66,6 +100,66 @@ router.post('/chat', async (req, res) => {
       return safeJson(res, 400, toErrorPayload(400, 'Please provide a question.', reqId));
     }
 
+    /*
+     * Explicit memory commands are handled deterministically and NEVER reach the
+     * model, so the model can neither mutate memory nor fabricate a write. Owner
+     * memory is owner-only and this app has no authentication, so for public
+     * traffic we explain that we won't read/write it rather than doing so. A
+     * trusted deployment (opt-in + verified owner identity) has commands run
+     * through the internal service.
+     */
+    const memoryCommand = parseMemoryCommand(question);
+    if (memoryCommand) {
+      const ownerNamespace = ownerMemoryEnabled() ? requestOwner(req) : null;
+      if (!ownerNamespace) {
+        clearTimeout(timeoutHandle);
+        const answer = memoryCommand.type === 'inspect'
+          ? OWNER_INSPECT_DISABLED_MESSAGE
+          : OWNER_MUTATION_DISABLED_MESSAGE;
+        console.log(JSON.stringify({ event: 'memory_command_refused', id: logMeta.id, requestId: reqId, action: memoryCommand.type }));
+        return safeJson(res, 200, { success: true, command: true, answer, requestId: reqId });
+      }
+      const outcome = await executeMemoryCommand(ownerNamespace, memoryCommand);
+      clearTimeout(timeoutHandle);
+      console.log(JSON.stringify({
+        event: 'memory_command', id: logMeta.id, requestId: reqId,
+        action: memoryCommand.type, ok: outcome.ok, code: outcome.code || null,
+      }));
+      return safeJson(res, 200, { success: true, command: true, answer: outcome.message, requestId: reqId });
+    }
+
+    /*
+     * Scope + language intent (P5). Deterministic, no model call. A clearly
+     * unrelated general-knowledge request is declined here (so it never reaches
+     * the provider); everything else proceeds and the model receives the
+     * behavior directives plus a short per-question language directive.
+     */
+    const analysis = analyzeQuestion(question);
+    if (analysis.scope === 'out_of_scope') {
+      clearTimeout(timeoutHandle);
+      console.log(JSON.stringify({ event: 'chat_scope_refusal', id: logMeta.id, requestId: reqId }));
+      return safeJson(res, 200, { success: true, answer: SCOPE_REFUSAL, declined: true, requestId: reqId });
+    }
+
+    /*
+     * Conversation continuity (P4). This app has no authentication, so a
+     * conversation is only read/persisted for a VERIFIED owner identity
+     * (requestOwner, set by trusted middleware in a secured deployment). A
+     * client-supplied conversationId is a locator, never proof of ownership, so
+     * anonymous traffic never reads or writes owner conversations.
+     */
+    const ownerNs = requestOwner(req);
+    let conversationId = null;
+    let persistedConversation = null;
+    let conversationStorageDown = false;
+    if (ownerNs) {
+      const requested = req.body && req.body.conversationId;
+      conversationId = isConversationId(requested) ? requested : newConversationId();
+      const loaded = await loadConversation(ownerNs, conversationId);
+      if (loaded.ok) persistedConversation = loaded.conversation;
+      else conversationStorageDown = true;
+    }
+
     let provider;
     try {
       provider = getProvider();
@@ -94,25 +188,66 @@ router.post('/chat', async (req, res) => {
     const retrievalMs = Date.now() - retrievalStart;
 
     const contextStr = (ctx && ctx.context) || '';
+
+    // Persistent memory is OWNER-ONLY. It is assembled only for a request that
+    // carries a verified owner identity (trusted middleware -> requestOwner).
+    // Anonymous requests never receive owner profile facts, project-memory
+    // records, or stored conversations; they still get the static portfolio
+    // context from retrieval above. projectId from the client is a
+    // shape-validated hint only, never authentication. Any failure degrades to
+    // no memory.
+    let memory = { block: '', hasMemory: false, degraded: false, project: null, projectMatch: null };
+    if (ownerNs) {
+      try {
+        memory = await assembleMemory({
+          namespace: ownerNs,
+          question,
+          category,
+          projectId: req.body?.projectId,
+          conversationId,
+        });
+      } catch (memErr) {
+        console.error(JSON.stringify({
+          event: 'memory_assemble_failed', requestId: reqId,
+          msg: String(memErr?.message || 'unknown').slice(0, 200),
+        }));
+        memory = { block: '', hasMemory: false, degraded: true, project: null, projectMatch: null };
+      }
+    }
+
     const promptBuildStart = Date.now();
-    const systemPrompt = buildPrompt(contextStr);
+    const systemPrompt = buildPrompt(contextStr, memory.block || '', analysis.directive || '');
     const promptBuildMs = Date.now() - promptBuildStart;
 
-    // keep history trimmed to recent turns to limit prompt size and latency
-    const normalizedHistory = normalizeHistory(history).slice(-6);
+    // Recent turns for the provider. For a verified owner with a persisted
+    // conversation, the stored turns are authoritative (they survive refresh and
+    // already exclude the current question); otherwise use the bounded client
+    // history, which is the only context anonymous visitors have.
+    const normalizedHistory = (ownerNs && persistedConversation)
+      ? getRecentTurns(persistedConversation)
+      : normalizeHistory(history, question);
 
-    // DEBUG: log the exact system prompt and user message the model will see
-    const debugMessages = `[SYS] ${systemPrompt.slice(0, 1000)}...[HIST] ${normalizedHistory.length} msgs[Q] ${question.slice(0, 200)}`;
+    // Debug log: sizes and flags only. Never log the user's question text,
+    // memory, conversation, or prompt contents.
     console.log(JSON.stringify({
       event: 'chat_request', id: logMeta.id, requestId: reqId,
       category, contextSize: contextStr.length,
       systemPromptSize: systemPrompt.length,
-      systemPromptHead: systemPrompt.slice(0, 500),
-      systemPromptTail: systemPrompt.slice(-200),
       historyLen: normalizedHistory.length,
-      questionPreview: question.slice(0, 200),
-      containsIIIT: systemPrompt.includes('IIIT Vadodara'),
-      containsDirectAnswer: systemPrompt.includes('Always answer directly'),
+      questionChars: question.length,
+      memory: {
+        owner: !!ownerNs,
+        hasMemory: memory.hasMemory === true,
+        degraded: memory.degraded === true,
+        memoryChars: (memory.block || '').length,
+        projectMatch: memory.projectMatch || null,
+      },
+      conversation: {
+        owner: !!ownerNs,
+        idSet: !!conversationId,
+        hasPersisted: !!persistedConversation,
+        storageDown: conversationStorageDown,
+      },
     }));
 
     try {
@@ -134,7 +269,41 @@ router.post('/chat', async (req, res) => {
         return safeJson(res, 200, {
           success: true, message: 'I received your question but generated an empty response. Please try rephrasing.',
           requestId: reqId,
+          ...(conversationId ? { conversationId } : {}),
         });
+      }
+
+      // Persist the exchange ONLY now that the reply succeeded. This keeps retry
+      // behaviour from double-writing (failed attempts store nothing) and never
+      // duplicates the current user message. Best-effort: a persistence failure
+      // never fails the response, and is reported truthfully via `conversation`.
+      let conversation = conversationId ? { id: conversationId, persisted: false } : null;
+      if (ownerNs && conversationId && !conversationStorageDown) {
+        try {
+          const saved = await appendExchange(ownerNs, conversationId, {
+            userText: question,
+            assistantText: answer,
+            projectId: (persistedConversation && persistedConversation.projectId) || req.body?.projectId,
+          });
+          if (saved.ok) {
+            conversation = {
+              id: conversationId,
+              persisted: true,
+              // Honest durability: true only when the durable backend stored it.
+              // When Upstash was unavailable and the store fell back to ephemeral
+              // memory, `durable` is false (and `degraded` is set).
+              durable: saved.durable === true,
+              ...(saved.degraded ? { degraded: true } : {}),
+              turns: saved.turns,
+              folded: saved.folded || 0,
+              summaryVia: saved.via || 'none',
+            };
+          } else {
+            console.error(JSON.stringify({ event: 'conversation_persist_failed', id: logMeta.id, requestId: reqId, error: saved.error || 'unknown' }));
+          }
+        } catch (persistErr) {
+          console.error(JSON.stringify({ event: 'conversation_persist_error', id: logMeta.id, requestId: reqId, msg: String(persistErr?.message || 'unknown').slice(0, 200) }));
+        }
       }
 
       const providerLatency = result?.latencyMs || 0;
@@ -144,12 +313,13 @@ router.post('/chat', async (req, res) => {
         answerLen: answer.length, provider_latency_ms: providerLatency,
         retrieval_latency_ms: retrievalMs, prompt_build_ms: promptBuildMs,
         total_request_ms: totalMs,
+        conversation: conversation ? { persisted: conversation.persisted === true, durable: conversation.durable === true, folded: conversation.folded || 0 } : null,
       }));
 
       // lightweight performance metric event
       console.log(JSON.stringify({ event: 'metric', provider_latency_ms: providerLatency, retrieval_latency_ms: retrievalMs, total_request_ms: totalMs }));
 
-      safeJson(res, 200, { success: true, answer, requestId: reqId });
+      safeJson(res, 200, { success: true, answer, requestId: reqId, ...(conversation ? { conversationId, conversation } : {}) });
     } catch (err) {
       clearTimeout(timeoutHandle);
       if (res.headersSent) return;
@@ -183,160 +353,6 @@ router.get('/status', (req, res) => {
     uptime: Math.floor(process.uptime()),
     providerConfigured: !!process.env.GROQ_API_KEY || !!process.env.GEMINI_API_KEY,
   });
-});
-
-// Connectivity test endpoint (raw provider connectivity debugging)
-router.get('/test', async (req, res) => {
-  const start = Date.now();
-  const requestId = Math.random().toString(36).slice(2, 10);
-  console.log(JSON.stringify({ event: 'provider_connectivity_test_start', requestId }));
-
-  const apiHost = 'api.groq.com';
-  const apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
-  const key = process.env.GROQ_API_KEY || null;
-
-  // helper to respond in a single place
-  function respond(status, body) {
-    if (res.headersSent) return;
-    res.status(status).json(body);
-  }
-
-  // DNS lookup
-  try {
-    const dns = await import('dns');
-    const { promises: dnsPromises } = dns;
-    const lookupStart = Date.now();
-    let addr = null;
-    try {
-      const r = await dnsPromises.lookup(apiHost);
-      addr = r.address;
-      console.log(JSON.stringify({ event: 'dns_lookup', requestId, host: apiHost, address: addr, durationMs: Date.now() - lookupStart }));
-    } catch (e) {
-      console.error(JSON.stringify({ event: 'dns_error', requestId, host: apiHost, msg: e.message }));
-      // continue to allow fetch to reveal error too
-    }
-  } catch (e) {
-    console.error(JSON.stringify({ event: 'dns_module_unavailable', msg: e.message }));
-  }
-
-  // TCP connect test
-  try {
-    const net = await import('net');
-    const socket = new net.Socket();
-    const connectStart = Date.now();
-    const connTimeout = 5000;
-    let connected = false;
-    await new Promise((resolve) => {
-      socket.setTimeout(connTimeout);
-      socket.once('error', (err) => {
-        console.error(JSON.stringify({ event: 'tcp_connect_error', requestId, msg: err.message }));
-        socket.destroy();
-        resolve();
-      });
-      socket.once('timeout', () => {
-        console.error(JSON.stringify({ event: 'tcp_connect_timeout', requestId, host: apiHost }));
-        socket.destroy();
-        resolve();
-      });
-      socket.connect(443, apiHost, () => {
-        connected = true;
-        const ms = Date.now() - connectStart;
-        console.log(JSON.stringify({ event: 'tcp_connect', requestId, host: apiHost, durationMs: ms }));
-        socket.end();
-        resolve();
-      });
-    });
-  } catch (e) {
-    console.error(JSON.stringify({ event: 'tcp_test_failure', requestId, msg: e.message }));
-  }
-
-  // If no API key, return early
-  if (!key) {
-    console.error(JSON.stringify({ event: 'provider_connectivity_test_no_key', requestId }));
-    return respond(400, { ok: false, error: 'GROQ_API_KEY not configured', requestId });
-  }
-
-  // Increase timeout for connectivity test
-  const controller = new AbortController();
-  const timeoutMs = 60_000;
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  // Try groq-sdk first if available
-  try {
-    let Groq = null;
-    try {
-      const mod = await import('groq-sdk');
-      Groq = mod.default || mod.Groq || mod;
-    } catch (e) {
-      console.log(JSON.stringify({ event: 'groq_sdk_missing', requestId, msg: e.message }));
-    }
-
-    if (Groq) {
-      try {
-        console.log(JSON.stringify({ event: 'groq_sdk_init', requestId }));
-        const sdk = new Groq({ apiKey: key });
-        console.log(JSON.stringify({ event: 'groq_sdk_ready', requestId }));
-        // send minimal request
-        console.log(JSON.stringify({ event: 'groq_sdk_request_start', requestId }));
-        const reqStart = Date.now();
-        // Attempt to call compatible API — many SDKs map to openai-like methods; try common patterns
-        let sdkResp = null;
-        if (typeof sdk.chat === 'object' && typeof sdk.chat.completions?.create === 'function') {
-          sdkResp = await sdk.chat.completions.create({ model: groqModel(), messages: [{ role: 'user', content: 'ping' }] });
-        } else if (typeof sdk.chatCompletion === 'function') {
-          sdkResp = await sdk.chatCompletion({ model: groqModel(), messages: [{ role: 'user', content: 'ping' }] });
-        } else if (typeof sdk.createCompletion === 'function') {
-          // fallback
-          sdkResp = await sdk.createCompletion({ model: groqModel(), messages: [{ role: 'user', content: 'ping' }] });
-        } else if (typeof sdk.request === 'function') {
-          sdkResp = await sdk.request({ method: 'POST', path: '/openai/v1/chat/completions', body: { model: groqModel(), messages: [{ role: 'user', content: 'ping' }] } });
-        } else {
-          console.log(JSON.stringify({ event: 'groq_sdk_unknown_api', requestId }));
-        }
-        const sdkMs = Date.now() - reqStart;
-        clearTimeout(timeoutId);
-        console.log(JSON.stringify({ event: 'groq_sdk_response', requestId, durationMs: sdkMs }));
-        // attempt to extract text
-        let respText = '';
-        try { respText = (sdkResp?.choices?.[0]?.message?.content) || JSON.stringify(sdkResp).slice(0, 200); } catch (e) { respText = String(sdkResp).slice(0, 200); }
-        return respond(200, { ok: true, via: 'sdk', durationMs: sdkMs, preview: String(respText).slice(0, 100), requestId, raw: typeof sdkResp === 'object' ? Object.keys(sdkResp).slice(0,5) : null });
-      } catch (sdkErr) {
-        console.error(JSON.stringify({ event: 'groq_sdk_error', requestId, msg: sdkErr.message?.slice(0,300) }));
-        // fallthrough to raw fetch test
-      }
-    }
-  } catch (e) {
-    console.error(JSON.stringify({ event: 'groq_sdk_import_failed', requestId, msg: e.message }));
-  }
-
-  // Raw fetch fallback
-  try {
-    console.log(JSON.stringify({ event: 'groq_raw_fetch_start', requestId }));
-    const fetchStart = Date.now();
-    const resp = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: groqModel(), messages: [{ role: 'user', content: 'ping' }] }),
-      signal: controller.signal,
-    });
-    const fetchMs = Date.now() - fetchStart;
-    let j = null;
-    try { j = await resp.json(); } catch (e) { j = null; }
-    clearTimeout(timeoutId);
-
-    const groqRequestId = resp.headers.get('x-request-id') || resp.headers.get('request-id') || null;
-    console.log(JSON.stringify({ event: 'groq_raw_fetch_end', requestId, status: resp.status, groq_request_id: groqRequestId, fetchMs }));
-
-    const preview = j ? (j.choices?.[0]?.message?.content || JSON.stringify(j).slice(0,100)) : null;
-    return respond(resp.ok ? 200 : 502, { ok: resp.ok, status: resp.status, groqRequestId, durationMs: fetchMs, preview: preview ? String(preview).slice(0,100) : null, body: j });
-  } catch (e) {
-    clearTimeout(timeoutId);
-    // Determine error type
-    const errMsg = e?.message || String(e);
-    const errType = (e && e.code) ? e.code : (/(timeout|aborted|abort)/i.test(errMsg) ? 'AbortError/Timeout' : 'network');
-    console.error(JSON.stringify({ event: 'groq_raw_fetch_error', requestId, errType, msg: errMsg }));
-    return respond(502, { ok: false, error: errMsg, errType, requestId });
-  }
 });
 
 export default router;
