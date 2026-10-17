@@ -16,6 +16,16 @@ import DecisionLab from './experiences/components/DecisionLab'
 import TradeoffLab from './tradeoffs/components/TradeoffLab'
 import DebuggingLab from './debugging/components/DebuggingLab'
 import ReviewArena from './review/components/ReviewArena'
+import AiLab from './labs/ai/AiLab'
+import MachineLearningLab from './labs/machine-learning/MachineLearningLab'
+import PerformanceLab from './labs/performance/PerformanceLab'
+import LearningLab from './labs/learning/LearningLab'
+import ProductThinkingLab from './labs/product-thinking/ProductThinkingLab'
+import ApiDesignLab from './labs/api-design/ApiDesignLab'
+import ScalabilityLab from './labs/scalability/ScalabilityLab'
+import SystemsThinkingLab from './labs/systems-thinking/SystemsThinkingLab'
+import DatabasesLab from './labs/databases/DatabasesLab'
+import DistributedSystemsLab from './labs/distributed-systems/DistributedSystemsLab'
 import useBrainStore, { DEBUG_EASTER_EGGS } from './store'
 
 const KONAMI_SEQ = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a']
@@ -124,7 +134,17 @@ export default function InsideMyMind() {
         {activeModule === 'tradeoffs' && <TradeoffLab key="tradeoff" onBack={handleBack} />}
         {activeModule === 'debugging' && <DebuggingLab key="debug" onBack={handleBack} />}
         {activeModule === 'architecture' && <ReviewArena key="review" onBack={handleBack} />}
-        {activeModule && activeModule !== 'problem-solving' && activeModule !== 'tradeoffs' && activeModule !== 'debugging' && activeModule !== 'architecture' && (
+        {activeModule === 'ai' && <AiLab key="ai" onBack={handleBack} />}
+        {activeModule === 'machine-learning' && <MachineLearningLab key="ml" onBack={handleBack} />}
+        {activeModule === 'performance' && <PerformanceLab key="perf" onBack={handleBack} />}
+        {activeModule === 'learning' && <LearningLab key="learning" onBack={handleBack} />}
+        {activeModule === 'product-thinking' && <ProductThinkingLab key="pt" onBack={handleBack} />}
+        {activeModule === 'api-design' && <ApiDesignLab key="api" onBack={handleBack} />}
+        {activeModule === 'scalability' && <ScalabilityLab key="scal" onBack={handleBack} />}
+        {activeModule === 'systems-thinking' && <SystemsThinkingLab key="sys" onBack={handleBack} />}
+        {activeModule === 'databases' && <DatabasesLab key="db" onBack={handleBack} />}
+        {activeModule === 'distributed-systems' && <DistributedSystemsLab key="dist" onBack={handleBack} />}
+        {activeModule && !['problem-solving','tradeoffs','debugging','architecture','ai','machine-learning','performance','learning','product-thinking','api-design','scalability','systems-thinking','databases','distributed-systems'].includes(activeModule) && (
           <ModulePlaceholder key="module" moduleId={activeModule} onBack={handleBack} />
         )}
       </AnimatePresence>
