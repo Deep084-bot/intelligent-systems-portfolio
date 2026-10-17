@@ -5,20 +5,18 @@ import petRouter from './routes/pet.js';
 import contactRouter from './routes/contact.js';
 import leetcodeRouter from './routes/leetcode.js';
 import projectsRouter from './routes/projects.js';
+import memoryRouter from './routes/memory.js';
 import rateLimitMiddleware from './middleware/rateLimit.js';
 
 const app = express();
 
-// Startup: log GROQ API key presence safely
-try {
-  const groqKey = process.env.GROQ_API_KEY || null;
-  const present = !!groqKey;
-  const prefix = groqKey ? groqKey.slice(0, 4) : null;
-  const len = groqKey ? groqKey.length : 0;
-  console.log(JSON.stringify({ event: 'startup_groq_key', loaded: present, key_prefix: prefix, key_length: len }));
-} catch (e) {
-  console.log(JSON.stringify({ event: 'startup_groq_key', loaded: false }));
-}
+// Startup: log provider credential PRESENCE only. Never log any part of the
+// key (a prefix or length is credential-derived metadata and must not leak).
+console.log(JSON.stringify({
+  event: 'startup_ai_provider',
+  groqConfigured: !!process.env.GROQ_API_KEY,
+  geminiConfigured: !!process.env.GEMINI_API_KEY,
+}));
 
 app.set('trust proxy', 1);
 app.use(cors());
@@ -31,6 +29,7 @@ app.use('/api/ai', petRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/leetcode', leetcodeRouter);
 app.use('/api/projects', projectsRouter);
+app.use('/api/memory', memoryRouter);
 
 // Global error handler — catches JSON parse failures and uncaught errors
 app.use((err, _req, res, _next) => {

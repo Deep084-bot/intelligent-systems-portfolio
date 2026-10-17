@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSanitize from 'rehype-sanitize';
+import { markdownSchema } from './markdownSchema';
 import useAI from '../../hooks/useAI';
 import { Copy, Check, Eraser, Send, Bot, RefreshCcw, Wifi, WifiOff } from 'lucide-react';
 
@@ -150,7 +151,7 @@ export default function ChatAssistant() {
           onClick={() => { reset(); setPending(false); setShowThinking(false); inputRef.current?.focus(); }}
           disabled={isBusy}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs text-neutral-400 hover:text-neutral-200 transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Reset conversation"
+          title="Start a new conversation"
         >
           <Eraser size={14} />
           Reset
@@ -183,7 +184,7 @@ export default function ChatAssistant() {
                     <div className="prose prose-invert prose-sm max-w-none prose-code:before:content-none prose-code:after:content-none prose-pre:p-0 prose-pre:bg-transparent prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeHighlight, rehypeSanitize]}
+                        rehypePlugins={[rehypeHighlight, [rehypeSanitize, markdownSchema]]}
                         components={{
                           code({ node, inline, className, children, ...props }) {
                             if (!inline && className) {

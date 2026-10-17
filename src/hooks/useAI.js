@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { chat } from '../api/ai';
+import { buildRequestHistory } from './history';
 
 const TYPING_CHUNK_SIZE = 5;
 const TYPING_INTERVAL_MS = 40;
@@ -14,6 +15,9 @@ export default function useAI() {
   const cancelledRef = useRef(false);
   const sendingRef = useRef(false);
   const debounceRef = useRef(null);
+  // Continuity locator returned by the server for a verified owner. Null for
+  // anonymous visitors (no server-side conversation), so nothing is persisted.
+  const conversationIdRef = useRef(null);
 
   const updateMessages = useCallback((fn) => {
     setMessages((prev) => {
@@ -46,6 +50,12 @@ export default function useAI() {
     cancelledRef.current = false;
     setError(null);
 
+    // Build history from prior turns only. The current question is always sent
+    // separately as `text`; including it here would duplicate it. This helper is
+    // computed BEFORE appending the current user message and also drops a
+    // trailing user turn matching `text` (covers `retry`).
+    const history = buildRequestHistory(messagesRef.current, text);
+
     if (!silent) {
       const userMsg = { role: 'user', text };
       updateMessages((prev) => [...prev, userMsg]);
@@ -56,12 +66,8 @@ export default function useAI() {
     abortRef.current = controller;
 
     try {
-      const history = messagesRef.current
-        .filter((m) => m.role === 'user' || (m.role === 'assistant' && m.text))
-        .slice(-6);
-
       console.log('[useAI] Sending request with history length:', history.length);
-      const result = await chat(text, history, controller.signal);
+      const result = await chat(text, history, controller.signal, conversationIdRef.current);
       console.log('[useAI] API result received:', result);
 
       // Defensive extraction: ensure answer is always a string
@@ -76,6 +82,12 @@ export default function useAI() {
         answer = result.data;
       } else if (result && typeof result === 'string') {
         answer = result;
+      }
+
+      // Adopt the server's conversation id (present only for a verified owner)
+      // so follow-up messages continue the same persisted conversation.
+      if (result && typeof result.conversationId === 'string' && result.conversationId) {
+        conversationIdRef.current = result.conversationId;
       }
 
       console.log('[useAI] Extracted answer:', { type: typeof answer, length: answer?.length || 0, preview: answer?.slice(0, 50) });
@@ -189,6 +201,9 @@ export default function useAI() {
     setLoading(false);
     setMessages([]);
     messagesRef.current = [];
+    // Start a NEW conversation. This does not delete any persisted history — the
+    // public UI has no destructive memory action.
+    conversationIdRef.current = null;
 
     // Allow new requests shortly after cancellation completes
     setTimeout(() => { cancelledRef.current = false; sendingRef.current = false; }, 50);

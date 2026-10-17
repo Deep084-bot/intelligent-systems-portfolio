@@ -21,6 +21,7 @@
     "framer-motion": "^10.16.4",
     "gray-matter": "^4.0.3",
     "groq-sdk": "^1.2.0",
+    "hast-util-sanitize": "^4.1.0",
     "html-to-image": "^1.11.11",
     "leetcode-query": "^2.0.1",
     "lucide-react": "^0.263.1",
@@ -43,6 +44,7 @@
     "@vitejs/plugin-react": "^4.0.3",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.24",
+    "puppeteer-core": "^23.11.1",
     "tailwindcss": "^3.3.0",
     "vite": "^4.4.5"
   }
