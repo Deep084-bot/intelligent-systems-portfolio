@@ -32,6 +32,7 @@ function saveProgress(state) {
       tradeoffProgress: state.tradeoffProgress,
       debuggingProgress: state.debuggingProgress,
       reviewProgress: state.reviewProgress,
+      labProgress: state.labProgress,
     }))
   } catch {}
 }
@@ -49,6 +50,18 @@ const useBrainStore = create((set, get) => ({
   tradeoffProgress: saved?.tradeoffProgress || {},
   debuggingProgress: saved?.debuggingProgress || {},
   reviewProgress: saved?.reviewProgress || {},
+  labProgress: saved?.labProgress || {
+    ai: {},
+    "machine-learning": {},
+    performance: {},
+    learning: {},
+    "product-thinking": {},
+    "api-design": {},
+    scalability: {},
+    "systems-thinking": {},
+    databases: {},
+    "distributed-systems": {},
+  },
   particlesEnabled: true,
   ambientGlow: true,
   reducedMotion: false,
@@ -255,6 +268,30 @@ const useBrainStore = create((set, get) => ({
     saveProgress(get())
   },
 
+
+  recordLabResult: (labId, scenarioId, score, meta = {}) => {
+    const { labProgress, achievements } = get()
+    const prev = labProgress[labId]?.[scenarioId]
+    const nextLabProgress = {
+      ...labProgress,
+      [labId]: {
+        ...labProgress[labId],
+        [scenarioId]: {
+          bestScore: prev ? Math.max(prev.bestScore, score) : score,
+          completed: true,
+          attempts: (prev?.attempts || 0) + 1,
+          meta,
+        },
+      },
+    }
+    let nextAchievements = achievements
+    // simple heuristic: award for completing first lab scenario if high score
+    if (score >= 90 && !achievements.includes('architect') && labId === 'architecture') {
+      // no architecture-specific lab; skip generic
+    }
+    set({ labProgress: nextLabProgress, achievements: nextAchievements })
+    saveProgress(get())
+  },
   incrementSession: () => {
     const { sessionCount } = get()
     set({ sessionCount: sessionCount + 1 })
@@ -271,6 +308,18 @@ const useBrainStore = create((set, get) => ({
       tradeoffProgress: {},
       debuggingProgress: {},
       reviewProgress: {},
+      labProgress: {
+        ai: {},
+        "machine-learning": {},
+        performance: {},
+        learning: {},
+        "product-thinking": {},
+        "api-design": {},
+        scalability: {},
+        "systems-thinking": {},
+        databases: {},
+        "distributed-systems": {},
+      },
       recentOpens: [],
       curiosityVisible: false,
     })
@@ -279,3 +328,8 @@ const useBrainStore = create((set, get) => ({
 }))
 
 export default useBrainStore
+
+
+export function useReducedMotion() {
+  return useBrainStore((state) => state.reducedMotion)
+}
