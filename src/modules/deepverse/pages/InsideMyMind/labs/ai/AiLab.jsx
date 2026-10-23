@@ -99,7 +99,7 @@ export default function AiLab({ onBack }) {
                   {current.choices.map((ch) => (
                     <button key={ch.id} onClick={() => handleChoose(ch.id)}
                       className="w-full text-left px-4 py-3 rounded-xl transition-all hover:translate-x-1 active:scale-[0.995]"
-                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', pointerEvents: 'auto', cursor: 'pointer' }}>
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-[13px] text-neutral-200">{ch.label}</span>
                         <span className="text-[10px] font-mono text-neutral-600">{ch.subtitle}</span>

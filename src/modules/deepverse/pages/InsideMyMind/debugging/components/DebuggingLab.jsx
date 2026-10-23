@@ -123,7 +123,7 @@ export default function DebuggingLab({ onBack }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="h-full px-6 py-5"
+                className="h-full overflow-y-auto px-6 py-5"
               >
                 {state.phase === PHASE.INCIDENT && <IncidentBrief scenario={scenario} onBegin={handleBegin} />}
                 {state.phase === PHASE.INVESTIGATE && (

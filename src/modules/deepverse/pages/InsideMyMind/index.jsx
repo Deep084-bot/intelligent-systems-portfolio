@@ -125,29 +125,33 @@ export default function InsideMyMind() {
 
       <ParticleBackground />
 
-      <NeuralGraph onSelectModule={handleSelectModule} />
+      {!activeModule && <NeuralGraph onSelectModule={handleSelectModule} />}
 
-      <HUD />
+      {!activeModule && <HUD />}
 
-      <AnimatePresence>
-        {activeModule === 'problem-solving' && <DecisionLab key="lab" onBack={handleBack} />}
-        {activeModule === 'tradeoffs' && <TradeoffLab key="tradeoff" onBack={handleBack} />}
-        {activeModule === 'debugging' && <DebuggingLab key="debug" onBack={handleBack} />}
-        {activeModule === 'architecture' && <ReviewArena key="review" onBack={handleBack} />}
-        {activeModule === 'ai' && <AiLab key="ai" onBack={handleBack} />}
-        {activeModule === 'machine-learning' && <MachineLearningLab key="ml" onBack={handleBack} />}
-        {activeModule === 'performance' && <PerformanceLab key="perf" onBack={handleBack} />}
-        {activeModule === 'learning' && <LearningLab key="learning" onBack={handleBack} />}
-        {activeModule === 'product-thinking' && <ProductThinkingLab key="pt" onBack={handleBack} />}
-        {activeModule === 'api-design' && <ApiDesignLab key="api" onBack={handleBack} />}
-        {activeModule === 'scalability' && <ScalabilityLab key="scal" onBack={handleBack} />}
-        {activeModule === 'systems-thinking' && <SystemsThinkingLab key="sys" onBack={handleBack} />}
-        {activeModule === 'databases' && <DatabasesLab key="db" onBack={handleBack} />}
-        {activeModule === 'distributed-systems' && <DistributedSystemsLab key="dist" onBack={handleBack} />}
-        {activeModule && !['problem-solving','tradeoffs','debugging','architecture','ai','machine-learning','performance','learning','product-thinking','api-design','scalability','systems-thinking','databases','distributed-systems'].includes(activeModule) && (
-          <ModulePlaceholder key="module" moduleId={activeModule} onBack={handleBack} />
-        )}
-      </AnimatePresence>
+      {activeModule && (
+        <div className="fixed inset-0 z-[9999] pointer-events-auto" style={{ isolation: 'isolate' }}>
+          <AnimatePresence>
+            {activeModule === 'problem-solving' && <DecisionLab key="lab" onBack={handleBack} />}
+            {activeModule === 'tradeoffs' && <TradeoffLab key="tradeoff" onBack={handleBack} />}
+            {activeModule === 'debugging' && <DebuggingLab key="debug" onBack={handleBack} />}
+            {activeModule === 'architecture' && <ReviewArena key="review" onBack={handleBack} />}
+            {activeModule === 'ai' && <AiLab key="ai" onBack={handleBack} />}
+            {activeModule === 'machine-learning' && <MachineLearningLab key="ml" onBack={handleBack} />}
+            {activeModule === 'performance' && <PerformanceLab key="perf" onBack={handleBack} />}
+            {activeModule === 'learning' && <LearningLab key="learning" onBack={handleBack} />}
+            {activeModule === 'product-thinking' && <ProductThinkingLab key="pt" onBack={handleBack} />}
+            {activeModule === 'api-design' && <ApiDesignLab key="api" onBack={handleBack} />}
+            {activeModule === 'scalability' && <ScalabilityLab key="scal" onBack={handleBack} />}
+            {activeModule === 'systems-thinking' && <SystemsThinkingLab key="sys" onBack={handleBack} />}
+            {activeModule === 'databases' && <DatabasesLab key="db" onBack={handleBack} />}
+            {activeModule === 'distributed-systems' && <DistributedSystemsLab key="dist" onBack={handleBack} />}
+            {!['problem-solving','tradeoffs','debugging','architecture','ai','machine-learning','performance','learning','product-thinking','api-design','scalability','systems-thinking','databases','distributed-systems'].includes(activeModule) && (
+              <ModulePlaceholder key="module" moduleId={activeModule} onBack={handleBack} />
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       <AnimatePresence>
         {curiosityOpen && <CuriosityPage key="curiosity" />}

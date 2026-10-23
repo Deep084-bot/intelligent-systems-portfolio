@@ -7,6 +7,7 @@ import { useCosmosAudio } from './hooks/useCosmosAudio'
 import JourneyWorld from './scenes/JourneyWorld'
 import CinematicEnding from './components/CinematicEnding'
 import { progressToMeters, metersToLabel } from './utils/scaleMapping'
+import { STAGE_WINDOWS } from './scenes/helpers'
 import { lerp, smoothstep } from './utils/lerp'
 
 // Camera keyframes — one framing per stage. The stages all live at the origin
@@ -133,6 +134,23 @@ export default function Cosmos({ navigate }) {
 
   const currentLabel = useMemo(() => {
     if (progress >= ENDING_AT - 0.01) return null
+    const windows = [
+      { w: STAGE_WINDOWS.human, label: 'You' },
+      { w: STAGE_WINDOWS.room, label: 'A Room' },
+      { w: STAGE_WINDOWS.building, label: 'A Building' },
+      { w: STAGE_WINDOWS.city, label: 'A City' },
+      { w: STAGE_WINDOWS.earth, label: 'Earth' },
+      { w: STAGE_WINDOWS.moon, label: 'The Moon' },
+      { w: STAGE_WINDOWS.sun, label: 'The Sun' },
+      { w: STAGE_WINDOWS.solar, label: 'The Solar System' },
+      { w: STAGE_WINDOWS.galaxy, label: 'The Milky Way' },
+      { w: STAGE_WINDOWS.universe, label: 'The Observable Universe' },
+    ]
+    for (let i = windows.length - 1; i >= 0; i--) {
+      const { w, label } = windows[i]
+      if (progress >= w[1] && progress <= w[2] + 0.01) return label
+    }
+    // fallback to thresholds
     let label = null
     for (const s of STAGE_LABELS) {
       if (progress < s.threshold) break

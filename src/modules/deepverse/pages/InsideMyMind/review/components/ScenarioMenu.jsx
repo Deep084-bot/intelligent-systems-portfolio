@@ -8,7 +8,7 @@ export default function ScenarioMenu({ scenarios, progress, onSelect }) {
 
       <div className="text-[9px] font-mono uppercase tracking-[0.25em] text-neutral-600 mb-2">Open pull requests</div>
       <div className="space-y-2 mb-4">
-        {scenarios.map((s) => {
+        {scenarios.filter((s) => !s.comingSoon).map((s) => {
           const p = progress[s.id]
           return (
             <button
@@ -25,7 +25,7 @@ export default function ScenarioMenu({ scenarios, progress, onSelect }) {
                       className="text-[8px] font-mono px-1.5 py-0.5 rounded"
                       style={{ background: 'rgba(109,92,252,0.1)', color: '#a78bfa', border: '1px solid rgba(109,92,252,0.2)' }}
                     >
-                      {s.issues.length} issues
+                      {(s.issues || []).length} issues
                     </span>
                   </div>
                   <div className="text-[11px] text-neutral-500 mt-0.5">{s.summary}</div>

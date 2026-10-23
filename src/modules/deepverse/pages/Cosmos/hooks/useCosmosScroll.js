@@ -97,13 +97,8 @@ export function useCosmosScroll() {
         if ((diff > 0 && next > target) || (diff < 0 && next < target)) next = target
         progressRef.current = Math.max(0, Math.min(1, next))
       } else {
-        velocity *= Math.pow(0.85, k)
-        if (Math.abs(velocity) < 0.0001) {
-          progressRef.current = target
-          velocity = 0
-        } else {
-          progressRef.current = Math.max(0, Math.min(1, current + velocity * k))
-        }
+        progressRef.current = target
+        velocity = 0
       }
 
       velocityRef.current = velocity

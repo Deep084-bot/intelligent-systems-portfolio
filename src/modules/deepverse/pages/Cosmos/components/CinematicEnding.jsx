@@ -123,19 +123,19 @@ export default function CinematicEnding({ progress, reducedMotion, onReturn }) {
           that still leaves the faintest hint of the Cosmic Web behind. */}
       <motion.div
         aria-hidden
-        className="absolute inset-0 z-10 pointer-events-none"
+        className="absolute inset-0 z-20 pointer-events-none"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.92 }}
+        animate={{ opacity: 0.98 }}
         transition={{ duration: reducedMotion ? 0.6 : TOTAL_MS / 1000, ease: 'linear' }}
         style={{
           background:
-            'radial-gradient(130% 100% at 50% 42%, rgba(5,7,18,0.45) 0%, rgba(2,4,12,0.9) 68%, rgba(1,2,8,0.96) 100%)',
+            'radial-gradient(130% 100% at 50% 42%, rgba(2,3,9,0.6) 0%, rgba(1,2,6,0.95) 68%, rgba(0,0,0,1) 100%)',
         }}
       />
 
       {/* Narrative — exactly one line on screen at a time, crossfaded in place. */}
       <div
-        className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+        className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
         role="status"
         aria-live="polite"
       >

@@ -596,6 +596,8 @@ export default function NeuralGraph({ onSelectModule }) {
       style={flicker ? { animation: 'brainFlicker 0.7s ease' } : undefined}
       onPointerDown={handlePointerDown}
       onDoubleClick={handleDoubleClick}
+      onMouseLeave={() => handleHover(null)}
+      onTouchEnd={() => handleHover(null)}
     >
       <style>{`@keyframes brainFlicker { 0%{opacity:1} 15%{opacity:0.25} 35%{opacity:0.85} 55%{opacity:0.35} 75%{opacity:0.9} 100%{opacity:1} } @keyframes curiosityFadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
       <svg width="100%" height="100%" style={{ display: 'block' }}>
