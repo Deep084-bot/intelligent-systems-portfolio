@@ -7,7 +7,7 @@ import { useCosmosAudio } from './hooks/useCosmosAudio'
 import JourneyWorld from './scenes/JourneyWorld'
 import CinematicEnding from './components/CinematicEnding'
 import { progressToMeters, metersToLabel } from './utils/scaleMapping'
-import { STAGE_WINDOWS } from './scenes/helpers'
+import { STAGE_WINDOWS, stageVisibility } from './scenes/helpers'
 import { lerp, smoothstep } from './utils/lerp'
 
 // Camera keyframes — one framing per stage. The stages all live at the origin
@@ -132,9 +132,19 @@ export default function Cosmos({ navigate }) {
     navigate('/deepverse')
   }, [navigate])
 
+  const handleReplay = useCallback(() => {
+    try {
+      setProgress(0)
+    } catch (e) {}
+    // Also reset scroll targets
+    if (typeof window !== 'undefined') {
+      window.scrollTo?.(0, 0)
+    }
+  }, [setProgress])
+
   const currentLabel = useMemo(() => {
-    if (progress >= ENDING_AT - 0.01) return null
-    const windows = [
+    if (progress >= ENDING_AT - 0.001) return null
+    const stages = [
       { w: STAGE_WINDOWS.human, label: 'You' },
       { w: STAGE_WINDOWS.room, label: 'A Room' },
       { w: STAGE_WINDOWS.building, label: 'A Building' },
@@ -146,17 +156,17 @@ export default function Cosmos({ navigate }) {
       { w: STAGE_WINDOWS.galaxy, label: 'The Milky Way' },
       { w: STAGE_WINDOWS.universe, label: 'The Observable Universe' },
     ]
-    for (let i = windows.length - 1; i >= 0; i--) {
-      const { w, label } = windows[i]
-      if (progress >= w[1] && progress <= w[2] + 0.01) return label
+    let best = null
+    let bestVis = 0
+    for (let i = 0; i < stages.length; i++) {
+      const v = stageVisibility(progress, stages[i].w)
+      if (v > bestVis) {
+        bestVis = v
+        best = stages[i].label
+      }
     }
-    // fallback to thresholds
-    let label = null
-    for (const s of STAGE_LABELS) {
-      if (progress < s.threshold) break
-      label = s.label
-    }
-    return label
+    if (bestVis < 0.01) return null
+    return best
   }, [progress])
 
   // Live distance readout. scaleMapping.js was present but unused; wire it up so
@@ -165,60 +175,85 @@ export default function Cosmos({ navigate }) {
   const distanceLabel = useMemo(() => metersToLabel(progressToMeters(progress)), [progress])
   const showDistance = progress > 0.02 && progress < ENDING_AT - 0.02
 
+  const inQuoteOnlyPhase = progress >= ENDING_AT + 0.01 // will be controlled by ending component too
+  const [quoteOnly, setQuoteOnly] = useState(false)
+  const [sceneHidden, setSceneHidden] = useState(false)
+
+  useEffect(() => {
+    if (progress < 0.9) {
+      setQuoteOnly(false)
+      setSceneHidden(false)
+    }
+  }, [progress])
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
-      className="fixed inset-0 bg-[#020617] overflow-hidden overscroll-none touch-none cursor-grab active:cursor-grabbing"
+      className="fixed inset-0 bg-[#000000] overflow-hidden overscroll-none touch-none cursor-grab active:cursor-grabbing"
       onClick={handleFirstInteraction}
       onTouchStart={handleFirstInteraction}
     >
-      <Canvas
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: false }}
-        camera={{ position: [0.9, 1.55, 2.9], fov: 50, near: 0.05, far: 5000 }}
-        onCreated={({ gl }) => {
-          gl.setClearColor('#020617')
-        }}
-      >
-        <fog attach="fog" args={['#020617', 150, 3600]} />
-        <JourneyWorld progressRef={progressRef} reducedMotion={reducedMotion} />
-        <CameraController progressRef={progressRef} reducedMotion={reducedMotion} />
-        {/* Ambient wash. Each stage layers its own motivated lights on top. */}
-        <ambientLight intensity={0.16} color="#5b6cff" />
-        <hemisphereLight intensity={0.35} color="#2a3a6b" groundColor="#05070f" />
-      </Canvas>
+      {!sceneHidden && (
+        <Canvas
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+          dpr={[1, 2]}
+          gl={{ antialias: true, alpha: false }}
+          camera={{ position: [0.9, 1.55, 2.9], fov: 50, near: 0.05, far: 5000 }}
+          onCreated={({ gl }) => {
+            gl.setClearColor('#020617')
+          }}
+        >
+          <fog attach="fog" args={['#020617', 150, 3600]} />
+          <JourneyWorld progressRef={progressRef} reducedMotion={reducedMotion} />
+          <CameraController progressRef={progressRef} reducedMotion={reducedMotion} />
+          {/* Ambient wash. Each stage layers its own motivated lights on top. */}
+          <ambientLight intensity={0.16} color="#5b6cff" />
+          <hemisphereLight intensity={0.35} color="#2a3a6b" groundColor="#05070f" />
+        </Canvas>
+      )}
 
-      {/* Stage label — fades out during ending */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none flex items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        {currentLabel && (
-          <motion.h1
-            key={currentLabel}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.6 }}
-            className="text-white/60 text-3xl md:text-5xl font-light tracking-[0.15em] uppercase"
-            style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 200 }}
-          >
-            {currentLabel}
-          </motion.h1>
-        )}
-      </motion.div>
+      {/* Stage label — hidden during quote only */}
+      {!quoteOnly && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none flex items-center justify-center px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          {currentLabel && (
+            <motion.div
+              key={currentLabel}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.6 }}
+              className="px-4 py-2 rounded-md"
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.25) 60%, transparent 100%)',
+                backdropFilter: 'blur(2px)',
+              }}
+            >
+              <h1
+                className="text-white text-2xl sm:text-3xl md:text-5xl font-light tracking-[0.18em] uppercase text-center"
+                style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 300, textShadow: '0 2px 12px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.7)' }}
+              >
+                {currentLabel}
+              </h1>
+            </motion.div>
+          )}
+        </motion.div>
+      )}
 
       {/* Closing narrative + return action (sequenced, non-overlapping). */}
       <CinematicEnding
         progress={progress}
         reducedMotion={reducedMotion}
         onReturn={handleBack}
+        onSceneHide={() => setSceneHidden(true)}
+        onQuoteOnly={() => setQuoteOnly(true)}
       />
 
       {/* Distance readout */}

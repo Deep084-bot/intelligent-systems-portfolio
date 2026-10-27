@@ -294,7 +294,7 @@ export function Galaxy() {
   // A proper spiral: two log-spiral arms carrying a blue-white/white/pink star
   // mix, a warm dense bulge cloud, thin inter-arm gaps (dark lanes emerge where
   // the gaussian arm scatter leaves space), and a bright core sprite.
-  const { disk, bulge } = useMemo(() => {
+  const { disk, bulge, arms, dust } = useMemo(() => {
     const R = 30
     const rng = mulberry32(31415)
     const gauss = () => {
@@ -304,9 +304,10 @@ export function Galaxy() {
       return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
     }
     const warm = [1.0, 0.9, 0.72]
-    const blue = [0.72, 0.8, 1.0]
-    const pink = [1.0, 0.66, 0.82]
-    const white = [0.95, 0.97, 1.0]
+    const blue = [0.72, 0.85, 1.0]
+    const pink = [1.0, 0.7, 0.88]
+    const white = [0.98, 0.98, 1.0]
+    const orange = [1.0, 0.82, 0.62]
 
     const build = (count, kind) => {
       const pos = new Float32Array(count * 3)
@@ -314,26 +315,53 @@ export function Galaxy() {
       for (let i = 0; i < count; i++) {
         let x, y, z, c
         if (kind === 'bulge') {
-          const r = Math.pow(rng(), 1.8) * 6.4
+          const r = Math.pow(rng(), 2.0) * 5.2
           const phi = Math.acos(2 * rng() - 1)
           const th = rng() * Math.PI * 2
           x = r * Math.sin(phi) * Math.cos(th)
-          y = r * Math.cos(phi) * 0.6
+          y = r * Math.cos(phi) * 0.5
           z = r * Math.sin(phi) * Math.sin(th)
-          const t = rng() * 0.35
-          c = [1.0 - 0.12 * t, 0.88 - 0.08 * t, 0.64 - 0.06 * t]
-        } else {
-          const r = Math.pow(rng(), 0.55) * R
+          const t = rng() * 0.25
+          c = [1.0 - 0.08 * t, 0.86 - 0.06 * t, 0.66 - 0.04 * t]
+          const dim = 0.7 + rng() * 0.25
+          c = [c[0] * dim, c[1] * dim, c[2] * dim]
+        } else if (kind === 'arms') {
+          const r = Math.pow(rng(), 0.5) * R
           const arm = i % 2
-          const base = 1.15 * Math.log(r + 1.4) + arm * Math.PI
-          const spread = 0.26 + (r / R) * 0.5
+          const base = 1.0 * Math.log(r + 1.2) + arm * Math.PI
+          const spread = 0.18 + (r / R) * 0.32
           const angle = base + gauss() * spread
-          x = Math.cos(angle) * r + gauss() * (0.35 + (r / R) * 1.2)
-          z = Math.sin(angle) * r + gauss() * (0.35 + (r / R) * 1.2)
-          y = gauss() * (0.2 + (r / R) * 0.38)
+          x = Math.cos(angle) * r + gauss() * (0.25 + (r / R) * 0.7)
+          z = Math.sin(angle) * r + gauss() * (0.25 + (r / R) * 0.7)
+          y = gauss() * (0.14 + (r / R) * 0.22)
           const rr = rng()
-          c = rr < 0.05 ? pink : rr < 0.34 ? blue : rr < 0.8 ? white : warm
-          const dim = 0.6 + rng() * 0.4
+          c = rr < 0.08 ? pink : rr < 0.28 ? blue : rr < 0.7 ? white : rr < 0.9 ? warm : orange
+          const dim = 0.5 + rng() * 0.5
+          c = [c[0] * dim, c[1] * dim, c[2] * dim]
+        } else if (kind === 'dust') {
+          const r = Math.pow(rng(), 0.45) * R * 0.9
+          const arm = i % 2
+          const base = 1.0 * Math.log(r + 1.2) + arm * Math.PI
+          const spread = 0.12 + (r / R) * 0.18
+          const angle = base + gauss() * spread
+          x = Math.cos(angle) * r
+          z = Math.sin(angle) * r
+          y = gauss() * 0.08
+          c = [0.6, 0.5, 0.7]
+          const dim = 0.25 + rng() * 0.25
+          c = [c[0] * dim, c[1] * dim, c[2] * dim]
+        } else {
+          const r = Math.pow(rng(), 0.6) * R * 1.15
+          const arm = Math.floor(rng() * 4)
+          const base = 0.9 * Math.log(r + 1.0) + arm * (Math.PI / 2)
+          const spread = 0.42 + (r / R) * 0.6
+          const angle = base + gauss() * spread
+          x = Math.cos(angle) * r + gauss() * (0.6 + (r / R) * 1.6)
+          z = Math.sin(angle) * r + gauss() * (0.6 + (r / R) * 1.6)
+          y = gauss() * (0.28 + (r / R) * 0.5)
+          const rr = rng()
+          c = rr < 0.15 ? blue : rr < 0.6 ? white : warm
+          const dim = 0.4 + rng() * 0.4
           c = [c[0] * dim, c[1] * dim, c[2] * dim]
         }
         pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z
@@ -341,36 +369,52 @@ export function Galaxy() {
       }
       return { pos, col }
     }
-    return { disk: build(11000, 'disk'), bulge: build(3200, 'bulge') }
+    return { disk: build(6000, 'disk'), bulge: build(2400, 'bulge'), arms: build(9000, 'arms'), dust: build(2000, 'dust') }
   }, [])
 
   useFrame(({ clock }) => {
-    if (group.current) group.current.rotation.y = clock.getElapsedTime() * motion * 0.012
+    if (group.current) group.current.rotation.y = clock.getElapsedTime() * motion * 0.008
   })
 
   return (
-    <group ref={group} rotation={[0.32, 0, 0.12]}>
+    <group ref={group} rotation={[0.36, 0.2, 0.12]}>
+      {/* Outer halo */}
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={disk.pos.length / 3} array={disk.pos} itemSize={3} />
+          <bufferAttribute attach="attributes-color" count={disk.col.length / 3} array={disk.col} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial map={sprite} size={0.9} vertexColors transparent opacity={0.6} depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation />
+      </points>
+      {/* Dust lanes */}
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={dust.pos.length / 3} array={dust.pos} itemSize={3} />
+          <bufferAttribute attach="attributes-color" count={dust.col.length / 3} array={dust.col} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial map={sprite} size={1.6} vertexColors transparent opacity={0.35} depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation />
+      </points>
       {/* Bulge star cloud */}
       <points>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={bulge.pos.length / 3} array={bulge.pos} itemSize={3} />
           <bufferAttribute attach="attributes-color" count={bulge.col.length / 3} array={bulge.col} itemSize={3} />
         </bufferGeometry>
-        <pointsMaterial map={sprite} size={1.4} vertexColors transparent opacity={0.95} depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation />
+        <pointsMaterial map={sprite} size={1.1} vertexColors transparent opacity={0.9} depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation />
       </points>
       {/* Spiral arms */}
       <points>
         <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={disk.pos.length / 3} array={disk.pos} itemSize={3} />
-          <bufferAttribute attach="attributes-color" count={disk.col.length / 3} array={disk.col} itemSize={3} />
+          <bufferAttribute attach="attributes-position" count={arms.pos.length / 3} array={arms.pos} itemSize={3} />
+          <bufferAttribute attach="attributes-color" count={arms.col.length / 3} array={arms.col} itemSize={3} />
         </bufferGeometry>
-        <pointsMaterial map={sprite} size={1.2} vertexColors transparent opacity={1} depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation />
+        <pointsMaterial map={sprite} size={1.0} vertexColors transparent opacity={0.95} depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation />
       </points>
       {/* Bright galactic core */}
-      <sprite scale={[9, 9, 1]}>
-        <spriteMaterial map={glow} color="#ffdca0" transparent opacity={0.5} depthWrite={false} blending={THREE.AdditiveBlending} />
+      <sprite scale={[7, 7, 1]}>
+        <spriteMaterial map={glow} color="#ffe7b5" transparent opacity={0.42} depthWrite={false} blending={THREE.AdditiveBlending} />
       </sprite>
-      <ambientLight intensity={0.3} color="#8a7dff" />
+      <ambientLight intensity={0.28} color="#9a8dff" />
     </group>
   )
 }

@@ -2,9 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { endingState } from '../scenes/endingState'
 
-// The closing narrative. Displayed one line at a time (never accumulated), on a
-// sequentially controlled timeline so it reads as a deliberate cinematic
-// conclusion regardless of how fast the visitor scrolled to the end.
 const LINES = [
   { text: 'This is everything we have ever observed.' },
   { text: 'Somewhere inside it: one ordinary galaxy.' },
@@ -17,19 +14,32 @@ const LINES = [
   { text: "But someone's world might. So build something beautiful.", final: true },
 ]
 
-const STEP = 1300 // ms each line holds before advancing
-const HOLD = 1300 // ms pause after the final line before the return action
-const FADE = 0.65 // s crossfade between lines
-const ENTER_AT = 0.94 // progress at which the ending begins
-const RESET_BELOW = 0.9 // progress at which the ending resets (hysteresis)
-const TOTAL_MS = (LINES.length - 1) * STEP + HOLD
+const FADE = 0.65
+const ENTER_AT = 0.94
+const RESET_BELOW = 0.9
+const FADE_OUT_SCENE_MS = 1600
+const UNIVERSE_HOLD_MS = 5000
+const SHORT_QUOTE_MIN_MS = 4000
+const NARRATIVE_MIN_MS = 3000
+const FINAL_QUOTE_MIN_MS = 8000
 
-export default function CinematicEnding({ progress, reducedMotion, onReturn }) {
+function getNarrativeMin(i) {
+  const text = LINES[i] ? LINES[i].text : ''
+  // Give longer lines more time
+  const base = NARRATIVE_MIN_MS
+  const extra = Math.min(2000, Math.max(0, (text.length - 80) * 15))
+  return base + extra
+}
+
+export default function CinematicEnding({ progress, reducedMotion, onReturn, onSceneHide, onQuoteOnly }) {
+  const [phase, setPhase] = useState('idle') // idle | holdingUniverse | fadingScene | narrative | quoteOnly
   const [index, setIndex] = useState(-1)
-  const [done, setDone] = useState(false)
+  const [showQuote, setShowQuote] = useState(false)
+  const [showControls, setShowControls] = useState(false)
   const startedRef = useRef(false)
   const timersRef = useRef([])
   const rafRef = useRef(0)
+  const enterTimeRef = useRef(0)
 
   const clearTimers = () => {
     timersRef.current.forEach(clearTimeout)
@@ -43,153 +53,252 @@ export default function CinematicEnding({ progress, reducedMotion, onReturn }) {
     endingState.active = false
     endingState.dim = 0
     clearTimers()
+    setPhase('idle')
     setIndex(-1)
-    setDone(false)
+    setShowQuote(false)
+    setShowControls(false)
+    enterTimeRef.current = 0
+    if (onSceneHide) onSceneHide(false)
+    if (onQuoteOnly) onQuoteOnly(false)
+  }
+
+  const beginFadeToNarrative = () => {
+    if (!startedRef.current) return
+    setPhase('fadingScene')
+    setIndex(-1)
+    setShowQuote(false)
+    setShowControls(false)
+    if (onQuoteOnly) onQuoteOnly(false)
+
+    const duration = reducedMotion ? 800 : FADE_OUT_SCENE_MS
+    const t0 = performance.now()
+    const tick = (now) => {
+      if (!startedRef.current) return
+      const p = Math.min(1, (now - t0) / duration)
+      endingState.dim = p
+      if (p < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        endingState.dim = 1
+        if (onSceneHide) onSceneHide(false) // keep scene visible during narrative on black screen
+        setPhase('narrative')
+        startNarrative()
+      }
+    }
+    rafRef.current = requestAnimationFrame(tick)
   }
 
   const start = () => {
     startedRef.current = true
     endingState.active = true
-    setDone(false)
-
-    if (reducedMotion) {
-      // Respect reduced motion: no crossfades, no y-drift, no long sequence.
-      setIndex(LINES.length - 1)
-      endingState.dim = 0.85
-      timersRef.current.push(setTimeout(() => setDone(true), 900))
-      return
-    }
-
-    setIndex(0)
-    const scheduleFrom = (i) => {
-      const t = setTimeout(() => {
-        if (!startedRef.current) return
-        if (i < LINES.length - 1) {
-          setIndex(i + 1)
-          scheduleFrom(i + 1)
-        } else {
-          timersRef.current.push(setTimeout(() => {
-            if (startedRef.current) setDone(true)
-          }, HOLD))
-        }
-      }, STEP)
-      timersRef.current.push(t)
-    }
-    scheduleFrom(0)
-
-    // Smoothly recede the scene across the whole sequence.
-    const t0 = performance.now()
-    const tick = (now) => {
+    enterTimeRef.current = Date.now()
+    // Hold universe stage visible for at least 5 seconds before transitioning
+    setPhase('holdingUniverse')
+    setIndex(-1)
+    setShowQuote(false)
+    setShowControls(false)
+    endingState.dim = 0
+    if (onSceneHide) onSceneHide(false)
+    if (onQuoteOnly) onQuoteOnly(false)
+    const t = setTimeout(() => {
       if (!startedRef.current) return
-      endingState.dim = Math.min(1, (now - t0) / TOTAL_MS)
-      if (endingState.dim < 1) rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
+      // Only transition if still in holding phase
+      if (phaseRef.current === 'holdingUniverse') {
+        beginFadeToNarrative()
+      }
+    }, UNIVERSE_HOLD_MS)
+    timersRef.current.push(t)
   }
 
-  // Start / reset driven by scroll progress (with hysteresis so it does not
-  // chatter at the boundary).
+  const phaseRef = useRef('idle')
+  useEffect(() => { phaseRef.current = phase }, [phase])
+
+  const startNarrative = () => {
+    if (reducedMotion) {
+      setIndex(LINES.length - 1)
+      timersRef.current.push(setTimeout(() => {
+        if (!startedRef.current) return
+        goToQuoteOnly()
+      }, Math.max(4000, NARRATIVE_MIN_MS)))
+      return
+    }
+    setIndex(0)
+    scheduleNarrativeLine(0)
+  }
+
+  const scheduleNarrativeLine = (i) => {
+    const minDisplay = getNarrativeMin(i)
+    const t = setTimeout(() => {
+      if (!startedRef.current) return
+      if (i < LINES.length - 1) {
+        setIndex(i + 1)
+        scheduleNarrativeLine(i + 1)
+      } else {
+        timersRef.current.push(setTimeout(() => {
+          if (startedRef.current) goToQuoteOnly()
+        }, Math.max(minDisplay, NARRATIVE_MIN_MS)))
+      }
+    }, minDisplay)
+    timersRef.current.push(t)
+  }
+
+  const goToQuoteOnly = () => {
+    if (!startedRef.current) return
+    setPhase('quoteOnly')
+    if (onSceneHide) onSceneHide(true)
+    if (onQuoteOnly) onQuoteOnly(true)
+    timersRef.current.push(setTimeout(() => {
+      if (!startedRef.current) return
+      setShowQuote(true)
+      timersRef.current.push(setTimeout(() => {
+        if (!startedRef.current) return
+        setShowControls(true)
+      }, reducedMotion ? 200 : 500))
+    }, reducedMotion ? 200 : 300))
+  }
+
   useEffect(() => {
     if (progress >= ENTER_AT && !startedRef.current) start()
     else if (progress < RESET_BELOW && startedRef.current) reset()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress])
 
-  // Keyboard skip: once the ending is playing, Enter/Space completes it so a
-  // keyboard user is never forced to wait through the whole sequence.
   useEffect(() => {
-    if (index < 0 || done) return
+    if (phase !== 'narrative' && phase !== 'quoteOnly') return
     const onKey = (e) => {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
         e.preventDefault()
         clearTimers()
-        setIndex(LINES.length - 1)
-        endingState.dim = Math.max(endingState.dim, 0.85)
-        setDone(true)
+        if (phase === 'narrative') {
+          goToQuoteOnly()
+        } else if (phase === 'quoteOnly') {
+          onReturn && onReturn()
+        }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [index, done])
+  }, [phase, onReturn])
 
   useEffect(() => () => reset(), []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (index < 0) return null
-  const line = LINES[index]
+  if (phase === 'idle') return null
 
-  return (
-    <>
-      {/* Graded darkening: intentional, smooth approach to a near-black finale
-          that still leaves the faintest hint of the Cosmic Web behind. */}
+  if (phase === 'fadingScene') {
+    return (
       <motion.div
         aria-hidden
-        className="absolute inset-0 z-20 pointer-events-none"
+        className="absolute inset-0 z-40 pointer-events-none bg-black"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.98 }}
-        transition={{ duration: reducedMotion ? 0.6 : TOTAL_MS / 1000, ease: 'linear' }}
-        style={{
-          background:
-            'radial-gradient(130% 100% at 50% 42%, rgba(2,3,9,0.6) 0%, rgba(1,2,6,0.95) 68%, rgba(0,0,0,1) 100%)',
-        }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: reducedMotion ? 0.6 : FADE_OUT_SCENE_MS / 1000, ease: 'linear' }}
       />
+    )
+  }
 
-      {/* Narrative — exactly one line on screen at a time, crossfaded in place. */}
-      <div
-        className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
-        role="status"
-        aria-live="polite"
-      >
-        <AnimatePresence initial={false}>
-          <motion.div
-            key={index}
-            className="absolute inset-0 flex items-center justify-center px-7 sm:px-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reducedMotion ? 0.2 : FADE, ease: 'easeInOut' }}
-          >
+  if (phase === 'holdingUniverse') {
+    return null
+  }
+
+  if (phase === 'narrative') {
+    if (index < 0) return null
+    const line = LINES[index]
+    return (
+      <>
+        <div className="absolute inset-0 z-50 bg-black" aria-hidden />
+        <div
+          className="absolute inset-0 z-[60] flex items-center justify-center px-7 sm:px-10"
+          role="status"
+          aria-live="polite"
+        >
+          <AnimatePresence initial={false} mode="wait">
+            <motion.div
+              key={index}
+              className="absolute inset-0 flex items-center justify-center px-7 sm:px-10"
+              initial={{ opacity: reducedMotion ? 1 : 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: reducedMotion ? 1 : 0 }}
+              transition={{ duration: reducedMotion ? 0 : FADE, ease: 'easeInOut' }}
+            >
+              <motion.p
+                initial={{ opacity: reducedMotion ? 1 : 0, y: reducedMotion ? 0 : 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: reducedMotion ? 0 : FADE, ease: 'easeOut' }}
+                className="text-center"
+                style={{
+                  fontFamily: '"Cormorant Garamond", Georgia, "Times New Roman", serif',
+                  fontStyle: 'italic',
+                  fontWeight: line.final ? 400 : 300,
+                  fontSize: line.final ? 'clamp(26px, 4.8vw, 46px)' : 'clamp(19px, 3.4vw, 30px)',
+                  lineHeight: 1.6,
+                  letterSpacing: '0.012em',
+                  color: line.final ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.92)',
+                  maxWidth: line.final ? '34rem' : '38rem',
+                  textWrap: 'balance',
+                  padding: '0 1rem',
+                }}
+              >
+                {line.text}
+              </motion.p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </>
+    )
+  }
+
+  if (phase === 'quoteOnly') {
+    return (
+      <>
+        <div className="absolute inset-0 z-50 bg-black" aria-hidden />
+        <div
+          className="absolute inset-0 z-[60] flex items-center justify-center px-7 sm:px-10"
+          role="status"
+          aria-live="polite"
+        >
+          {showQuote && (
             <motion.p
-              initial={{ opacity: 0, y: reducedMotion ? 0 : 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reducedMotion ? 0.2 : FADE, ease: 'easeOut' }}
+              initial={{ opacity: reducedMotion ? 1 : 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: reducedMotion ? 0 : 0.8, ease: 'easeIn' }}
               className="text-center"
               style={{
                 fontFamily: '"Cormorant Garamond", Georgia, "Times New Roman", serif',
                 fontStyle: 'italic',
-                fontWeight: line.final ? 400 : 300,
-                fontSize: line.final ? 'clamp(26px, 4.8vw, 46px)' : 'clamp(19px, 3.4vw, 30px)',
-                lineHeight: 1.5,
+                fontWeight: 400,
+                fontSize: 'clamp(26px, 4.8vw, 46px)',
+                lineHeight: 1.6,
                 letterSpacing: '0.012em',
-                color: line.final ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.78)',
-                maxWidth: line.final ? '30rem' : '34rem',
+                color: 'rgba(255,255,255,0.98)',
+                maxWidth: '34rem',
                 textWrap: 'balance',
+                padding: '0 1rem',
               }}
             >
-              {line.text}
+              But someone's world might. So build something beautiful.
             </motion.p>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Return action — anchored to the bottom so it can never overlap the
-          centred narrative. Appears only after the sequence + pause. */}
-      {done && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.9, delay: reducedMotion ? 0 : 0.3 }}
-          className="absolute inset-x-0 bottom-16 sm:bottom-20 z-30 flex justify-center px-6 pointer-events-none"
-        >
-          <button
-            type="button"
-            onClick={onReturn}
-            data-testid="cosmos-return"
-            className="pointer-events-auto rounded-full border border-white/20 bg-white/5 px-7 py-3 text-[12px] tracking-[0.22em] uppercase text-white/75 hover:text-white hover:border-white/45 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+          )}
+        </div>
+        {showControls && (
+          <motion.div
+            initial={{ opacity: reducedMotion ? 1 : 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="absolute inset-x-0 bottom-16 sm:bottom-20 z-[70] flex justify-center px-6 pointer-events-none"
           >
-            Return to DeepVerse
-          </button>
-        </motion.div>
-      )}
-    </>
-  )
+            <button
+              type="button"
+              onClick={onReturn}
+              data-testid="cosmos-return"
+              className="pointer-events-auto rounded-full border border-white/40 bg-black/60 px-7 py-3 text-[12px] tracking-[0.22em] uppercase text-white/95 hover:text-white hover:border-white/80 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            >
+              Return to DeepVerse
+            </button>
+          </motion.div>
+        )}
+      </>
+    )
+  }
+
+  return null
 }
